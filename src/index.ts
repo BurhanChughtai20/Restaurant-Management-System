@@ -10,6 +10,8 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCors from '@fastify/cors';
 import fastifyBearerAuth from '@fastify/bearer-auth';
 import fastifyResponseValidation from '@fastify/response-validation';
+import authRoutes from "./routes/auth.ts";
+import fastifyMysql from '@fastify/mysql';
 
 // Handle CommonJS default export
 const fastifyCompress = fastifyCompressPkg.default;
@@ -31,7 +33,6 @@ await fastify.register(fastifyCompress, {
   global: true,
   threshold: 1024,
   encodings: ['gzip', 'deflate', 'br']
-  // 2. Removed the incorrect 'as FastifyCompressOptions' type assertion
 });
 
 // Caching
@@ -59,6 +60,9 @@ await fastify.register(fastifyResponseValidation);
 fastify.get('/', async () => {
   return { hello: 'world' };
 });
+
+const API_PREFIX = process.env.API_PREFIX;
+await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
 
 // Start server
 try {

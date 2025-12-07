@@ -14,8 +14,10 @@
     "declaration": true,
     "declarationMap": true,
     "noUncheckedIndexedAccess": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "exactOptionalPropertyTypes": true,
-
+    "resolveJsonModule": true,
     "types": ["node"],
     "esModuleInterop": true
   },

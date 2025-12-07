@@ -1,16 +1,23 @@
+// DATABASE CONNECTION
 datasource db {
-  provider = "mysql"
+  provider = "mysql" 
 }
 
+// PRISMA CLIENT GENERATOR
+generator client {
+  provider = "prisma-client-js"
+}
+
+// MODELS
 model Users {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
+  id              Int             @id @default(autoincrement())
+  email           String          @unique
   password        String
-  isEmailVerified Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isEmailVerified Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
   otps            Otp[]
-  passwordResets  PasswordReset[]  // New relation for forgot password
+  passwordResets  PasswordReset[]
 }
 
 model Otp {
