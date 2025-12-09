@@ -1,23 +1,64 @@
-// DATABASE CONNECTION
-datasource db {
-  provider = "mysql" 
-}
-
-// PRISMA CLIENT GENERATOR
 generator client {
   provider = "prisma-client-js"
 }
 
-// MODELS
+datasource db {
+  provider = "postgresql"
+}
+
+//
+// ────────────────────────────────────────────────
+//  ENUMS
+// ────────────────────────────────────────────────
+//
+
+enum OtpType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+enum Role {
+  Admin
+  Order_Taker
+  Shop_Owner
+}
+
+//
+// ────────────────────────────────────────────────
+//  MODELS
+// ────────────────────────────────────────────────
+//
+
+/**
+ * Users table - one record per email
+ * A user can have multiple role accounts via UserRole junction table
+ */
 model Users {
-  id              Int             @id @default(autoincrement())
-  email           String          @unique
+  id              Int      @id @default(autoincrement())
+  name            String   @db.Char(100)
+  email           String   @unique
   password        String
-  isEmailVerified Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  otps            Otp[]
-  passwordResets  PasswordReset[]
+  isEmailVerified Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userRoles      UserRole[]
+  otps           Otp[]
+  passwordResets PasswordReset[]
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      Role
+  token     String?  @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
 }
 
 model Otp {
@@ -27,7 +68,9 @@ model Otp {
   type      OtpType
   expiresAt DateTime
   createdAt DateTime @default(now())
-  user      Users    @relation(fields: [userId], references: [id])
+
+  // Relations
+  user Users @relation(fields: [userId], references: [id])
 }
 
 model PasswordReset {
@@ -37,10 +80,7 @@ model PasswordReset {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-  user      Users    @relation(fields: [userId], references: [id])
-}
 
-enum OtpType {
-  EMAIL_VERIFY
-  PASSWORD_RESET
+  // Relations
+  user Users @relation(fields: [userId], references: [id])
 }
