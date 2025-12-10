@@ -1,9 +1,10 @@
-import bcrypt from "bcrypt";
 import { redisClient } from "../../libs/redis.ts";
 import { sendOtpEmail } from "../../libs/mailer.ts";
+import { generateOtp } from "../../libs/generateOtp.ts";
+import { hashPassword } from "../../libs/hashPassword.ts";
 
 const OTP_EXPIRATION_SECONDS = 30;
-
+const OtpExipres= Date.now() + OTP_EXPIRATION_SECONDS * 1000; 
 export async function signup({
   name,
   email,
@@ -15,52 +16,37 @@ export async function signup({
   password: string;
   role: string;
 }) {
+
   const key = `signup:${email}:${role}`;
 
   const exists = await redisClient.exists(key);
   if (exists) {
-    throw new Error(
-      "User already exists or pending verification for this role"
-    );
+    throw new Error("User already exists or pending verification for this role");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await hashPassword(password);
+  const otp = generateOtp();
+  const otpExpiresAt = OtpExipres;
 
-  const otp = Math.floor(1000 + Math.random() * 9000).toString();
-  const otpExpiresAt = Date.now() + OTP_EXPIRATION_SECONDS * 1000;
-
-  console.log(
-    `[DEBUG SIGNUP] Generated OTP: ${otp} for email: ${email}, role: ${role}`
-  );
-  console.log(`[DEBUG SIGNUP] Redis key: ${key}`);
-  console.log(
-    `[DEBUG SIGNUP] OTP expires at: ${new Date(otpExpiresAt).toISOString()}`
-  );
-
-  // Store as JSON string in Redis (not as hash)
-  const signupData = {
-    name,
-    email,
+  await redisClient.hSet(key, {
+    name: name,
+    email: email,
     password: hashedPassword,
-    role,
-    otp,
-    otpExpiresAt: otpExpiresAt.toString(),
-  };
+    role: role,
+    otp: otp,
+    otpExpiresAt: otpExpiresAt,
+  });
 
-  await redisClient.setEx(
-    key,
-    OTP_EXPIRATION_SECONDS,
-    JSON.stringify(signupData)
-  );
+  await redisClient.expire(key, OTP_EXPIRATION_SECONDS);
 
   try {
     await sendOtpEmail(email, otp);
-  } catch (err) {
+  } catch (error) {
     await redisClient.del(key);
     throw new Error("Failed to send OTP email. Please try again.");
   }
 
   return {
-    message: `User created successfully. OTP sent to your email. OTP expires in ${OTP_EXPIRATION_SECONDS} seconds.`,
+    message: `User created successfully. OTP sent to your email. Expires in ${OTP_EXPIRATION_SECONDS} sec.`,
   };
 }

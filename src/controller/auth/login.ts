@@ -38,10 +38,6 @@ export async function login({
     }
 
     if (!user.userRoles || user.userRoles.length === 0) {
-      console.log(
-        `[DEBUG LOGIN] No roles found for user. Available roles:`,
-        await prisma.userRole.findMany({ where: { userId: user.id } })
-      );
       throw new ApiError(403, `User does not have ${role} role`);
     }
 

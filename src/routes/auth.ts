@@ -91,11 +91,11 @@ async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post("/reset-password", async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const { otp, newPassword } = request.body as {
+      const { otp, password } = request.body as {
         otp: string;
-        newPassword: string;
+        password: string;
       };
-      return await verifyOtpAndResetPassword({ otp, newPassword });
+      return await verifyOtpAndResetPassword({ otp, password });
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({ error: err.message });
     }
