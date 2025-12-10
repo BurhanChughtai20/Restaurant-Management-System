@@ -1,5 +1,6 @@
+// src/index.ts
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCompressPkg from '@fastify/compress';
 import fastifyCookie from '@fastify/cookie';
@@ -7,13 +8,18 @@ import fastifyCaching from '@fastify/caching';
 import fastifyJwt from '@fastify/jwt';
 import fastifyCors from '@fastify/cors';
 import fastifyResponseValidation from '@fastify/response-validation';
-import authRoutes from "./routes/auth.ts";
-import { prisma } from "./libs/prisma.ts";
-import { connectRedis } from "./libs/redis.ts";
+import authRoutes from './routes/auth.ts';
+import qrRoutes from './routes/qrRoutes.ts';
+import { prisma } from './libs/prisma.ts';
+import { connectRedis } from './libs/redis.ts';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { orderTakerSocket } from './sockets/orderTakerSocket.ts';
 
 const fastifyCompress = fastifyCompressPkg.default;
-const fastify = Fastify({ logger: true });
+const fastify: FastifyInstance = Fastify({ logger: true });
 
+// --- JWT Secret check ---
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET is not defined in .env');
 
@@ -22,11 +28,11 @@ await fastify.register(fastifyHelmet);
 await fastify.register(fastifyCompress, {
   global: true,
   threshold: 1024,
-  encodings: ['gzip', 'deflate', 'br']
+  encodings: ['gzip', 'deflate', 'br'],
 });
 await fastify.register(fastifyCaching, {
   privacy: fastifyCaching.privacy.PRIVATE,
-  expiresIn: 60 * 1000
+  expiresIn: 60 * 1000,
 });
 await fastify.register(fastifyCookie);
 await fastify.register(fastifyJwt, { secret: jwtSecret });
@@ -38,43 +44,54 @@ fastify.setErrorHandler((error: any, request, reply) => {
   if (error.statusCode) {
     reply.status(error.statusCode).send({
       statusCode: error.statusCode,
-      error: error.statusCode === 409 ? "Conflict" : "Bad Request",
+      error: error.statusCode === 409 ? 'Conflict' : 'Bad Request',
       message: error.message,
     });
     return;
   }
 
-  // For unexpected 500 errors
   request.log.error(error);
   reply.status(500).send({
     statusCode: 500,
-    error: "Internal Server Error",
-    message: "Something unexpected went wrong on the server.",
+    error: 'Internal Server Error',
+    message: 'Something unexpected went wrong on the server.',
   });
 });
 
 // --- Test route ---
 fastify.get('/', async () => ({ hello: 'world' }));
 
-// --- Auth Routes ---
-const API_PREFIX = process.env.API_PREFIX;
+// --- Auth & QR Routes ---
+const API_PREFIX = process.env.API_PREFIX || '/api';
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
+await fastify.register(qrRoutes, { prefix: `${API_PREFIX}/qr` });
 
-// --- Prisma Connection Test ---
 try {
   await prisma.$connect();
-  console.log("Prisma PostgreSQL connected successfully!");
+  console.log('Prisma PostgreSQL connected successfully!');
 } catch (err) {
-  console.error("Failed to connect Prisma:", err);
+  console.error('Failed to connect Prisma:', err);
 }
 
 await connectRedis();
 
-// --- Start Server ---
+const server: http.Server = http.createServer(fastify.server);
+
+const io: SocketIOServer = new SocketIOServer(server, {
+  cors: { origin: '*' },
+});
+
+orderTakerSocket(io);
+
+io.on('connection', (socket) => {
+  console.log('⚡ Socket.IO: Client connected!', socket.id);
+});
+
 try {
-  const port = Number(process.env.PORT) || 3000;
-  await fastify.listen({ port });
-  console.log(`Server running on port ${port}`);
+  const port: number = Number(process.env.PORT) || 3000;
+  server.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);

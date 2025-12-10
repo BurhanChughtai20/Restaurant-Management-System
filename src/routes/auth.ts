@@ -5,6 +5,7 @@ import { verifyEmailOtp } from "../controller/auth/verifyEmailOtp.ts";
 import { logout } from "../controller/auth/logout.ts"; 
 import { forgotPassword } from "../controller/auth/forgotPassword.ts";
 import { verifyOtpAndResetPassword } from "../controller/auth/verifyOtpAndResetPassword.ts";
+import { deleteAccount } from "../controller/auth/deleteAccount.ts";
 
 async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/signup", async (request: FastifyRequest, reply: FastifyReply) => {
@@ -98,6 +99,22 @@ async function authRoutes(fastify: FastifyInstance) {
       return await verifyOtpAndResetPassword({ otp, password });
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({ error: err.message });
+    }
+  });
+
+  fastify.delete("/delete-account", async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return reply.status(401).send({ error: "Missing or invalid authorization header" });
+      }
+      const token = authHeader.replace("Bearer ", "");
+
+       const { role } = request.body as { role: string };
+      const result = await deleteAccount(token, role);
+      return result;
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
     }
   });
 }

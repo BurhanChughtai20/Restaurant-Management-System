@@ -54,6 +54,17 @@ CREATE TABLE "PasswordReset" (
     CONSTRAINT "PasswordReset_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "WaiterConnection" (
+    "id" SERIAL NOT NULL,
+    "Order_Taker_ID" INTEGER NOT NULL,
+    "socketId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WaiterConnection_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Users_email_key" ON "Users"("email");
 
@@ -66,6 +77,12 @@ CREATE UNIQUE INDEX "UserRole_userId_role_key" ON "UserRole"("userId", "role");
 -- CreateIndex
 CREATE UNIQUE INDEX "PasswordReset_token_key" ON "PasswordReset"("token");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "WaiterConnection_Order_Taker_ID_key" ON "WaiterConnection"("Order_Taker_ID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WaiterConnection_socketId_key" ON "WaiterConnection"("socketId");
+
 -- AddForeignKey
 ALTER TABLE "UserRole" ADD CONSTRAINT "UserRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -74,3 +91,6 @@ ALTER TABLE "Otp" ADD CONSTRAINT "Otp_userId_fkey" FOREIGN KEY ("userId") REFERE
 
 -- AddForeignKey
 ALTER TABLE "PasswordReset" ADD CONSTRAINT "PasswordReset_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WaiterConnection" ADD CONSTRAINT "WaiterConnection_Order_Taker_ID_fkey" FOREIGN KEY ("Order_Taker_ID") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

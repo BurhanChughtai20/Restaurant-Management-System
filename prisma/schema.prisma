@@ -29,10 +29,6 @@ enum Role {
 // ────────────────────────────────────────────────
 //
 
-/**
- * Users table - one record per email
- * A user can have multiple role accounts via UserRole junction table
- */
 model Users {
   id              Int      @id @default(autoincrement())
   name            String   @db.Char(100)
@@ -45,6 +41,8 @@ model Users {
   userRoles      UserRole[]
   otps           Otp[]
   passwordResets PasswordReset[]
+
+   waiterConnection WaiterConnection?
 }
 
 model UserRole {
@@ -83,4 +81,18 @@ model PasswordReset {
 
   // Relations
   user Users @relation(fields: [userId], references: [id])
+}
+
+model WaiterConnection {
+  id             Int      @id @default(autoincrement())
+  Order_Taker_ID Int      @unique
+  socketId       String?  @unique
+  sessionToken   String   @unique  
+  isActive       Boolean  @default(true)
+  fromTime       String?  
+  toTime         String? 
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  waiter Users @relation(fields: [Order_Taker_ID], references: [id], onDelete: Cascade)
 }
