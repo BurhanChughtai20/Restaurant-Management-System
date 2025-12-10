@@ -6,12 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-//
-// ────────────────────────────────────────────────
-//  ENUMS
-// ────────────────────────────────────────────────
-//
-
 enum OtpType {
   EMAIL_VERIFY
   PASSWORD_RESET
@@ -21,13 +15,8 @@ enum Role {
   Admin
   Order_Taker
   Shop_Owner
+  Chef
 }
-
-//
-// ────────────────────────────────────────────────
-//  MODELS
-// ────────────────────────────────────────────────
-//
 
 model Users {
   id              Int      @id @default(autoincrement())
@@ -67,7 +56,6 @@ model Otp {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  // Relations
   user Users @relation(fields: [userId], references: [id])
 }
 
@@ -79,7 +67,6 @@ model PasswordReset {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  // Relations
   user Users @relation(fields: [userId], references: [id])
 }
 
