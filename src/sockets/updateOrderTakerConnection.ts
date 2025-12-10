@@ -1,6 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../libs/prisma.ts";
- 
 
 export const updateOrderTakerConnection = async ({
   orderTakerId,

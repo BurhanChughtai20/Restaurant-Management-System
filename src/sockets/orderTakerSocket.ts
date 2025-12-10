@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../libs/prisma.ts";
-   
+
 export const orderTakerSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("Client connected:", socket.id);

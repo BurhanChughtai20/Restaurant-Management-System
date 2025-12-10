@@ -1,4 +1,3 @@
-// src/index.ts
 import 'dotenv/config';
 import Fastify, { FastifyInstance } from 'fastify';
 import fastifyHelmet from '@fastify/helmet';
@@ -19,11 +18,9 @@ import { orderTakerSocket } from './sockets/orderTakerSocket.ts';
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
 
-// --- JWT Secret check ---
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT_SECRET is not defined in .env');
 
-// --- Plugins ---
 await fastify.register(fastifyHelmet);
 await fastify.register(fastifyCompress, {
   global: true,
@@ -39,7 +36,6 @@ await fastify.register(fastifyJwt, { secret: jwtSecret });
 await fastify.register(fastifyCors, { origin: '*' });
 await fastify.register(fastifyResponseValidation);
 
-// --- Global Error Handler ---
 fastify.setErrorHandler((error: any, request, reply) => {
   if (error.statusCode) {
     reply.status(error.statusCode).send({
@@ -61,7 +57,6 @@ fastify.setErrorHandler((error: any, request, reply) => {
 // --- Test route ---
 fastify.get('/', async () => ({ hello: 'world' }));
 
-// --- Auth & QR Routes ---
 const API_PREFIX = process.env.API_PREFIX || '/api';
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
 await fastify.register(qrRoutes, { prefix: `${API_PREFIX}/qr` });

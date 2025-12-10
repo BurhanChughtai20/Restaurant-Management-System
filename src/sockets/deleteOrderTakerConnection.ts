@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../libs/prisma.ts";
 
-interface DeleteOrderTakerBody {
+export interface DeleteOrderTakerBody {
   orderTakerId: number;
 }
 
