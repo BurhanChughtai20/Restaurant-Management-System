@@ -56,13 +56,13 @@ fastify.setErrorHandler((error: any, request, reply) => {
   });
 });
 
-// --- Test route ---
 fastify.get('/', async () => ({ hello: 'world' }));
 
 const API_PREFIX = process.env.API_PREFIX || '/api';
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
 await fastify.register(orderTakerManagementRoutes, { prefix: `${API_PREFIX}/waiter` });
 await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/chef` });
+await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/menu-items` });
 
 try {
   await prisma.$connect();
