@@ -1,4 +1,4 @@
-import prisma from "../libs/prisma.ts";
+import prisma from "../../libs/prisma.ts";
 
 export const updateChefConnection = async ({
   chefId,

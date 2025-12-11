@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import Fastify from "fastify";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCompressPkg from '@fastify/compress';
 import fastifyCookie from '@fastify/cookie';
@@ -16,6 +16,8 @@ import { Server as SocketIOServer } from 'socket.io';
 import { orderTakerSocket } from './sockets/orderTakerSocket.ts';
 import orderTakerManagementRoutes from './routes/order_Taker_Management_Admin_Routes.ts';
 import chefsManagementRoutes from './routes/chefs_Management_Admin_Routes.ts';
+import MenuItemsRoutes from './routes/Items_Admin.ts';
+import registerAuthenticate from './middleware/authenticate.ts';
 
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
@@ -35,6 +37,7 @@ await fastify.register(fastifyCaching, {
 });
 await fastify.register(fastifyCookie);
 await fastify.register(fastifyJwt, { secret: jwtSecret });
+await registerAuthenticate(fastify);
 await fastify.register(fastifyCors, { origin: '*' });
 await fastify.register(fastifyResponseValidation);
 
@@ -62,7 +65,7 @@ const API_PREFIX = process.env.API_PREFIX || '/api';
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
 await fastify.register(orderTakerManagementRoutes, { prefix: `${API_PREFIX}/waiter` });
 await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/chef` });
-await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/menu-items` });
+await fastify.register(MenuItemsRoutes, { prefix: `${API_PREFIX}/menu-items` });
 
 try {
   await prisma.$connect();

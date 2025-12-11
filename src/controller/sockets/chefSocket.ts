@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import prisma from "../libs/prisma.ts";
+import prisma from "../../libs/prisma.ts";
 
 export const chefSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {

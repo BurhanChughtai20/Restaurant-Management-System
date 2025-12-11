@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { generateQRToken } from "../controller/staff/generateQRToken.ts";
-import { deleteChefConnection } from "../sockets/deleteChefConnection.ts";
-import { updateChefConnection } from "../sockets/updateChefConnection.ts";
-import { getChefStats } from "../controller/staff/getChefStatsAdmin.ts";
+import { generateQRToken } from "../utils/generateQRToken.ts"; 
+import { getChefStats } from "../controller/staff/chef/getChefStatsAdmin.ts";
+import { deleteChefConnection } from "../controller/sockets/deleteChefConnection.ts";
+import { updateChefConnection } from "../controller/sockets/updateChefConnection.ts";
+
 interface UpdateChefBody {
   chefId: number;
   fromTime: string;
@@ -14,11 +15,14 @@ interface DeleteChefBody {
 }
 
 async function chefsManagementRoutes(fastify: FastifyInstance) {
+  
   fastify.get(
     "/token-chef",
+    { preHandler: [fastify.authenticate] },
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
-        return await generateQRToken(request, reply);
+        const tokenData = await generateQRToken(request, reply);
+        return reply.send(tokenData);
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
       }
@@ -27,25 +31,24 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.delete<{ Body: DeleteChefBody }>(
     "/token-chef",
-    async (request, reply) => {
+    { preHandler: [fastify.authenticate] },
+    async (request: FastifyRequest<{ Body: DeleteChefBody }>, reply: FastifyReply) => {
       try {
-        return await deleteChefConnection(request, reply);
+        const result = await deleteChefConnection(request, reply);
+        return reply.send(result);
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
       }
     }
   );
-
   fastify.patch<{ Body: UpdateChefBody }>(
     "/token-chef",
-    async (request, reply) => {
+    { preHandler: [fastify.authenticate] },
+    async (request: FastifyRequest<{ Body: UpdateChefBody }>, reply: FastifyReply) => {
       try {
         const { chefId, fromTime, toTime } = request.body;
-        const updated = await updateChefConnection({
-          chefId,
-          fromTime,
-          toTime,
-        });
+        const updated = await updateChefConnection({ chefId, fromTime, toTime });
+
         return reply.send({
           message: "Chef timing updated successfully",
           data: updated,
@@ -58,8 +61,14 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.get(
     "/chef/stats",
+    { preHandler: [fastify.authenticate] },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      return await getChefStats(request, reply);
+      try {
+        const stats = await getChefStats(request, reply);
+        return reply.send(stats);
+      } catch (error: any) {
+        return reply.status(400).send({ error: error.message });
+      }
     }
   );
 }

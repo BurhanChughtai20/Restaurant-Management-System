@@ -99,3 +99,14 @@ model ChefConnection {
 
   chef Users @relation(fields: [Chef_ID], references: [id], onDelete: Cascade)
 }
+
+model MenuItem {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.Char(100)
+  sku         String   @unique
+  price       Float    // Price per item
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

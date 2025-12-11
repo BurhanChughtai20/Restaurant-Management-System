@@ -1,6 +1,6 @@
 import prisma from "../../libs/prisma.ts";
 import { redisClient } from "../../libs/redis.ts";
-import { generateToken } from "../../middleware/jwtToken.ts";
+import { generateToken } from "../../utils/jwtToken.ts";
 import { ApiError } from "../../utils/ApiError.ts";
 
 export async function verifyEmailOtp({
