@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { generateQRToken } from "../controller/qr/generateQRToken.ts";
+import { generateQRToken } from "../controller/staff/generateQRToken.ts";
 import { deleteOrderTakerConnection } from "../sockets/deleteOrderTakerConnection.ts";
 import { updateOrderTakerConnection } from "../sockets/updateOrderTakerConnection.ts";
-import { getOrderTakerStats } from "../controller/qr/getOrderTakerStats.ts";
+import { getOrderTakerStats } from "../controller/staff/getOrderTakerStatsAdmin.ts";
 
 interface UpdateOrderTakerBody {
   orderTakerId: number;

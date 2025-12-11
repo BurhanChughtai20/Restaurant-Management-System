@@ -17,14 +17,18 @@ export const deleteOrderTakerConnection = async (
     });
 
     if (!connection) {
-      return reply.status(404).send({ message: "Order Taker connection not found" });
+      return reply
+        .status(404)
+        .send({ message: "Order Taker connection not found" });
     }
 
     await prisma.waiterConnection.delete({
       where: { Order_Taker_ID: orderTakerId },
     });
 
-    return reply.send({ message: "Order Taker connection deleted successfully" });
+    return reply.send({
+      message: "Order Taker connection deleted successfully",
+    });
   } catch (err) {
     console.error(err);
     return reply.status(500).send({ message: "Server error" });

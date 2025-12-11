@@ -32,6 +32,8 @@ model Users {
   passwordResets PasswordReset[]
 
    waiterConnection WaiterConnection?
+   chefConnection ChefConnection?
+
 }
 
 model UserRole {
@@ -82,4 +84,18 @@ model WaiterConnection {
   updatedAt      DateTime @updatedAt
 
   waiter Users @relation(fields: [Order_Taker_ID], references: [id], onDelete: Cascade)
+}
+
+model ChefConnection {
+  id           Int      @id @default(autoincrement())
+  Chef_ID      Int      @unique
+  socketId     String?  @unique
+  sessionToken String   @unique
+  isActive     Boolean  @default(true)
+  fromTime     String?
+  toTime       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  chef Users @relation(fields: [Chef_ID], references: [id], onDelete: Cascade)
 }

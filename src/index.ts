@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify from "fastify";
+import type { FastifyInstance } from "fastify";
 import fastifyHelmet from '@fastify/helmet';
 import fastifyCompressPkg from '@fastify/compress';
 import fastifyCookie from '@fastify/cookie';
@@ -8,12 +9,13 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCors from '@fastify/cors';
 import fastifyResponseValidation from '@fastify/response-validation';
 import authRoutes from './routes/auth.ts';
-import qrRoutes from './routes/qrRoutes.ts';
-import { prisma } from './libs/prisma.ts';
+ import { prisma } from './libs/prisma.ts';
 import { connectRedis } from './libs/redis.ts';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { orderTakerSocket } from './sockets/orderTakerSocket.ts';
+import orderTakerManagementRoutes from './routes/order_Taker_Management_Admin_Routes.ts';
+import chefsManagementRoutes from './routes/chefs_Management_Admin_Routes.ts';
 
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
@@ -59,7 +61,8 @@ fastify.get('/', async () => ({ hello: 'world' }));
 
 const API_PREFIX = process.env.API_PREFIX || '/api';
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
-await fastify.register(qrRoutes, { prefix: `${API_PREFIX}/qr` });
+await fastify.register(orderTakerManagementRoutes, { prefix: `${API_PREFIX}/waiter` });
+await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/chef` });
 
 try {
   await prisma.$connect();
