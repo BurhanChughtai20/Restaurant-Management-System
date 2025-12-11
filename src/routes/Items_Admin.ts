@@ -15,6 +15,7 @@ interface UpdateMenuItemParams {
   name?: string;
   price?: number;
   description?: string;
+  isActive?: boolean;
 }
 interface DeleteMenuItemParams {
   id: string;
@@ -53,13 +54,14 @@ async function MenuItemsRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       try {
         const { id } = request.params;
-        const { name, price, description } = request.body;
+        const { name, price, description, isActive } = request.body;
 
         const updatedMenuItem = await updateMenuItem({
           id: Number(id),
           ...(name !== undefined && { name }),
           ...(price !== undefined && { price }),
           ...(description !== undefined && { description }),
+          ...(isActive !== undefined && { isActive }),
         });
 
         return reply.send(updatedMenuItem);

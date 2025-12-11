@@ -5,9 +5,16 @@ interface UpdateMenuItemParams {
   name?: string;
   price?: number;
   description?: string;
+  isActive?: boolean;
 }
 
-export async function updateMenuItem({ id, name, price, description }: UpdateMenuItemParams) {
+export async function updateMenuItem({
+  id,
+  name,
+  price,
+  description,
+  isActive,
+}: UpdateMenuItemParams) {
   if (!id) throw new Error("Menu item ID is required");
 
   const existingItem = await prisma.menuItem.findUnique({ where: { id } });
@@ -19,6 +26,7 @@ export async function updateMenuItem({ id, name, price, description }: UpdateMen
       name: name ?? existingItem.name,
       price: price ?? existingItem.price,
       description: description ?? existingItem.description,
+      isActive: isActive ?? existingItem.isActive,
     },
   });
 
