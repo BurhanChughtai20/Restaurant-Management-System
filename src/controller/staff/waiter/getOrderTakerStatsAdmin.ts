@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import prisma from "../../libs/prisma.ts";
-
+import prisma from "../../../libs/prisma.ts";
+ 
 export async function getOrderTakerStats(
   request: FastifyRequest,
   reply: FastifyReply

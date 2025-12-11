@@ -3,6 +3,7 @@ import { generateQRToken } from "../utils/generateQRToken.ts";
 import { deleteOrderTakerConnection } from "../controller/sockets/deleteOrderTakerConnection.ts";
 import { updateOrderTakerConnection } from "../controller/sockets/updateOrderTakerConnection.ts";
 import { getOrderTakerStats } from "../controller/staff/waiter/getOrderTakerStatsAdmin.ts";
+import { getAllOrderTakers } from "../controller/staff/waiter/getAllOrderTakers.ts";
 
 interface UpdateOrderTakerBody {
   orderTakerId: number;
@@ -15,6 +16,18 @@ interface DeleteOrderTakerBody {
 }
 
 async function waitersManagementRoutes(fastify: FastifyInstance) {
+  fastify.get(
+    "/",
+    { preHandler: [fastify.authenticate] },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const orderTakers = await getAllOrderTakers();
+        return reply.send(orderTakers);
+      } catch (error: any) {
+        return reply.status(400).send({ error: error.message });
+      }
+    }
+  );
 
   fastify.get(
     "/token-order-taker",
@@ -48,7 +61,10 @@ async function waitersManagementRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest<{ Body: UpdateOrderTakerBody }>, reply: FastifyReply) => {
       try {
         const { orderTakerId, fromTime, toTime } = request.body;
-        const updated = await updateOrderTakerConnection({ orderTakerId, fromTime, toTime });
+        const updated = await updateOrderTakerConnection({ orderTakerId,
+          ...(fromTime !== undefined && { fromTime }),
+          ...(toTime !== undefined && { toTime }),
+        });
 
         return reply.send({
           message: "Order Taker timing updated successfully",

@@ -2,21 +2,18 @@ import { redisClient } from "../../libs/redis.ts";
 import { sendOtpEmail } from "../../libs/mailer.ts";
 import { generateOtp } from "../../libs/generateOtp.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
+import type { Role } from "@prisma/client";
 
-const OTP_EXPIRATION_SECONDS = 30;
-const OtpExipres= Date.now() + OTP_EXPIRATION_SECONDS * 1000; 
-export async function signup({
-  name,
-  email,
-  password,
-  role,
-}: {
+interface SignupParams {
   name: string;
   email: string;
   password: string;
-  role: string;
-}) {
+  role: Role;
+}
 
+const OTP_EXPIRATION_SECONDS = 30;
+
+export async function signup({ name, email, password, role }: SignupParams) {
   const key = `signup:${email}:${role}`;
 
   const exists = await redisClient.exists(key);
@@ -26,15 +23,15 @@ export async function signup({
 
   const hashedPassword = await hashPassword(password);
   const otp = generateOtp();
-  const otpExpiresAt = OtpExipres;
+  const otpExpiresAt = Date.now() + OTP_EXPIRATION_SECONDS * 1000;
 
   await redisClient.hSet(key, {
-    name: name,
-    email: email,
+    name,
+    email,
     password: hashedPassword,
-    role: role,
-    otp: otp,
-    otpExpiresAt: otpExpiresAt,
+    role,
+    otp,
+    otpExpiresAt: otpExpiresAt.toString(),
   });
 
   await redisClient.expire(key, OTP_EXPIRATION_SECONDS);
@@ -47,6 +44,6 @@ export async function signup({
   }
 
   return {
-    message: `User created successfully. OTP sent to your email. Expires in ${OTP_EXPIRATION_SECONDS} sec.`,
+    message: `User created successfully. OTP sent to your email. Expires in ${OTP_EXPIRATION_SECONDS} seconds.`,
   };
 }

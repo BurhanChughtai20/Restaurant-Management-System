@@ -1,14 +1,16 @@
 import prisma from "../../libs/prisma.ts";
 
+interface UpdateChefConnectionParams {
+  chefId: number;
+  fromTime?: string;
+  toTime?: string;
+}
+
 export const updateChefConnection = async ({
   chefId,
   fromTime,
   toTime,
-}: {
-  chefId: number;
-  fromTime: string;
-  toTime: string;
-}) => {
+}: UpdateChefConnectionParams) => {
   const connection = await prisma.chefConnection.findUnique({
     where: { Chef_ID: chefId },
   });
@@ -19,7 +21,10 @@ export const updateChefConnection = async ({
 
   const updatedConnection = await prisma.chefConnection.update({
     where: { Chef_ID: chefId },
-    data: { fromTime, toTime },
+    data: {
+      fromTime: fromTime ?? connection.fromTime,
+      toTime: toTime ?? connection.toTime,
+    },
   });
 
   return updatedConnection;

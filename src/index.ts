@@ -13,11 +13,11 @@ import authRoutes from './routes/auth.ts';
 import { connectRedis } from './libs/redis.ts';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { orderTakerSocket } from './sockets/orderTakerSocket.ts';
-import orderTakerManagementRoutes from './routes/order_Taker_Management_Admin_Routes.ts';
+ import orderTakerManagementRoutes from './routes/order_Taker_Management_Admin_Routes.ts';
 import chefsManagementRoutes from './routes/chefs_Management_Admin_Routes.ts';
 import MenuItemsRoutes from './routes/Items_Admin.ts';
 import registerAuthenticate from './middleware/authenticate.ts';
+import { orderTakerSocket } from './controller/sockets/orderTakerSocket.ts';
 
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
