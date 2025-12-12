@@ -4,6 +4,8 @@ import { deleteOrderTakerConnection } from "../controller/sockets/deleteOrderTak
 import { updateOrderTakerConnection } from "../controller/sockets/updateOrderTakerConnection.ts";
 import { getOrderTakerStats } from "../controller/staff/waiter/getOrderTakerStatsAdmin.ts";
 import { getAllOrderTakers } from "../controller/staff/waiter/getAllOrderTakers.ts";
+import { searchWaiters } from "../controller/staff/waiter/searchWaiters.ts";
+import { paginateWaiters } from "../controller/staff/waiter/paginateWaiters.ts";
 
 interface UpdateOrderTakerBody {
   orderTakerId: number;
@@ -88,6 +90,47 @@ async function waitersManagementRoutes(fastify: FastifyInstance) {
       }
     }
   );
+
+fastify.get(
+  "/waiters/search",
+  { preHandler: [fastify.authenticate] },
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { page = 1, limit = 10, search, isActive } = request.query as any;
+
+      const result = await searchWaiters({
+        search,
+        page: Number(page),
+        limit: Number(limit),
+        isActive: isActive !== undefined ? isActive === "true" : undefined,
+      });
+
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+);
+
+fastify.get(
+  "/waiters/paginate",
+  { preHandler: [fastify.authenticate] },
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { page = 1, limit = 10 } = request.query as any;
+
+      const result = await paginateWaiters({
+        page: Number(page),
+        limit: Number(limit),
+      });
+
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+);
+
 }
 
 export default waitersManagementRoutes;

@@ -4,6 +4,8 @@ import { getChefStats } from "../controller/staff/chef/getChefStatsAdmin.ts";
 import { deleteChefConnection } from "../controller/sockets/deleteChefConnection.ts";
 import { updateChefConnection } from "../controller/sockets/updateChefConnection.ts";
 import { getAllChefs } from "../controller/staff/chef/getAllChefs.ts";
+import { searchChefs } from "../controller/staff/chef/searchChefs.ts";
+import { paginateChefs } from "../controller/staff/chef/paginateChefs.ts";
 
 interface UpdateChefBody {
   chefId: number;
@@ -93,6 +95,63 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
       }
     }
   );
+
+  fastify.get(
+  "/search",
+  { preHandler: [fastify.authenticate] },
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const {
+        search = "",
+        page = "1",
+        limit = "10",
+        isActive,
+      } = request.query as {
+        search?: string;
+        page?: string;
+        limit?: string;
+        isActive?: string;
+      };
+
+      const result = await searchChefs({
+        search,
+        page: Number(page),
+        limit: Number(limit),
+        ...(isActive !== undefined && {
+          isActive: isActive === "true",
+        }),
+      });
+
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+);
+
+fastify.get(
+  "/paginate",
+  { preHandler: [fastify.authenticate] },
+  async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { page = "1", limit = "10" } = request.query as {
+        page?: string;
+        limit?: string;
+      };
+
+      const result = await paginateChefs({
+        page: Number(page),
+        limit: Number(limit) || 10,
+      });
+
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(400).send({ error: error.message });
+    }
+  }
+);
+
+
 }
 
 export default chefsManagementRoutes;
