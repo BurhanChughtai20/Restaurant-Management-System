@@ -1,5 +1,4 @@
-import { prisma } from "../../libs/prisma.ts";
-
+import prisma from "../../../libs/prisma.ts";
 interface UpdateMenuItemParams {
   id: number;
   name?: string;

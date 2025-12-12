@@ -1,5 +1,4 @@
-import { prisma } from "../../libs/prisma.ts";
-
+import prisma from "../../../libs/prisma.ts";
 interface DeleteMenuItemParams {
   id: number;
 };

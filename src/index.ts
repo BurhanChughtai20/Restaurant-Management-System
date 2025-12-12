@@ -1,35 +1,36 @@
-import 'dotenv/config';
+import "dotenv/config";
 import Fastify from "fastify";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import fastifyHelmet from '@fastify/helmet';
-import fastifyCompressPkg from '@fastify/compress';
-import fastifyCookie from '@fastify/cookie';
-import fastifyCaching from '@fastify/caching';
-import fastifyJwt from '@fastify/jwt';
-import fastifyCors from '@fastify/cors';
-import fastifyResponseValidation from '@fastify/response-validation';
-import authRoutes from './routes/auth.ts';
- import { prisma } from './libs/prisma.ts';
-import { connectRedis } from './libs/redis.ts';
-import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
- import orderTakerManagementRoutes from './routes/order_Taker_Management_Admin_Routes.ts';
-import chefsManagementRoutes from './routes/chefs_Management_Admin_Routes.ts';
-import MenuItemsRoutes from './routes/Items_Admin.ts';
-import registerAuthenticate from './middleware/authenticate.ts';
-import { orderTakerSocket } from './controller/sockets/orderTakerSocket.ts';
+import fastifyHelmet from "@fastify/helmet";
+import fastifyCompressPkg from "@fastify/compress";
+import fastifyCookie from "@fastify/cookie";
+import fastifyCaching from "@fastify/caching";
+import fastifyJwt from "@fastify/jwt";
+import fastifyCors from "@fastify/cors";
+import fastifyResponseValidation from "@fastify/response-validation";
+import authRoutes from "./routes/auth.ts";
+import { prisma } from "./libs/prisma.ts";
+import { connectRedis } from "./libs/redis.ts";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
+import orderTakerManagementRoutes from "./routes/order_Taker_Management_Admin_Routes.ts";
+import chefsManagementRoutes from "./routes/chefs_Management_Admin_Routes.ts";
+import MenuItemsAdminRoutes from "./routes/MenuItems_Admin.ts";
+import registerAuthenticate from "./middleware/authenticate.ts";
+import { orderTakerSocket } from "./controller/sockets/orderTakerSocket.ts";
+import MenuItemsOrderTaker from "./routes/MenuItems_Order_Taker.ts";
 
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
 
 const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) throw new Error('JWT_SECRET is not defined in .env');
+if (!jwtSecret) throw new Error("JWT_SECRET is not defined in .env");
 
 await fastify.register(fastifyHelmet);
 await fastify.register(fastifyCompress, {
   global: true,
   threshold: 1024,
-  encodings: ['gzip', 'deflate', 'br'],
+  encodings: ["gzip", "deflate", "br"],
 });
 await fastify.register(fastifyCaching, {
   privacy: fastifyCaching.privacy.PRIVATE,
@@ -38,14 +39,14 @@ await fastify.register(fastifyCaching, {
 await fastify.register(fastifyCookie);
 await fastify.register(fastifyJwt, { secret: jwtSecret });
 await registerAuthenticate(fastify);
-await fastify.register(fastifyCors, { origin: '*' });
+await fastify.register(fastifyCors, { origin: "*" });
 await fastify.register(fastifyResponseValidation);
 
 fastify.setErrorHandler((error: any, request, reply) => {
   if (error.statusCode) {
     reply.status(error.statusCode).send({
       statusCode: error.statusCode,
-      error: error.statusCode === 409 ? 'Conflict' : 'Bad Request',
+      error: error.statusCode === 409 ? "Conflict" : "Bad Request",
       message: error.message,
     });
     return;
@@ -54,24 +55,31 @@ fastify.setErrorHandler((error: any, request, reply) => {
   request.log.error(error);
   reply.status(500).send({
     statusCode: 500,
-    error: 'Internal Server Error',
-    message: 'Something unexpected went wrong on the server.',
+    error: "Internal Server Error",
+    message: "Something unexpected went wrong on the server.",
   });
 });
 
-fastify.get('/', async () => ({ hello: 'world' }));
+fastify.get("/", async () => ({ hello: "world" }));
 
-const API_PREFIX = process.env.API_PREFIX || '/api';
+const API_PREFIX = process.env.API_PREFIX || "/api";
 await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
-await fastify.register(orderTakerManagementRoutes, { prefix: `${API_PREFIX}/waiter` });
+await fastify.register(orderTakerManagementRoutes, {
+  prefix: `${API_PREFIX}/waiter`,
+});
 await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/chef` });
-await fastify.register(MenuItemsRoutes, { prefix: `${API_PREFIX}/menu-items` });
+await fastify.register(MenuItemsAdminRoutes, {
+  prefix: `${API_PREFIX}/menu-items/admin`,
+});
+await fastify.register(MenuItemsOrderTaker, {
+  prefix: `${API_PREFIX}/menu-items/order-taker`,
+});
 
 try {
   await prisma.$connect();
-  console.log('Prisma PostgreSQL connected successfully!');
+  console.log("Prisma PostgreSQL connected successfully!");
 } catch (err) {
-  console.error('Failed to connect Prisma:', err);
+  console.error("Failed to connect Prisma:", err);
 }
 
 await connectRedis();
@@ -79,13 +87,13 @@ await connectRedis();
 const server: http.Server = http.createServer(fastify.server);
 
 const io: SocketIOServer = new SocketIOServer(server, {
-  cors: { origin: '*' },
+  cors: { origin: "*" },
 });
 
 orderTakerSocket(io);
 
-io.on('connection', (socket) => {
-  console.log('⚡ Socket.IO: Client connected!', socket.id);
+io.on("connection", (socket) => {
+  console.log("⚡ Socket.IO: Client connected!", socket.id);
 });
 
 try {

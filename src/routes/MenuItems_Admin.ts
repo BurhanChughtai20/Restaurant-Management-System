@@ -1,10 +1,10 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { CreateMenuItem } from "../controller/menu-itms/createMenuItem.ts";
-import { getAllMenuItems } from "../controller/menu-itms/getAllMenuItems.ts";
-import { updateMenuItem } from "../controller/menu-itms/updateMenuItem.ts";
-import { deleteMenuItem } from "../controller/menu-itms/deleteMenuItem.ts";
-import { searchMenuItems } from "../controller/menu-itms/searchMenuItems.ts";
-import { paginateMenuItems } from "../controller/menu-itms/paginateMenuItems.ts";
+import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify"; 
+import { CreateMenuItem } from "../controller/menu-itms/admin/createMenuItem.ts";
+import { getAllMenuItems } from "../controller/menu-itms/admin/getAllMenuItems.ts";
+import { updateMenuItem } from "../controller/menu-itms/admin/updateMenuItem.ts";
+import { deleteMenuItem } from "../controller/menu-itms/admin/deleteMenuItem.ts";
+import { searchMenuItems } from "../controller/menu-itms/admin/searchMenuItems.ts";
+import { paginateMenuItems } from "../controller/menu-itms/admin/paginateMenuItems.ts";
 
 interface MenuItemBody {
   name: string;
@@ -36,7 +36,7 @@ async function MenuItemsRoutes(fastify: FastifyInstance) {
       }
     }
   );
-
+  
   fastify.get(
     "/",
     { preHandler: [fastify.authenticate] },

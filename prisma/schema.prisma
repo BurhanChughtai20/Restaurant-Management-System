@@ -18,6 +18,13 @@ enum Role {
   Chef
 }
 
+enum OrderStatus {
+  PENDING
+  PICKED
+  READY
+  COMPLETED
+}
+
 model Users {
   id              Int      @id @default(autoincrement())
   name            String   @db.Char(100)
@@ -31,9 +38,11 @@ model Users {
   otps           Otp[]
   passwordResets PasswordReset[]
 
-   waiterConnection WaiterConnection?
-   chefConnection ChefConnection?
+  waiterConnection WaiterConnection?
+  chefConnection   ChefConnection?
 
+  ordersTaken  Order[] @relation("OrdersTaken")
+  ordersPicked Order[] @relation("OrdersPicked")
 }
 
 model UserRole {
@@ -73,22 +82,8 @@ model PasswordReset {
 }
 
 model WaiterConnection {
-  id             Int      @id @default(autoincrement())
-  Order_Taker_ID Int      @unique
-  socketId       String?  @unique
-  sessionToken   String   @unique  
-  isActive       Boolean  @default(true)
-  fromTime       String?  
-  toTime         String? 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  waiter Users @relation(fields: [Order_Taker_ID], references: [id], onDelete: Cascade)
-}
-
-model ChefConnection {
   id           Int      @id @default(autoincrement())
-  Chef_ID      Int      @unique
+  orderTakerId Int      @unique
   socketId     String?  @unique
   sessionToken String   @unique
   isActive     Boolean  @default(true)
@@ -97,16 +92,57 @@ model ChefConnection {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  chef Users @relation(fields: [Chef_ID], references: [id], onDelete: Cascade)
+  waiter Users @relation(fields: [orderTakerId], references: [id], onDelete: Cascade)
+}
+
+model ChefConnection {
+  id           Int      @id @default(autoincrement())
+  chefId       Int      @unique
+  socketId     String?  @unique
+  sessionToken String   @unique
+  isActive     Boolean  @default(true)
+  fromTime     String?
+  toTime       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  chef Users @relation(fields: [chefId], references: [id], onDelete: Cascade)
 }
 
 model MenuItem {
   id          Int      @id @default(autoincrement())
   name        String   @db.Char(100)
   sku         String   @unique
-  price       Float    // Price per item
+  price       Float
   description String?  @db.Text
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id         Int   @id @default(autoincrement())
+  orderId    Int
+  menuItemId Int
+  quantity   Int   @default(1)
+  price      Float // populate automatically from MenuItem.price
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  orderTakerId Int
+  chefId       Int?
+  status       OrderStatus @default(PENDING)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  orderTaker Users       @relation("OrdersTaken", fields: [orderTakerId], references: [id])
+  chef       Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
+  items      OrderItem[]
 }

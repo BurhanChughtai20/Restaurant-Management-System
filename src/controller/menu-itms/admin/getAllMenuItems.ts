@@ -1,5 +1,4 @@
-import { prisma } from "../../libs/prisma.ts";
-
+import prisma from "../../../libs/prisma.ts";
 export async function getAllMenuItems() {
   try {
     const menuItems = await prisma.menuItem.findMany();

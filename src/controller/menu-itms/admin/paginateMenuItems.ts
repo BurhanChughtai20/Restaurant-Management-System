@@ -1,5 +1,4 @@
-import prisma from "../../libs/prisma.ts";
-
+import prisma from "../../../libs/prisma.ts";
 interface PaginateParams {
   page: number;
   limit: number;

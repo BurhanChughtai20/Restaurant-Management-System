@@ -1,5 +1,5 @@
-import { prisma } from "../../libs/prisma.ts";
-import { generateSKU } from "../../utils/generateSKU.ts";
+import prisma from "../../../libs/prisma.ts";
+import { generateSKU } from "../../../utils/generateSKU.ts";
 
 interface MenuItemParams {
   name: string;
