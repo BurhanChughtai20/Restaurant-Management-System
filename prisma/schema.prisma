@@ -123,14 +123,17 @@ model MenuItem {
 }
 
 model OrderItem {
-  id         Int   @id @default(autoincrement())
-  orderId    Int
-  menuItemId Int
-  quantity   Int   @default(1)
-  price      Float // populate automatically from MenuItem.price
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  menuItemId  Int
+  name        String   // snapshot
+  description String?  // snapshot
+  quantity    Int      @default(1)
+  price       Float    // snapshot
+  total       Float
 
-  order    Order    @relation(fields: [orderId], references: [id])
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id])
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
 }
 
 
@@ -139,6 +142,7 @@ model Order {
   orderTakerId Int
   chefId       Int?
   status       OrderStatus @default(PENDING)
+  totalAmount  Float       @default(0)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
