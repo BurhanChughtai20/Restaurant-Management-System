@@ -18,14 +18,9 @@ export const chefSocket = (io: Server) => {
         }
 
         await prisma.chefConnection.upsert({
-          where: { Chef_ID: userId },
+          where: { chefId: userId },
           update: { sessionToken: token, socketId: socket.id, isActive: true },
-          create: {
-            Chef_ID: userId,
-            sessionToken: token,
-            socketId: socket.id,
-            isActive: true,
-          },
+          create: { chefId: userId, sessionToken: token, socketId: socket.id, isActive: true },
         });
 
         socket.emit("qr_success", { userData: userRole.user });
@@ -33,6 +28,31 @@ export const chefSocket = (io: Server) => {
         console.error("chefSocket error:", err);
         socket.emit("qr_error", "Server error");
       }
+    });
+
+    // Chef picks an order → join the same room as the waiter
+    socket.on("pick_order", async ({ orderId, chefId }) => {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) return socket.emit("error", "Order not found");
+
+      // Join room with waiter
+      const roomName = `order_${orderId}`;
+      socket.join(roomName);
+
+      // Update order with chefId
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { chefId },
+      });
+
+      // Notify waiter and chef in the room
+      io.to(roomName).emit("order_picked", { orderId, chefId });
+    });
+
+    // Chef updates status → send to room
+    socket.on("update_status", ({ orderId, status }) => {
+      const roomName = `order_${orderId}`;
+      io.to(roomName).emit("status_update", { orderId, status });
     });
   });
 };

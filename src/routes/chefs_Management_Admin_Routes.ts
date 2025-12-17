@@ -18,7 +18,6 @@ interface DeleteChefBody {
 }
 
 async function chefsManagementRoutes(fastify: FastifyInstance) {
-  // ✅ List all chefs
   fastify.get(
     "/",
     { preHandler: [fastify.authenticate] },
@@ -32,7 +31,6 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // ✅ Generate QR token
   fastify.get(
     "/token-chef",
     { preHandler: [fastify.authenticate] },
@@ -46,7 +44,6 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // ✅ Delete chef connection
   fastify.delete<{ Body: DeleteChefBody }>(
     "/token-chef",
     { preHandler: [fastify.authenticate] },
@@ -82,7 +79,6 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // ✅ Get chef stats
   fastify.get(
     "/chef/stats",
     { preHandler: [fastify.authenticate] },

@@ -13,7 +13,7 @@ export const deleteOrderTakerConnection = async (
 
   try {
     const connection = await prisma.waiterConnection.findUnique({
-      where: { Order_Taker_ID: orderTakerId },
+      where: { orderTakerId },
     });
 
     if (!connection) {
@@ -23,7 +23,7 @@ export const deleteOrderTakerConnection = async (
     }
 
     await prisma.waiterConnection.delete({
-      where: { Order_Taker_ID: orderTakerId },
+      where: { orderTakerId },
     });
 
     return reply.send({

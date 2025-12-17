@@ -7,19 +7,19 @@ import { createOrder } from "../controller/menu-itms/orderTaker/createOrder.ts";
 interface OrderItemInput {
   menuItemId: number;
   quantity: number;
-}
+};
 
 interface CreateOrderRequestBody {
   items: OrderItemInput[];
-}
+};
 
 interface AuthenticatedUser {
   id: number;
   name?: string;
   email?: string;
-}
+};
 
-async function OrderTakerRoutes(fastify: FastifyInstance) {
+async function OrderTaker_Mobile_Routes(fastify: FastifyInstance) {
   fastify.get(
     "/menu-items",
     {
@@ -60,8 +60,9 @@ async function OrderTakerRoutes(fastify: FastifyInstance) {
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
       }
-    }
+    },
   );
-}
 
-export default OrderTakerRoutes;
+};
+
+export default OrderTaker_Mobile_Routes;

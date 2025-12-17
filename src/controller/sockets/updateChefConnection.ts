@@ -12,7 +12,7 @@ export const updateChefConnection = async ({
   toTime,
 }: UpdateChefConnectionParams) => {
   const connection = await prisma.chefConnection.findUnique({
-    where: { Chef_ID: chefId },
+    where: { chefId },
   });
 
   if (!connection) {
@@ -20,7 +20,7 @@ export const updateChefConnection = async ({
   }
 
   const updatedConnection = await prisma.chefConnection.update({
-    where: { Chef_ID: chefId },
+    where: { chefId },
     data: {
       fromTime: fromTime ?? connection.fromTime,
       toTime: toTime ?? connection.toTime,

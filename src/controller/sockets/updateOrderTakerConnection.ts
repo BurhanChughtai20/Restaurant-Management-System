@@ -1,4 +1,3 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 
 interface UpdateOrderTakerParams {
@@ -13,7 +12,7 @@ export const updateOrderTakerConnection = async ({
   toTime,
 }: UpdateOrderTakerParams) => {
   const connection = await prisma.waiterConnection.findUnique({
-    where: { Order_Taker_ID: orderTakerId },
+    where: { orderTakerId },
   });
 
   if (!connection) {
@@ -21,7 +20,7 @@ export const updateOrderTakerConnection = async ({
   }
 
   const updatedConnection = await prisma.waiterConnection.update({
-    where: { Order_Taker_ID: orderTakerId },
+    where: { orderTakerId },
     data: { 
       fromTime: fromTime ?? connection.fromTime,
       toTime: toTime ?? connection.toTime,

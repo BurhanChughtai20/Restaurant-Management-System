@@ -1,6 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyInstance } from "fastify";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyCompressPkg from "@fastify/compress";
 import fastifyCookie from "@fastify/cookie";
@@ -18,7 +18,8 @@ import chefsManagementRoutes from "./routes/chefs_Management_Admin_Routes.ts";
 import MenuItemsAdminRoutes from "./routes/MenuItems_Admin.ts";
 import registerAuthenticate from "./middleware/authenticate.ts";
 import { orderTakerSocket } from "./controller/sockets/orderTakerSocket.ts";
-import MenuItemsOrderTaker from "./routes/MenuItems_Order_Taker.ts";
+import OrderTaker_Mobile_Routes from "./routes/MenuItems_Order_Taker.ts";
+import MenuItems_Chef_Mobile_Routes from "./routes/MenuItems_Chef.ts";
 
 const fastifyCompress = fastifyCompressPkg.default;
 const fastify: FastifyInstance = Fastify({ logger: true });
@@ -71,8 +72,11 @@ await fastify.register(chefsManagementRoutes, { prefix: `${API_PREFIX}/chef` });
 await fastify.register(MenuItemsAdminRoutes, {
   prefix: `${API_PREFIX}/menu-items/admin`,
 });
-await fastify.register(MenuItemsOrderTaker, {
+await fastify.register(OrderTaker_Mobile_Routes, {
   prefix: `${API_PREFIX}/menu-items/order-taker`,
+});
+await fastify.register(MenuItems_Chef_Mobile_Routes, {
+  prefix: `${API_PREFIX}/menu-items/chef`,
 });
 
 try {

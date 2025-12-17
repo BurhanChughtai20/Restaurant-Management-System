@@ -13,7 +13,7 @@ export const deleteChefConnection = async (
 
   try {
     const connection = await prisma.chefConnection.findUnique({
-      where: { Chef_ID: chefId },
+      where: { chefId },
     });
 
     if (!connection) {
@@ -21,7 +21,7 @@ export const deleteChefConnection = async (
     }
 
     await prisma.chefConnection.delete({
-      where: { Chef_ID: chefId },
+      where: { chefId },
     });
 
     return reply.send({ message: "Chef connection deleted successfully" });
