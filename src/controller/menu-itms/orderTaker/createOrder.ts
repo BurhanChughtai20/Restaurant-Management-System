@@ -3,12 +3,12 @@ import prisma from "../../../libs/prisma.ts";
 interface OrderItemInput {
   menuItemId: number;
   quantity: number;
-}
+};
 
 interface CreateOrderInput {
   orderTakerId: number;
   items: OrderItemInput[];
-}
+};
 
 export async function createOrder({ orderTakerId, items }: CreateOrderInput) {
   if (!items || items.length === 0) {

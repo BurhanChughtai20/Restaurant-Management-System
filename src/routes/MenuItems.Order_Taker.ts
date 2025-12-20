@@ -3,21 +3,22 @@ import { Role } from "@prisma/client";
 import { allowRoles } from "../preHandler/roleGuard.ts";
 import { getMenuItemsForOrderTaker } from "../controller/menu-itms/orderTaker/getMenuItems.ts";
 import { createOrder } from "../controller/menu-itms/orderTaker/createOrder.ts";
+import { updateOrder } from "../controller/menu-itms/orderTaker/updateOrder.ts";
 
 interface OrderItemInput {
   menuItemId: number;
   quantity: number;
-};
+}
 
 interface CreateOrderRequestBody {
   items: OrderItemInput[];
-};
+}
 
 interface AuthenticatedUser {
   id: number;
   name?: string;
   email?: string;
-};
+}
 
 async function OrderTaker_Mobile_Routes(fastify: FastifyInstance) {
   fastify.get(
@@ -60,9 +61,33 @@ async function OrderTaker_Mobile_Routes(fastify: FastifyInstance) {
       } catch (error: any) {
         return reply.status(400).send({ error: error.message });
       }
-    },
+    }
   );
 
-};
+  fastify.patch<{ Body: CreateOrderRequestBody; Params: { id: string } }>(
+    "/orders/:id",
+    {
+      preHandler: [fastify.authenticate, allowRoles([Role.Order_Taker])],
+    },
+    async (request, reply) => {
+      try {
+        const user = request.user as AuthenticatedUser;
+        const orderTakerId = user.id;
+        const orderId = parseInt(request.params.id);
+        if (!orderTakerId) {
+          return reply.status(401).send({ error: "Unauthorized" });
+        }
+        const updatedOrder = await updateOrder({
+          orderId,
+          items: request.body.items,
+        });
+
+        return reply.status(200).send(updatedOrder);
+      } catch (error: any) {
+        return reply.status(400).send({ error: error.message });
+      }
+    }
+  );
+}
 
 export default OrderTaker_Mobile_Routes;
