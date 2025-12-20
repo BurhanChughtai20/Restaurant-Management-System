@@ -20,7 +20,7 @@ interface AuthenticatedUser {
   email?: string;
 }
 
-async function OrderTaker_Mobile_Routes(fastify: FastifyInstance) {
+async function OrderTaker_Orders_Mobile_Routes(fastify: FastifyInstance) {
   fastify.get(
     "/menu-items",
     {
@@ -90,4 +90,4 @@ async function OrderTaker_Mobile_Routes(fastify: FastifyInstance) {
   );
 }
 
-export default OrderTaker_Mobile_Routes;
+export default OrderTaker_Orders_Mobile_Routes;

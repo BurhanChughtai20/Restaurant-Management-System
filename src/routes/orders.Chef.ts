@@ -3,7 +3,7 @@ import { Role } from "@prisma/client";
 import { allowRoles } from "../preHandler/roleGuard.ts";
 import { getMenuItemsForChef, MenuItemForChef } from "../controller/menu-itms/chef/getMenuItemsForChef.ts";
 
-async function Chef_Mobile_Routes(fastify: FastifyInstance) {
+async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
   fastify.get("/menu-items",
     {
       preHandler: [fastify.authenticate, allowRoles([Role.Chef])],
@@ -19,4 +19,4 @@ async function Chef_Mobile_Routes(fastify: FastifyInstance) {
   ); 
 }
 
-export default Chef_Mobile_Routes;
+export default Chef_Orders_Mobile_Routes;
