@@ -1,4 +1,5 @@
 import prisma from "../../libs/prisma.ts";
+
 export interface AdminOrderItem {
   id: number;
   name: string;
@@ -26,19 +27,18 @@ export async function getAllOrders(): Promise<AdminOrder[]> {
       items: {
         select: {
           id: true,
-          orderId: true,
           menuItemId: true,
           name: true,
           description: true,
           quantity: true,
           price: true,
-          total: true
+          total: true,
         },
       },
     },
   });
 
-  return orders.map((order) => ({
+  return orders.map(order => ({
     id: order.id,
     orderTakerId: order.orderTakerId,
     chefId: order.chefId,
@@ -46,7 +46,7 @@ export async function getAllOrders(): Promise<AdminOrder[]> {
     totalAmount: order.totalAmount,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
-    items: order.items.map((item) => ({
+    items: order.items.map(item => ({
       id: item.id,
       name: item.name,
       description: item.description,

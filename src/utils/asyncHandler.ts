@@ -6,7 +6,7 @@ export function asyncHandler<
 >(fn: (request: Req, reply: Res) => Promise<any>) {
   return async (request: Req, reply: Res) => {
     try {
-      await fn(request, reply);
+      return await fn(request, reply);
     } catch (error: any) {
       return reply.status(400).send({ error: error.message });
     }
