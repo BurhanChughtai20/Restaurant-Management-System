@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../../libs/prisma.ts";
-import { updateOrder } from "../menu-itms/orderTaker/updateOrder.ts";
 import { emitOrderUpdate, handleQRConnect, joinOrderRoom } from "../../libs/socketHandlers.ts";
+import { updateOrder } from "../orders/orderTaker/updateOrder.ts";
  
 export const chefSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {

@@ -84,7 +84,7 @@ async function OrderTaker_Orders_Mobile_Routes(fastify: FastifyInstance) {
       preHandler: [
         fastify.authenticate,
         allowRoles([Role.Order_Taker])
-      ]
+      ],
     },
     asyncHandler(async (request, reply) => {
       const user = request.user as { id: number };

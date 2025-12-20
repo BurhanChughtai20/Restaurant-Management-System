@@ -1,4 +1,5 @@
-import { Order, OrderStatus } from "@prisma/client";
+import type { Order } from "@prisma/client";
+import { OrderStatus } from "@prisma/client";
 
 export function groupOrdersByPeriod(
   orders: Order[],

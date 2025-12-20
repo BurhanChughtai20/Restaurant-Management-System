@@ -1,4 +1,4 @@
-import prisma from "../../libs/prisma.ts";
+import prisma from "../../../libs/prisma.ts";
 
 export async function get_All_Orders_OrderTakers(orderTakerId: number) {
   try {

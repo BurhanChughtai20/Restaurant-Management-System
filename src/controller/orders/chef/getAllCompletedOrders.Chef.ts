@@ -1,4 +1,4 @@
-import prisma from "../../libs/prisma.ts";
+import prisma from "../../../libs/prisma.ts";
 
 export async function getAllCompletedOrdersForChef(chefId: number) {
   try {
