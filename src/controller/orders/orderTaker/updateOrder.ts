@@ -93,8 +93,7 @@ export async function updateOrder({ orderId, items }: UpdateOrderInput) {
       }
     }
 
-    // 🔴 Removed items
-    for (const removed of existingMap.values()) {
+     for (const removed of existingMap.values()) {
       changeLogs.push({
         type: "REMOVED",
         message: `${removed.name} removed`,
@@ -105,8 +104,7 @@ export async function updateOrder({ orderId, items }: UpdateOrderInput) {
       });
     }
 
-    // ✅ Update order total
-    const order = await tx.order.update({
+     const order = await tx.order.update({
       where: { id: orderId },
       data: { totalAmount },
       include: { items: true },

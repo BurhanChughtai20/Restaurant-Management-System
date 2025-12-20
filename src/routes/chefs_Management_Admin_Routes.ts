@@ -6,97 +6,71 @@ import { updateChefConnection } from "../controller/sockets/updateChefConnection
 import { getAllChefs } from "../controller/staff/chef/getAllChefs.ts";
 import { searchChefs } from "../controller/staff/chef/searchChefs.ts";
 import { paginateChefs } from "../controller/staff/chef/paginateChefs.ts";
+import { asyncHandler } from "../utils/asyncHandler.ts";
 
-interface UpdateChefBody {
-  chefId: number;
-  fromTime?: string;
-  toTime?: string;
-}
-
-interface DeleteChefBody {
-  chefId: number;
-}
+interface UpdateChefBody { chefId: number; fromTime?: string; toTime?: string; }
+interface DeleteChefBody { chefId: number; }
 
 async function chefsManagementRoutes(fastify: FastifyInstance) {
+
   fastify.get(
     "/",
     { preHandler: [fastify.authenticate] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const chefs = await getAllChefs();
-        return reply.send(chefs);
-      } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
-      }
-    }
+    asyncHandler(async (_, reply: FastifyReply) => {
+      const chefs = await getAllChefs();
+      return reply.send(chefs);
+    })
   );
 
   fastify.get(
     "/token-chef",
     { preHandler: [fastify.authenticate] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const tokenData = await generateQRToken(request, reply);
-        return reply.send(tokenData);
-      } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
-      }
-    }
+    asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+      const tokenData = await generateQRToken(request, reply);
+      return reply.send(tokenData);
+    })
   );
 
   fastify.delete<{ Body: DeleteChefBody }>(
     "/token-chef",
     { preHandler: [fastify.authenticate] },
-    async (request, reply) => {
-      try {
-        const result = await deleteChefConnection(request, reply);
-        return reply.send(result);
-      } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
-      }
-    }
+    asyncHandler(async (request, reply) => {
+      const result = await deleteChefConnection(request, reply);
+      return reply.send(result);
+    })
   );
 
   fastify.patch<{ Body: UpdateChefBody }>(
     "/token-chef",
     { preHandler: [fastify.authenticate] },
-    async (request, reply) => {
-      try {
-        const { chefId, fromTime, toTime } = request.body;
-        const updated = await updateChefConnection({
-          chefId,
-          ...(fromTime !== undefined && { fromTime }),
-          ...(toTime !== undefined && { toTime }),
-        });
+    asyncHandler(async (request, reply) => {
+      const { chefId, fromTime, toTime } = request.body;
+      const updated = await updateChefConnection({
+        chefId,
+        ...(fromTime !== undefined && { fromTime }),
+        ...(toTime !== undefined && { toTime }),
+      });
 
-        return reply.send({
-          message: "Chef timing updated successfully",
-          data: updated,
-        });
-      } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
-      }
-    }
+      return reply.send({
+        message: "Chef timing updated successfully",
+        data: updated,
+      });
+    })
   );
 
   fastify.get(
     "/chef/stats",
     { preHandler: [fastify.authenticate] },
-    async (request, reply) => {
-      try {
-        const stats = await getChefStats(request, reply);
-        return reply.send(stats);
-      } catch (error: any) {
-        return reply.status(400).send({ error: error.message });
-      }
-    }
+    asyncHandler(async (request, reply) => {
+      const stats = await getChefStats(request, reply);
+      return reply.send(stats);
+    })
   );
 
   fastify.get(
-  "/search",
-  { preHandler: [fastify.authenticate] },
-  async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
+    "/search",
+    { preHandler: [fastify.authenticate] },
+    asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
       const {
         search = "",
         page = "1",
@@ -113,23 +87,17 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
         search,
         page: Number(page),
         limit: Number(limit),
-        ...(isActive !== undefined && {
-          isActive: isActive === "true",
-        }),
+        ...(isActive !== undefined && { isActive: isActive === "true" }),
       });
 
       return reply.send(result);
-    } catch (error: any) {
-      return reply.status(400).send({ error: error.message });
-    }
-  }
-);
+    })
+  );
 
-fastify.get(
-  "/paginate",
-  { preHandler: [fastify.authenticate] },
-  async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
+  fastify.get(
+    "/paginate",
+    { preHandler: [fastify.authenticate] },
+    asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
       const { page = "1", limit = "10" } = request.query as {
         page?: string;
         limit?: string;
@@ -141,13 +109,7 @@ fastify.get(
       });
 
       return reply.send(result);
-    } catch (error: any) {
-      return reply.status(400).send({ error: error.message });
-    }
-  }
-);
-
-
+    })
+  );
 }
-
 export default chefsManagementRoutes;

@@ -1,6 +1,4 @@
 import prisma from "../../libs/prisma.ts";
-
-// Types for safety
 export interface AdminOrderItem {
   id: number;
   name: string;
