@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { allowRoles } from "../preHandler/roleGuard.ts"; 
 import { getAllOrders } from "../controller/orders/getAllOrders.Admin.ts";
 import { asyncHandler } from "../utils/asyncHandler.ts";
+import { getWeeklyTopOrderTakers } from "../controller/orders/orderTaker/getWeeklyTopOrderTakers.Admin.ts";
 
 async function AdminOrdersRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -15,6 +16,18 @@ async function AdminOrdersRoutes(fastify: FastifyInstance) {
       return reply.send(orders);
     })
   );
+
+   fastify.get(
+    "/top-order-takers/weekly",
+    {
+      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
+    },
+    asyncHandler(async (_req, reply: FastifyReply) => {
+      const data = await getWeeklyTopOrderTakers();
+      return reply.send(data);
+    })
+  );
+
 }
 
 export default AdminOrdersRoutes;

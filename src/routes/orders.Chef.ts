@@ -6,6 +6,7 @@ import { getMenuItemsForChef } from "../controller/orders/chef/getMenuItemsForCh
 import type { MenuItemForChef } from "../controller/orders/chef/getMenuItemsForChef.ts";
 import { getAllCompletedOrdersForChef } from "../controller/orders/chef/getAllCompletedOrders.Chef.ts";
 import { getChefReport } from "../controller/orders/chef/chefReport.service.ts";
+import { getWeeklyTopChefs } from "../controller/orders/chef/getWeeklyTopChefs.Admin.ts";
 
 async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
   fastify.get(
@@ -50,6 +51,18 @@ async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
       return reply.send(report);
     })
   );
+
+   fastify.get(
+    "/top-chefs/weekly",
+    {
+      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
+    },
+    asyncHandler(async (_req, reply: FastifyReply) => {
+      const data = await getWeeklyTopChefs();
+      return reply.send(data);
+    })
+  );
+
 }
 
 export default Chef_Orders_Mobile_Routes;
