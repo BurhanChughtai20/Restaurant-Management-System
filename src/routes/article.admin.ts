@@ -59,15 +59,17 @@ async function articleAdmin(fastify: FastifyInstance) {
   );
 
   fastify.get(
-    "/",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    asyncHandler(async (_req, reply) => {
-      const articles = await getArticle();
-      return reply.send(articles);
-    })
-  );
+  "/",
+  {
+    preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
+  },
+  asyncHandler(async (req, reply) => {
+    const page = parseInt((req.query as { page?: string })?.page ?? "1");
+    const articles = await getArticle(page, 10);
+    return reply.send(articles);
+  })
+);
+
 
   fastify.patch<{ Params: { id: string }; Body: UpdateArticleBody }>(
     "/:id",
