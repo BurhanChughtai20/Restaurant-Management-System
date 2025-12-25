@@ -43,6 +43,8 @@ model Users {
 
   ordersTaken  Order[] @relation("OrdersTaken")
   ordersPicked Order[] @relation("OrdersPicked")
+
+  articles Article[]
 }
 
 model UserRole {
@@ -123,19 +125,18 @@ model MenuItem {
 }
 
 model OrderItem {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   orderId     Int
   menuItemId  Int
-  name        String   // snapshot
-  description String?  // snapshot
-  quantity    Int      @default(1)
-  price       Float    // snapshot
+  name        String
+  description String?
+  quantity    Int     @default(1)
+  price       Float
   total       Float
 
-  order       Order    @relation(fields: [orderId], references: [id])
-  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
 }
-
 
 model Order {
   id           Int         @id @default(autoincrement())
@@ -149,4 +150,37 @@ model Order {
   orderTaker Users       @relation("OrdersTaken", fields: [orderTakerId], references: [id])
   chef       Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
   items      OrderItem[]
+}
+
+model Article {
+  id                Int      @id @default(autoincrement())
+  title             String   @db.VarChar(200)
+  description       String   @db.Text
+  image             String?
+  restaurantName    String   @db.VarChar(150)
+  restaurantWebsite String?  @db.VarChar(255)
+
+  // SEO & Marketing fields
+  metaTitle         String?  @db.VarChar(70) 
+  metaDescription   String?  @db.VarChar(160)   
+  keywords          String?  @db.Text           
+  address           String?  @db.VarChar(255)
+  mapLink           String?  @db.VarChar(500)   
+  phoneNumber       String?  @db.VarChar(50)
+  openingHours      String?  @db.VarChar(255)  
+  socialLinks       Json?
+
+  // Publication info
+  isPublished       Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  publisherId       Int
+  publisher         Users    @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+
+  @@index([publisherId])
+  @@index([restaurantName])
+  @@index([keywords])
 }

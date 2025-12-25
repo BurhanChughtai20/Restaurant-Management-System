@@ -6,6 +6,7 @@ import MenuItemsAdminRoutes from "./MenuItems_Admin.ts";
 import OrderTaker_Mobile_Routes from "./orders.Order_Taker.ts";
 import MenuItems_Chef_Mobile_Routes from "./orders.Chef.ts";
 import Orders_Admin_Routes from "./admin.orders.ts";
+import Article_Admin_Routes from "./article.admin.ts";
 export async function registerRoutes(fastify: FastifyInstance) {
   const API_PREFIX = process.env.API_PREFIX || "/api";
 
@@ -16,4 +17,5 @@ export async function registerRoutes(fastify: FastifyInstance) {
   await fastify.register(OrderTaker_Mobile_Routes, { prefix: `${API_PREFIX}/menu-items/order-taker` });
   await fastify.register(MenuItems_Chef_Mobile_Routes, { prefix: `${API_PREFIX}/menu-items/chef` });
   await fastify.register(Orders_Admin_Routes, { prefix: `${API_PREFIX}/orders/admin` });
+  await fastify.register(Article_Admin_Routes, { prefix: `${API_PREFIX}/article` });
 }
