@@ -7,6 +7,7 @@ import { getArticle } from "../controller/article/getArticle.ts";
 import { updateArticle } from "../controller/article/updateArticle.ts";
 import { deleteArticle } from "../controller/article/deleteArticle.ts";
 import { searchArticle } from "../controller/article/searchArticle.ts";
+import { autoCreateArticle } from "../controller/article/autoCreateArticle.ts";
 
 interface CreateArticleBody {
   title: string;
@@ -43,8 +44,20 @@ interface UpdateArticleBody {
   openingHours?: string;
   socialLinks?: Record<string, string>;
 
+  isPublished?: boolean; 
+}
+
+interface AutoArticleBody {
+  title: string;
+  restaurantName: string;
+  keywords?: string;
+  address?: string;
+  mapLink?: string;
+  phoneNumber?: string;
+  image?: string | Buffer;
   isPublished?: boolean;
 }
+
 
 async function articleAdmin(fastify: FastifyInstance) {
   fastify.post<{ Body: CreateArticleBody }>(
@@ -57,6 +70,17 @@ async function articleAdmin(fastify: FastifyInstance) {
       return reply.code(201).send(article);
     })
   );
+  fastify.post<{ Body: AutoArticleBody }>(
+  "/auto-create",
+  {
+    preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
+  },
+  asyncHandler(async (req, reply) => {
+    const article = await autoCreateArticle(req);
+    return reply.code(201).send(article);
+  })
+);
+
 
   fastify.get(
   "/",

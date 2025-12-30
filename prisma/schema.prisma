@@ -140,14 +140,14 @@ model OrderItem {
 
 model Order {
   id           Int         @id @default(autoincrement())
-  orderTakerId Int
+  orderTakerId Int?
   chefId       Int?
   status       OrderStatus @default(PENDING)
   totalAmount  Float       @default(0)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  orderTaker Users       @relation("OrdersTaken", fields: [orderTakerId], references: [id])
+  orderTaker Users?      @relation("OrdersTaken", fields: [orderTakerId], references: [id])
   chef       Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
   items      OrderItem[]
 }
@@ -160,7 +160,6 @@ model Article {
   restaurantName    String   @db.VarChar(150)
   restaurantWebsite String?  @db.VarChar(255)
 
-  // SEO & Marketing fields
   metaTitle         String?  @db.VarChar(70) 
   metaDescription   String?  @db.VarChar(160)   
   keywords          String?  @db.Text           
@@ -170,7 +169,6 @@ model Article {
   openingHours      String?  @db.VarChar(255)  
   socialLinks       Json?
 
-  // Publication info
   isPublished       Boolean  @default(false)
 
   createdAt         DateTime @default(now())
