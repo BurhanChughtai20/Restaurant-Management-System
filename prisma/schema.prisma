@@ -25,14 +25,28 @@ enum OrderStatus {
   COMPLETED
 }
 
+model Restaurant {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  users     Users[]
+  menuItems MenuItem[]
+  orders    Order[]
+  articles  Article[]
+}
+
 model Users {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.Char(100)
-  email           String   @unique
-  password        String
-  isEmailVerified Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  restaurantId Int
+  name         String   @db.Char(100)
+  email        String   @unique
+  password     String
+  isEmailVerified Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   userRoles      UserRole[]
   otps           Otp[]
@@ -45,6 +59,8 @@ model Users {
   ordersPicked Order[] @relation("OrdersPicked")
 
   articles Article[]
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model UserRole {
@@ -69,7 +85,7 @@ model Otp {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user Users @relation(fields: [userId], references: [id])
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordReset {
@@ -80,7 +96,7 @@ model PasswordReset {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user Users @relation(fields: [userId], references: [id])
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WaiterConnection {
@@ -112,16 +128,18 @@ model ChefConnection {
 }
 
 model MenuItem {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.Char(100)
-  sku         String   @unique
-  price       Float
-  description String?  @db.Text
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  restaurantId Int
+  name         String   @db.Char(100)
+  sku          String   @unique
+  price        Float
+  description  String?  @db.Text
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   orderItems OrderItem[]
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model OrderItem {
@@ -134,12 +152,13 @@ model OrderItem {
   price       Float
   total       Float
 
-  order    Order    @relation(fields: [orderId], references: [id])
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }
 
 model Order {
   id           Int         @id @default(autoincrement())
+  restaurantId Int
   orderTakerId Int?
   chefId       Int?
   status       OrderStatus @default(PENDING)
@@ -150,35 +169,24 @@ model Order {
   orderTaker Users?      @relation("OrdersTaken", fields: [orderTakerId], references: [id])
   chef       Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
   items      OrderItem[]
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model Article {
-  id                Int      @id @default(autoincrement())
-  title             String   @db.VarChar(200)
-  description       String   @db.Text
-  image             String?
-  restaurantName    String   @db.VarChar(150)
-  restaurantWebsite String?  @db.VarChar(255)
+  id             Int      @id @default(autoincrement())
+  restaurantId   Int
+  title          String   @db.VarChar(200)
+  description    String   @db.Text
+  image          String?
+  isPublished    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  publisherId    Int
 
-  metaTitle         String?  @db.VarChar(70) 
-  metaDescription   String?  @db.VarChar(160)   
-  keywords          String?  @db.Text           
-  address           String?  @db.VarChar(255)
-  mapLink           String?  @db.VarChar(500)   
-  phoneNumber       String?  @db.VarChar(50)
-  openingHours      String?  @db.VarChar(255)  
-  socialLinks       Json?
-
-  isPublished       Boolean  @default(false)
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  publisherId       Int
-  publisher         Users    @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  publisher   Users      @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([publisherId])
-  @@index([restaurantName])
-  @@index([keywords])
+  @@index([restaurantId])
+  @@index([title])
 }
