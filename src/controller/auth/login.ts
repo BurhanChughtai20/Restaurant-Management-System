@@ -4,8 +4,12 @@ import { generateToken } from "../../utils/jwtToken.ts";
 import { ApiError } from "../../utils/ApiError.ts";
 import { Prisma, Role } from "@prisma/client";
 
-type UserWithRoles = Prisma.UsersGetPayload<{
-  include: { userRoles: true };
+// **FIXED: Include restaurant in the type**
+type UserWithRolesAndRestaurant = Prisma.UsersGetPayload<{
+  include: { 
+    userRoles: true;
+    restaurant: true;  // **ADD this**
+  };
 }>;
 
 export async function login({
@@ -17,12 +21,16 @@ export async function login({
   password: string;
   role: Role;
 }) {
-  const user: UserWithRoles | null = await prisma.users.findUnique({
+  const user: UserWithRolesAndRestaurant | null = await prisma.users.findUnique({
     where: { email },
     include: {
       userRoles: {
-        where: { role, isActive: false },
+        where: { 
+          role, 
+          isActive: true 
+        },
       },
+      restaurant: true,
     },
   });
 
@@ -32,10 +40,7 @@ export async function login({
   if (!isPasswordValid) throw new ApiError(401, "Invalid email or password");
 
   if (!user.isEmailVerified)
-    throw new ApiError(
-      403,
-      "Email not verified. Please verify your email first."
-    );
+    throw new ApiError(403, "Email not verified. Please verify your email first.");
 
   if (!user.userRoles || user.userRoles.length === 0)
     throw new ApiError(403, `User does not have ${role} role`);
@@ -57,6 +62,8 @@ export async function login({
       name: user.name,
       email: user.email,
       role: userRole.role,
+      restaurantId: user.restaurantId,
+      restaurantName: user.restaurant?.name, 
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
     },

@@ -25,6 +25,15 @@ export async function signup({ name, email, password, role }: SignupParams) {
   const otp = generateOtp();
   const otpExpiresAt = Date.now() + OTP_EXPIRATION_SECONDS * 1000;
 
+  // **NEW: Auto-create restaurant data for Admin**
+  let restaurantData = null;
+  if (role === 'Admin') {
+    restaurantData = {
+      name: `${name}'s Restaurant`,
+      slug: `${email.split('@')[0]}-${Date.now()}` // Unique slug
+    };
+  }
+
   await redisClient.hSet(key, {
     name,
     email,
@@ -32,6 +41,7 @@ export async function signup({ name, email, password, role }: SignupParams) {
     role,
     otp,
     otpExpiresAt: otpExpiresAt.toString(),
+    restaurantData: JSON.stringify(restaurantData),
   });
 
   await redisClient.expire(key, OTP_EXPIRATION_SECONDS);

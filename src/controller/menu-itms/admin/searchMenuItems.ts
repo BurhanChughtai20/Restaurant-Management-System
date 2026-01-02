@@ -1,20 +1,45 @@
 import prisma from "../../../libs/prisma.ts";
+import {
+  generateCacheKey,
+  getCachedData,
+  setCachedData,
+} from "../../../libs/redisCache.ts";
+
 interface SearchMenuItemsParams {
+  restaurantId: number; // ✅ REQUIRED
   search?: string;
   page: number;
   limit: number;
-  isActive?: boolean | undefined;
+  isActive?: boolean;
 }
 
 export async function searchMenuItems({
+  restaurantId,
   search,
   page,
   limit,
   isActive,
 }: SearchMenuItemsParams) {
+  // Generate cache key based on search parameters
+  const cacheKey = generateCacheKey("search:menu_items", {
+    restaurantId,
+    search,
+    page,
+    limit,
+    isActive,
+  });
+
+  // Check if data exists in Redis cache
+  const cachedResult = await getCachedData(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   const skip = (page - 1) * limit;
 
-  const where: any = {};
+  const where: any = {
+    restaurantId, // 🔐 restaurant isolation
+  };
 
   if (search) {
     where.OR = [
@@ -40,7 +65,7 @@ export async function searchMenuItems({
     }),
   ]);
 
-  return {
+  const result = {
     data: items,
     pagination: {
       page,
@@ -49,4 +74,9 @@ export async function searchMenuItems({
       totalPages: Math.ceil(total / limit),
     },
   };
+
+  // Cache the result for 3 minutes
+  await setCachedData(cacheKey, result);
+
+  return result;
 }

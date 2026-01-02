@@ -1,9 +1,29 @@
 import prisma from "../../../libs/prisma.ts";
 
-export async function getAllCompletedOrdersForChef(chefId: number) {
+export async function getAllCompletedOrdersForChef(
+  restaurantId: number,
+  chefId: number
+) {
   try {
+    // 🔥 Verify chef belongs to restaurant
+    const chef = await prisma.users.findFirst({
+      where: {
+        id: chefId,
+        restaurantId,
+        userRoles: { some: { role: "Chef" } },
+      },
+    });
+
+    if (!chef) {
+      throw new Error("Unauthorized - Chef not in your restaurant");
+    }
+
     const orders = await prisma.order.findMany({
-      where: { chefId, status: "COMPLETED" },
+      where: {
+        restaurantId, // 🔥 Ensure restaurant isolation
+        chefId,
+        status: "COMPLETED",
+      },
       include: {
         items: {
           include: { menuItem: true },

@@ -32,10 +32,12 @@ model Restaurant {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  users     Users[]
-  menuItems MenuItem[]
-  orders    Order[]
-  articles  Article[]
+  users              Users[]
+  menuItems          MenuItem[]
+  orders             Order[]
+  articles           Article[]
+  whatsappNumbers    WhatsAppNumber[]
+  whatsappOrders     WhatsAppOrder[]
 }
 
 model Users {
@@ -138,8 +140,9 @@ model MenuItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  orderItems OrderItem[]
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems          OrderItem[]
+  whatsappOrderItems  WhatsAppOrderItem[]
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model OrderItem {
@@ -189,4 +192,50 @@ model Article {
   @@index([publisherId])
   @@index([restaurantId])
   @@index([title])
+}
+
+model WhatsAppNumber {
+  id           Int      @id @default(autoincrement())
+  restaurantId Int
+  phoneNumber  String   @db.VarChar(20)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, phoneNumber])
+  @@index([restaurantId])
+}
+
+model WhatsAppOrder {
+  id           Int      @id @default(autoincrement())
+  restaurantId Int
+  phoneNumber  String   @db.VarChar(20)
+  clientName   String?  @db.VarChar(100)
+  address      String   @db.Text
+  status       String   @default("PENDING")
+  totalAmount  Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items      WhatsAppOrderItem[]
+
+  @@index([restaurantId])
+  @@index([phoneNumber])
+}
+
+model WhatsAppOrderItem {
+  id              Int     @id @default(autoincrement())
+  whatsappOrderId Int
+  menuItemId      Int
+  name            String
+  description     String?
+  quantity        Int     @default(1)
+  price           Float
+  total           Float
+
+  whatsappOrder WhatsAppOrder @relation(fields: [whatsappOrderId], references: [id], onDelete: Cascade)
+  menuItem      MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }

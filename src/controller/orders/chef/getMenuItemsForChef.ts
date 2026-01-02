@@ -8,11 +8,17 @@ export interface MenuItemForChef {
   orderId?: number;
 }
 
-export async function getMenuItemsForChef(): Promise<MenuItemForChef[]> {
+export async function getMenuItemsForChef(
+  restaurantId: number
+): Promise<MenuItemForChef[]> {
   const twentySecondsAgo = new Date(Date.now() - 60 * 1000);
 
   const recentOrders = await prisma.order.findMany({
-    where: { status: "PENDING", createdAt: { gte: twentySecondsAgo } },
+    where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
+      status: "PENDING",
+      createdAt: { gte: twentySecondsAgo },
+    },
     include: {
       items: {
         select: {
@@ -25,8 +31,8 @@ export async function getMenuItemsForChef(): Promise<MenuItemForChef[]> {
     },
   });
 
-  return recentOrders.flatMap(order =>
-    order.items.map(item => ({
+  return recentOrders.flatMap((order) =>
+    order.items.map((item) => ({
       id: item.menuItemId,
       name: item.name,
       description: item.description,

@@ -1,6 +1,8 @@
 import prisma from "../../../libs/prisma.ts";
+
 interface UpdateMenuItemParams {
   id: number;
+  restaurantId: number; // ✅ required
   name?: string;
   price?: number;
   description?: string;
@@ -9,6 +11,7 @@ interface UpdateMenuItemParams {
 
 export async function updateMenuItem({
   id,
+  restaurantId, // ✅ ADD THIS
   name,
   price,
   description,
@@ -16,16 +19,24 @@ export async function updateMenuItem({
 }: UpdateMenuItemParams) {
   if (!id) throw new Error("Menu item ID is required");
 
-  const existingItem = await prisma.menuItem.findUnique({ where: { id } });
-  if (!existingItem) throw new Error("Menu item not found");
+  const existingItem = await prisma.menuItem.findFirst({
+    where: {
+      id,
+      restaurantId,
+    },
+  });
+
+  if (!existingItem) {
+    throw new Error("Menu item not found or access denied");
+  }
 
   const updatedItem = await prisma.menuItem.update({
     where: { id },
     data: {
-      name: name ?? existingItem.name,
-      price: price ?? existingItem.price,
-      description: description ?? existingItem.description,
-      isActive: isActive ?? existingItem.isActive,
+      ...(name !== undefined && { name }),
+      ...(price !== undefined && { price }),
+      ...(description !== undefined && { description }),
+      ...(isActive !== undefined && { isActive }),
     },
   });
 

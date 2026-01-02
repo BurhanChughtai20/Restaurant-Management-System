@@ -10,8 +10,26 @@ export const deleteChefConnection = async (
   reply: FastifyReply
 ) => {
   const { chefId } = req.body;
+  const restaurantId = (req as any).restaurantId;
 
   try {
+    // 🔥 Verify chef belongs to the restaurant
+    const chef = await prisma.users.findFirst({
+      where: {
+        id: chefId,
+        restaurantId,
+        userRoles: {
+          some: { role: "Chef" },
+        },
+      },
+    });
+
+    if (!chef) {
+      return reply
+        .status(403)
+        .send({ message: "Unauthorized - Chef not in your restaurant" });
+    }
+
     const connection = await prisma.chefConnection.findUnique({
       where: { chefId },
     });

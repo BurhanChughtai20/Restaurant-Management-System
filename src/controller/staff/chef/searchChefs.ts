@@ -1,7 +1,12 @@
 import prisma from "../../../libs/prisma.ts";
+import {
+  generateCacheKey,
+  getCachedData,
+  setCachedData,
+} from "../../../libs/redisCache.ts";
 
- 
 interface SearchChefParams {
+  restaurantId: number;
   search?: string;
   page: number;
   limit: number;
@@ -9,22 +14,40 @@ interface SearchChefParams {
 }
 
 export async function searchChefs({
+  restaurantId,
   search,
   page,
   limit,
   isActive,
 }: SearchChefParams) {
+  // Generate cache key based on search parameters
+  const cacheKey = generateCacheKey("search:chefs", {
+    restaurantId,
+    search,
+    page,
+    limit,
+    isActive,
+  });
+
+  // Check if data exists in Redis cache
+  const cachedResult = await getCachedData(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   const skip = (page - 1) * limit;
 
   const where: any = {
-    chef: {}   // Search within Users model (relation)
+    chef: {
+      restaurantId, // 🔥 Ensure restaurant isolation
+    },
   };
 
   if (search) {
     where.chef = {
+      ...where.chef,
       OR: [
         { name: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },
       ],
     };
@@ -40,13 +63,16 @@ export async function searchChefs({
       skip,
       take: limit,
       orderBy: { id: "desc" },
-      include: { chef: true }, // 🔥 include user info
+      include: {
+        chef: {
+          select: { id: true, name: true, email: true, restaurantId: true },
+        },
+      },
     }),
-
     prisma.chefConnection.count({ where }),
   ]);
 
-  return {
+  const result = {
     data: chefs,
     pagination: {
       page,
@@ -55,4 +81,9 @@ export async function searchChefs({
       totalPages: Math.ceil(total / limit),
     },
   };
+
+  // Cache the result for 3 minutes
+  await setCachedData(cacheKey, result);
+
+  return result;
 }

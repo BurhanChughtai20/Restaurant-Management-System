@@ -1,4 +1,5 @@
 import prisma from "../../libs/prisma.ts";
+import { OrderStatus } from "@prisma/client";
 
 export interface AdminOrderItem {
   id: number;
@@ -11,17 +12,23 @@ export interface AdminOrderItem {
 
 export interface AdminOrder {
   id: number;
-  orderTakerId: number;
+  restaurantId: number;
+  orderTakerId: number | null;
   chefId?: number | null;
-  status: string;
+  status: OrderStatus;
   totalAmount: number;
   createdAt: Date;
   updatedAt: Date;
   items: AdminOrderItem[];
 }
 
-export async function getAllOrders(): Promise<AdminOrder[]> {
+export async function getAllOrders(
+  restaurantId: number
+): Promise<AdminOrder[]> {
   const orders = await prisma.order.findMany({
+    where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
+    },
     orderBy: { createdAt: "desc" },
     include: {
       items: {
@@ -38,15 +45,16 @@ export async function getAllOrders(): Promise<AdminOrder[]> {
     },
   });
 
-  return orders.map(order => ({
+  return orders.map((order) => ({
     id: order.id,
+    restaurantId: order.restaurantId,
     orderTakerId: order.orderTakerId,
     chefId: order.chefId,
     status: order.status,
     totalAmount: order.totalAmount,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
-    items: order.items.map(item => ({
+    items: order.items.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,

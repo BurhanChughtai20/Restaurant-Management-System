@@ -1,20 +1,27 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../../libs/prisma.ts";
- 
+
 export async function getOrderTakerStats(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    const totalOrderTakers = await prisma.userRole.count({
-      where: { role: "Order_Taker", isActive: true },
-    });
+    const restaurantId = (request as any).restaurantId;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
+
+    // 🔥 Filter by restaurantId for all stats
+    const totalOrderTakers = await prisma.userRole.count({
+      where: {
+        role: "Order_Taker",
+        isActive: true,
+        user: { restaurantId }, // Ensure restaurant isolation
+      },
+    });
 
     const activeDaily = await prisma.waiterConnection.count({
       where: {
@@ -23,6 +30,7 @@ export async function getOrderTakerStats(
           gte: startOfDay,
           lte: endOfDay,
         },
+        waiter: { restaurantId }, // Ensure restaurant isolation
       },
     });
     const inactiveDaily = await prisma.waiterConnection.count({
@@ -32,6 +40,7 @@ export async function getOrderTakerStats(
           gte: startOfDay,
           lte: endOfDay,
         },
+        waiter: { restaurantId }, // Ensure restaurant isolation
       },
     });
 

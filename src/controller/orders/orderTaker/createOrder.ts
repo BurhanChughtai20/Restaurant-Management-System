@@ -6,25 +6,57 @@ interface OrderItemInput {
 }
 
 interface CreateOrderInput {
+  restaurantId: number;
   orderTakerId: number;
   items: OrderItemInput[];
 }
 
-export async function createOrder({ orderTakerId, items }: CreateOrderInput) {
+export async function createOrder({
+  restaurantId,
+  orderTakerId,
+  items,
+}: CreateOrderInput) {
   if (!items.length) throw new Error("Order must have at least one item");
+
+  // 🔥 Verify order taker belongs to restaurant
+  const orderTaker = await prisma.users.findFirst({
+    where: {
+      id: orderTakerId,
+      restaurantId,
+      userRoles: { some: { role: "Order_Taker" } },
+    },
+  });
+
+  if (!orderTaker) {
+    throw new Error("Unauthorized - Order Taker not in your restaurant");
+  }
 
   let totalAmount = 0;
 
   const order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
-      data: { orderTakerId, status: "PENDING", totalAmount: 0 },
+      data: {
+        restaurantId, // 🔥 Set restaurantId
+        orderTakerId,
+        status: "PENDING",
+        totalAmount: 0,
+      },
     });
 
     const orderItemsData = await Promise.all(
       items.map(async (item) => {
-        const menuItem = await tx.menuItem.findUniqueOrThrow({
-          where: { id: item.menuItemId },
+        const menuItem = await tx.menuItem.findFirst({
+          where: {
+            id: item.menuItemId,
+            restaurantId, // 🔥 Ensure menu item belongs to restaurant
+          },
         });
+
+        if (!menuItem) {
+          throw new Error(
+            `Menu item ${item.menuItemId} not found in your restaurant`
+          );
+        }
 
         const total = menuItem.price * item.quantity;
         totalAmount += total;

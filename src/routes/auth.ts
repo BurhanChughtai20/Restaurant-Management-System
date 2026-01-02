@@ -1,13 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { signup } from "../controller/auth/signup.ts";
 import { login } from "../controller/auth/login.ts";
-import { verifyEmailOtp } from "../controller/auth/verifyEmailOtp.ts";
-import { logout } from "../controller/auth/logout.ts"; 
+ import { logout } from "../controller/auth/logout.ts"; 
 import { forgotPassword } from "../controller/auth/forgotPassword.ts";
 import { verifyOtpAndResetPassword } from "../controller/auth/verifyOtpAndResetPassword.ts";
 import { deleteAccount } from "../controller/auth/deleteAccount.ts"; 
 import type { Role } from "@prisma/client";
 import { asyncHandler } from "../utils/asyncHandler.ts";
+import { verifyEmailOtp } from "../controller/auth/verifyEmailOtp.ts";
 
 interface SignupBody { name: string; email: string; password: string; role: Role; }
 interface LoginBody { email: string; password: string; role: Role; }

@@ -6,6 +6,7 @@ interface OrderItemUpdateInput {
 }
 
 interface UpdateOrderInput {
+  restaurantId: number;
   orderId: number;
   items: OrderItemUpdateInput[];
 }
@@ -15,11 +16,27 @@ interface OrderChangeMessage {
   message: string;
 }
 
-export async function updateOrder({ orderId, items }: UpdateOrderInput) {
+export async function updateOrder({
+  restaurantId,
+  orderId,
+  items,
+}: UpdateOrderInput) {
   const changeLogs: OrderChangeMessage[] = [];
   let totalAmount = 0;
 
   const updatedOrder = await prisma.$transaction(async (tx) => {
+    // 🔥 Verify order belongs to restaurant
+    const order = await tx.order.findFirst({
+      where: {
+        id: orderId,
+        restaurantId,
+      },
+    });
+
+    if (!order) {
+      throw new Error("Unauthorized - Order not in your restaurant");
+    }
+
     // ⚡ Select all needed fields
     const existingItems = await tx.orderItem.findMany({
       where: { orderId },
@@ -34,10 +51,24 @@ export async function updateOrder({ orderId, items }: UpdateOrderInput) {
       },
     });
 
-    const existingMap = new Map(existingItems.map(item => [item.menuItemId, item]));
+    const existingMap = new Map(
+      existingItems.map((item) => [item.menuItemId, item])
+    );
 
     for (const item of items) {
-      const menuItem = await tx.menuItem.findUniqueOrThrow({ where: { id: item.menuItemId } });
+      const menuItem = await tx.menuItem.findFirst({
+        where: {
+          id: item.menuItemId,
+          restaurantId, // 🔥 Ensure menu item belongs to restaurant
+        },
+      });
+
+      if (!menuItem) {
+        throw new Error(
+          `Menu item ${item.menuItemId} not found in your restaurant`
+        );
+      }
+
       const total = menuItem.price * item.quantity;
       totalAmount += total;
 

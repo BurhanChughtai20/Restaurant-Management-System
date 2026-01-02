@@ -5,12 +5,15 @@ interface MenuItemParams {
   name: string;
   price: number;
   description?: string;
+  restaurantId: number;
 }
+
 
 export async function CreateMenuItem({
   name,
   price,
   description,
+  restaurantId,
 }: MenuItemParams) {
   if (!name || !price) {
     throw new Error("Name and price are required");
@@ -24,8 +27,12 @@ export async function CreateMenuItem({
       price,
       description: description ?? null,
       sku,
+      restaurant: {
+        connect: { id: restaurantId },
+      },
     },
   });
 
   return newMenuItem;
 }
+

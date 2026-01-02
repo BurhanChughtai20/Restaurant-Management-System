@@ -6,15 +6,22 @@ export async function getChefStats(
   reply: FastifyReply
 ) {
   try {
-    const totalChefs = await prisma.userRole.count({
-      where: { role: "Chef", isActive: true },
-    });
+    const restaurantId = (request as any).restaurantId;
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
+
+    // 🔥 Filter by restaurantId for all stats
+    const totalChefs = await prisma.userRole.count({
+      where: {
+        role: "Chef",
+        isActive: true,
+        user: { restaurantId }, // Ensure restaurant isolation
+      },
+    });
 
     const activeDaily = await prisma.chefConnection.count({
       where: {
@@ -23,6 +30,7 @@ export async function getChefStats(
           gte: startOfDay,
           lte: endOfDay,
         },
+        chef: { restaurantId }, // Ensure restaurant isolation
       },
     });
 
@@ -33,6 +41,7 @@ export async function getChefStats(
           gte: startOfDay,
           lte: endOfDay,
         },
+        chef: { restaurantId }, // Ensure restaurant isolation
       },
     });
 

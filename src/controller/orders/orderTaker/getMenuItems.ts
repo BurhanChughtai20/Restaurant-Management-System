@@ -1,8 +1,9 @@
 import prisma from "../../../libs/prisma.ts";
 
-export async function getMenuItemsForOrderTaker() {
+export async function getMenuItemsForOrderTaker(restaurantId: number) {
   return prisma.menuItem.findMany({
     where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
       isActive: true,
     },
     select: {

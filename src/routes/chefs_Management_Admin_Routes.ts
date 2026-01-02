@@ -7,24 +7,31 @@ import { getAllChefs } from "../controller/staff/chef/getAllChefs.ts";
 import { searchChefs } from "../controller/staff/chef/searchChefs.ts";
 import { paginateChefs } from "../controller/staff/chef/paginateChefs.ts";
 import { asyncHandler } from "../utils/asyncHandler.ts";
+import { restaurantAuth } from "../middleware/restaurantAuth.ts";
 
-interface UpdateChefBody { chefId: number; fromTime?: string; toTime?: string; }
-interface DeleteChefBody { chefId: number; }
+interface UpdateChefBody {
+  chefId: number;
+  fromTime?: string;
+  toTime?: string;
+}
+interface DeleteChefBody {
+  chefId: number;
+}
 
 async function chefsManagementRoutes(fastify: FastifyInstance) {
-
   fastify.get(
     "/",
-    { preHandler: [fastify.authenticate] },
-    asyncHandler(async (_, reply: FastifyReply) => {
-      const chefs = await getAllChefs();
+    { preHandler: [restaurantAuth] },
+    asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+      const restaurantId = (request as any).restaurantId;
+      const chefs = await getAllChefs(restaurantId);
       return reply.send(chefs);
     })
   );
 
   fastify.get(
     "/token-chef",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
       const tokenData = await generateQRToken(request, reply);
       return reply.send(tokenData);
@@ -33,7 +40,7 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.delete<{ Body: DeleteChefBody }>(
     "/token-chef",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request, reply) => {
       const result = await deleteChefConnection(request, reply);
       return reply.send(result);
@@ -42,10 +49,12 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.patch<{ Body: UpdateChefBody }>(
     "/token-chef",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request, reply) => {
+      const restaurantId = (request as any).restaurantId;
       const { chefId, fromTime, toTime } = request.body;
       const updated = await updateChefConnection({
+        restaurantId,
         chefId,
         ...(fromTime !== undefined && { fromTime }),
         ...(toTime !== undefined && { toTime }),
@@ -60,7 +69,7 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.get(
     "/chef/stats",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request, reply) => {
       const stats = await getChefStats(request, reply);
       return reply.send(stats);
@@ -69,8 +78,9 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.get(
     "/search",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+      const restaurantId = (request as any).restaurantId;
       const {
         search = "",
         page = "1",
@@ -84,6 +94,7 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
       };
 
       const result = await searchChefs({
+        restaurantId,
         search,
         page: Number(page),
         limit: Number(limit),
@@ -96,14 +107,16 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
 
   fastify.get(
     "/paginate",
-    { preHandler: [fastify.authenticate] },
+    { preHandler: [restaurantAuth] },
     asyncHandler(async (request: FastifyRequest, reply: FastifyReply) => {
+      const restaurantId = (request as any).restaurantId;
       const { page = "1", limit = "10" } = request.query as {
         page?: string;
         limit?: string;
       };
 
       const result = await paginateChefs({
+        restaurantId,
         page: Number(page),
         limit: Number(limit) || 10,
       });

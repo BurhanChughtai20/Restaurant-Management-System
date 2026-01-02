@@ -1,8 +1,18 @@
 import { Role } from "@prisma/client";
-import prisma from "../../libs/prisma.ts";
 import { redisClient } from "../../libs/redis.ts";
-import { generateToken } from "../../utils/jwtToken.ts";
+import prisma from "../../libs/prisma.ts";
 import { ApiError } from "../../utils/ApiError.ts";
+import { generateToken } from "../../utils/jwtToken.ts";
+
+interface UserData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  otp: string;
+  otpExpiresAt: string;
+  restaurantData?: string | undefined;
+}
 
 export async function verifyEmailOtp({
   email,
@@ -11,27 +21,40 @@ export async function verifyEmailOtp({
 }: {
   email: string;
   otp: string;
-  role: string;
+  role: Role;
 }) {
   const redisKey = `signup:${email}:${role}`;
-  const userData = await redisClient.hGetAll(redisKey);
+  const userDataRaw = await redisClient.hGetAll(redisKey);
 
-  if (!userData || Object.keys(userData).length === 0) {
+  if (!userDataRaw || Object.keys(userDataRaw).length === 0) {
     throw new Error("OTP expired or user not found");
+  }
+
+  // Parse Redis data safely
+  const userData: UserData = {
+    name: userDataRaw.name!,
+    email: userDataRaw.email!,
+    password: userDataRaw.password!,
+    role: userDataRaw.role!,
+    otp: userDataRaw.otp!,
+    otpExpiresAt: userDataRaw.otpExpiresAt!,
+    restaurantData: userDataRaw.restaurantData || undefined,
+  };
+
+  // Validate required fields
+  if (!userData.name || !userData.email || !userData.password || !userData.role) {
+    await redisClient.del(redisKey);
+    throw new Error("Required user data is missing");
   }
 
   if (userData.otp !== otp) {
     throw new Error("Invalid OTP");
   }
 
-  const otpExpiresAt = userData.otpExpiresAt;
-  if (!otpExpiresAt || parseInt(otpExpiresAt) < Date.now()) {
+  const otpExpiresAt = parseInt(userData.otpExpiresAt);
+  if (isNaN(otpExpiresAt) || otpExpiresAt < Date.now()) {
     await redisClient.del(redisKey);
     throw new Error("OTP expired");
-  }
-
-  if (!userData.email) {
-    throw new Error("Email is missing");
   }
 
   const existingUser = await prisma.users.findFirst({
@@ -42,41 +65,67 @@ export async function verifyEmailOtp({
     await redisClient.del(redisKey);
     throw new ApiError(409, "User already exists");
   }
-  if (!userData.email || !userData.name || !userData.password) {
-    throw new Error("Required user data is missing");
-  }
 
-  const user = await prisma.users.create({
-    data: {
+  // **SOLUTION: Dynamic data object - no undefined fields**
+  const result = await prisma.$transaction(async (tx) => {
+    let restaurantId: number | undefined;
+
+    if (userData.role === 'Admin') {
+      const restaurantData = userData.restaurantData 
+        ? JSON.parse(userData.restaurantData)
+        : { name: `${userData.name}'s Restaurant`, slug: `admin-${Date.now()}` };
+
+      const restaurant = await tx.restaurant.create({
+        data: {
+          name: restaurantData.name as string,
+          slug: restaurantData.slug as string,
+        },
+      });
+      restaurantId = restaurant.id;
+    }
+
+    // **DYNAMIC CREATE DATA - omits restaurantId if undefined**
+    const createData: any = {
       name: userData.name,
       email: userData.email,
       password: userData.password,
       isEmailVerified: true,
-    },
-  });
+    };
+    
+    if (restaurantId !== undefined) {
+      createData.restaurantId = restaurantId;
+    }
 
-  const token = generateToken(user.id, userData.role as Role, "12h");
+    const user = await tx.users.create({
+      data: createData,  // ✅ No undefined values
+    });
 
-  const userRole = await prisma.userRole.create({
-    data: {
-      userId: user.id,
-      role: userData.role as Role,
-      token,
-      isActive: true,
-    },
+    const token = generateToken(user.id, userData.role as Role, "12h");
+
+    const userRole = await tx.userRole.create({
+      data: {
+        userId: user.id,
+        role: userData.role as Role,
+        token,
+        isActive: true,
+      },
+    });
+
+    return { user, userRole, token };
   });
 
   await redisClient.del(redisKey);
 
   return {
     message: "Email verified successfully",
-    token,
+    token: result.token,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: userRole.role,
-      isEmailVerified: user.isEmailVerified,
+      id: result.user.id,
+      name: result.user.name,
+      email: result.user.email,
+      role: result.userRole.role,
+      restaurantId: result.user.restaurantId,
+      isEmailVerified: result.user.isEmailVerified,
     },
   };
 }

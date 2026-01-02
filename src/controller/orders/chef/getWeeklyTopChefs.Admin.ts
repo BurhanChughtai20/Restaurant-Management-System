@@ -1,13 +1,14 @@
 import prisma from "../../../libs/prisma.ts";
 import { OrderStatus } from "@prisma/client";
 
-export async function getWeeklyTopChefs() {
+export async function getWeeklyTopChefs(restaurantId: number) {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const grouped = await prisma.order.groupBy({
     by: ["chefId"],
     where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
       chefId: { not: null },
       status: OrderStatus.COMPLETED,
       createdAt: {
@@ -29,20 +30,22 @@ export async function getWeeklyTopChefs() {
 
   const chefs = await prisma.users.findMany({
     where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
       id: {
-        in: grouped.map(g => g.chefId!) ,
+        in: grouped.map((g) => g.chefId!),
       },
     },
     select: {
       id: true,
       name: true,
       email: true,
+      restaurantId: true,
       createdAt: true,
     },
   });
 
   return grouped.map((g, index) => {
-    const chef = chefs.find(c => c.id === g.chefId);
+    const chef = chefs.find((c) => c.id === g.chefId);
     return {
       rank: index + 1,
       chefId: g.chefId,

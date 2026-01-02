@@ -1,13 +1,14 @@
 import prisma from "../../../libs/prisma.ts";
 
-export async function getWeeklyTopOrderTakers() {
+export async function getWeeklyTopOrderTakers(restaurantId: number) {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  // 1️⃣ Group orders by orderTakerId
+  // 1️⃣ Group orders by orderTakerId with restaurant isolation
   const grouped = await prisma.order.groupBy({
     by: ["orderTakerId"],
     where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
       createdAt: {
         gte: oneWeekAgo,
       },
@@ -27,20 +28,22 @@ export async function getWeeklyTopOrderTakers() {
 
   const users = await prisma.users.findMany({
     where: {
+      restaurantId, // 🔥 Ensure restaurant isolation
       id: {
-        in: grouped.map(g => g.orderTakerId),
+        in: grouped.map((g) => g.orderTakerId),
       },
     },
     select: {
       id: true,
       name: true,
       email: true,
+      restaurantId: true,
       createdAt: true,
     },
   });
 
-  return grouped.map(g => {
-    const user = users.find(u => u.id === g.orderTakerId);
+  return grouped.map((g) => {
+    const user = users.find((u) => u.id === g.orderTakerId);
     return {
       orderTakerId: g.orderTakerId,
       name: user?.name,

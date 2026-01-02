@@ -25,7 +25,6 @@ export async function buildApp() {
   await registerAuthenticate(fastify);
   await fastify.register(fastifyCors, { origin: true });
   await fastify.register(fastifyResponseValidation);
-
   fastify.setErrorHandler((error, req, reply) => {
     req.log.error(error);
 
