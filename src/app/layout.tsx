@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
+import { NavbarCom } from "@/components/navbar-menu";
 
  const rubik = Rubik({
   subsets: ["latin"],
@@ -110,7 +111,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${rubik.variable} font-sans antialiased`}>
-        {/* Suspense boundary for streaming and code splitting */}
+       <NavbarCom/>
         {children}
       </body>
     </html>

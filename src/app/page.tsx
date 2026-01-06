@@ -1,11 +1,12 @@
-import React from 'react'
-
-const page = () => {
+import Capabilities from '@/components/Capabilities'
+import RestaurantLeadersHub from '@/components/RestaurantLeadersHub'
+import { HeroSectionOne } from '@/components/HeroSection'
+ const page = () => {
   return (
     <div>
-       <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+      <HeroSectionOne/>
+      <Capabilities/>
+      <RestaurantLeadersHub/>
     </div>
   )
 }
