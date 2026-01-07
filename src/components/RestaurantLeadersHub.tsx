@@ -58,8 +58,8 @@ const paragraphText = "Join a thriving community of restaurant owners and leader
           </motion.div>
 
           <DynamicContent
-            as="h2"
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight text-black"
+            as="h3"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 sm:mb-6 leading-tight text-black"
           >
             {headingText.split(" ").map((word, index) => (
               <motion.span

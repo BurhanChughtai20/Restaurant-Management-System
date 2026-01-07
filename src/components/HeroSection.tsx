@@ -2,9 +2,10 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
-import BannerImg from "@/public/banner.svg";
+import BannerImg from "../../public/banner.svg";
 import DynamicContent from "./Title";
 import IconImg from "@/assets/icon.svg";
+import { UtensilsCrossed } from "lucide-react";
  
 export function HeroSectionOne() {
    const headingText = "Launch your website in hours, not days";
@@ -113,13 +114,7 @@ export function HeroSectionOne() {
          
         </motion.div>
          <div className="flex items-center justify-center mt-10">
-          <Image
-          src={IconImg}
-          alt="icon"
-          height={40}
-          width={40}
-          className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8"
-          />
+           <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
           </div>
       </div>
     </div>

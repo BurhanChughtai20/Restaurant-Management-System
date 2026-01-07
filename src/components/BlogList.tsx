@@ -1,11 +1,15 @@
-import React from 'react'
+import BlogCard, { Article } from "./BlogCard";
 
-const BlogList = () => {
-  return (
-    <div>
-      
-    </div>
-  )
+interface BlogListProps {
+  blogs: Article[];
 }
 
-export default BlogList
+export default function BlogList({ blogs }: BlogListProps) {
+  return (
+    <div className="grid grid-cols-3 gap-10">
+      {blogs.map((blog) => (
+        <BlogCard key={blog.id} blog={blog} />
+      ))}
+    </div>
+  );
+}

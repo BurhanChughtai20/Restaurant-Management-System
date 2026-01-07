@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "question": "How does the restaurant management system help with inventory?",
+    "answer": "Our system provides real-time tracking of ingredients, automated reordering alerts, and waste management analytics to ensure you never run out of stock while maintaining high profit margins."
+  },
+  {
+    "id": "2",
+    "question": "Can I integrate this with my existing POS system?",
+    "answer": "Yes, our platform is built with a flexible API that seamlessly integrates with most major POS providers, allowing you to sync sales and inventory data without changing your hardware."
+  },
+  {
+    "id": "3",
+    "question": "Is there a mobile app for staff and managers?",
+    "answer": "Absolutely. We offer dedicated mobile applications for both iOS and Android, enabling your staff to take orders tableside and managers to track performance from anywhere."
+  }
+]

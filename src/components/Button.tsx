@@ -7,9 +7,11 @@ export type ButtonComProps = {
   onClick?: () => void;
   className?: string;
   type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
-  color?: string; // solid color fallback
+  color?: string; 
   disabled?: boolean;
-  gradient?: boolean; // new prop for gradient
+  gradient?: boolean;
+  icon?: React.ReactNode; // New Prop
+  iconPosition?: 'left' | 'right'; // New Prop
 };
 
 const ButtonCom: React.FC<ButtonComProps> = ({
@@ -21,11 +23,13 @@ const ButtonCom: React.FC<ButtonComProps> = ({
   color,
   disabled = false,
   gradient = false,
+  icon,
+  iconPosition = 'left',
 }) => {
   // Tailwind gradient class
   const gradientClass = gradient
-    ? 'bg-gradient-to-b from-black via-gray-900 to-black text-white border-none'
-    : '';
+    ? 'bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2'
+    : 'flex items-center justify-center gap-2';
 
   return (
     <Button
@@ -35,13 +39,14 @@ const ButtonCom: React.FC<ButtonComProps> = ({
       disabled={disabled}
       className={`${gradientClass} ${className}`}
       style={
-        // fallback to solid color if provided
         !gradient && color
           ? { backgroundColor: color, borderColor: color, color: '#fff' }
           : undefined
       }
     >
-      {text}
+      {icon && iconPosition === 'left' && icon}
+      <span>{text}</span>
+      {icon && iconPosition === 'right' && icon}
     </Button>
   );
 };

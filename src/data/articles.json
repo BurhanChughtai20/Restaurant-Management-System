@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "restaurantId": "rest_001",
+    "slug": "5-best-dishes-you-must-try",
+    "title": "5 Best Dishes You Must Try",
+    "description": "Discovering the perfect meal is an art form. From the sizzle of a perfectly seared steak to the delicate balance of a hand-crafted pasta, great food tells a story of culture and passion. In this guide, we explore five legendary dishes that define culinary excellence. Whether you are a fan of spicy street food or refined fine dining, these selections promise to take your palate on an unforgettable journey. We dive deep into the secret ingredients, the traditional cooking methods, and the best places to find these mouth-watering masterpieces around the globe. Prepare your appetite for a tour of the world's most iconic flavors.",
+    "image": "/blogImg.svg",
+    "isPublished": true,
+    "createdAt": "2025-12-15T10:30:00Z"
+  },
+  {
+    "id": "2",
+    "restaurantId": "rest_002",
+    "slug": "5-best-dishes-you-must-tray",
+    "title": "5 Best Dishes You Must Tray",
+    "description": "Discovering the perfect meal is an art form. From the sizzle of a perfectly seared steak to the delicate balance of a hand-crafted pasta, great food tells a story of culture and passion. In this guide, we explore five legendary dishes that define culinary excellence. Whether you are a fan of spicy street food or refined fine dining, these selections promise to take your palate on an unforgettable journey. We dive deep into the secret ingredients, the traditional cooking methods, and the best places to find these mouth-watering masterpieces around the globe. Prepare your appetite for a tour of the world's most iconic flavors.",
+    "image": "/blogImg.svg",
+    "isPublished": true,
+    "createdAt": "2025-12-15T10:30:00Z"
+  }
+]

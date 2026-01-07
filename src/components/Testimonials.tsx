@@ -6,7 +6,7 @@ import { motion, Variants, AnimatePresence, useInView } from "framer-motion";
 import DynamicContent from "./Title";
 import Image from "next/image";
 import Avatar from "@/assets/icon.svg";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react";
 
 const DESKTOP_VISIBLE_COUNT = 3;
 
@@ -124,13 +124,7 @@ function Testimonials() {
             <Card className="w-[90%] p-5">
               <CardHeader>
                 <div className="flex gap-4 items-center">
-                  <Image
-                    src={testimonials[mobileIndex].imageUrl}
-                    alt={testimonials[mobileIndex].name}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
+                   <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
                   <div>
                     <h4 className="font-semibold">
                       {testimonials[mobileIndex].name}
@@ -160,10 +154,7 @@ function Testimonials() {
           </button>
         </div>
       </div>
-
-      {/* ===================== */}
-      {/* 💻 DESKTOP SLIDER */}
-      {/* ===================== */}
+ 
       <div ref={sectionRef} className="hidden md:block relative w-full">
         <AnimatePresence mode="wait">
           <motion.div
@@ -180,13 +171,7 @@ function Testimonials() {
                 <Card key={index} className="p-5">
                   <CardHeader>
                     <div className="flex gap-4 items-center">
-                      <Image
-                        src={owner.imageUrl}
-                        alt={owner.name}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
+                       <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
                       <div>
                         <h4 className="font-semibold">{owner.name}</h4>
                         <p className="text-sm text-default-400">
