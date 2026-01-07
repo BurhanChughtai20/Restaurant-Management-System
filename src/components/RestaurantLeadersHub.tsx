@@ -6,11 +6,10 @@ import Testimonials from './Testimonials';
  
 const RestaurantLeadersHub = () => {
     const headingText = "Restaurant leaders' hub, connecting you to their networks.";
-
+const paragraphText = "Join a thriving community of restaurant owners and leaders. Share insights, exchange ideas, and grow together in the dynamic world of hospitality.";
   return (
     <div className={`relative w-full  py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden transition-colors duration-300`}>
-      {/* Background Decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-blue-100 blur-3xl opacity-30"
           animate={{
@@ -37,10 +36,8 @@ const RestaurantLeadersHub = () => {
         />
       </div>
 
-      {/* Content */}
-      <div className='relative z-10 mx-auto max-w-7xl flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8'>
-        {/* Header */}
-        <motion.div
+       <div className='relative z-10 mx-auto max-w-7xl flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8'>
+         <motion.div
           className="text-center lg:text-start mb-12 sm:mb-16 md:mb-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -85,7 +82,7 @@ const RestaurantLeadersHub = () => {
             as="p"
             className="text-base sm:text-lg md:text-xl text-gray-600 mt-6"
           >
-            Discover how leading restaurant owners are transforming their businesses with our platform
+            {paragraphText}
           </DynamicContent>
         </motion.div>
  

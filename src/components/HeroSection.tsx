@@ -29,14 +29,14 @@ export function HeroSectionOne() {
   return (
     <div className={`relative mx-auto my-10 flex max-w-7xl flex-col items-center justify-center`}>
       {/* borders / lines kept as is */}
-      <div className="absolute inset-y-0 left-0 h-full w-px bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 dark:bg-neutral-800/80">
-        <div className="absolute top-0 h-40 w-px bg-gradient-to-b from-transparent via-blue-700 to-transparent" />
+      <div className="absolute inset-y-0 left-0 h-full w-px bg-linear-to-b from-gray-900 via-gray-800 to-gray-900 dark:bg-neutral-800/80">
+        <div className="absolute top-0 h-40 w-px bg-linear-to-b from-transparent via-blue-700 to-transparent" />
       </div>
-      <div className="absolute inset-y-0 right-0 h-full w-px bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 dark:bg-neutral-800/80">
-        <div className="absolute h-40 w-px bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 to-transparent" />
+      <div className="absolute inset-y-0 right-0 h-full w-px bg-linear-to-b from-gray-900 via-gray-800 to-gray-900 dark:bg-neutral-800/80">
+        <div className="absolute h-40 w-px bg-linear-to-b from-gray-900 via-gray-800 to-gray-900 to-transparent" />
       </div>
       <div className={`absolute inset-x-0 bottom-0 h-px w-full `}>
-        <div className="absolute mx-auto h-px w-40 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 to-transparent" />
+        <div className="absolute mx-auto h-px w-40 bg-linear-to-b from-gray-900 via-gray-800 to-gray-900 to-transparent" />
       </div>
 
       <div className="px-4 py-10 md:py-20">
@@ -105,7 +105,7 @@ export function HeroSectionOne() {
             <Image
               src={BannerImg}
               alt="Landing page preview"
-              className="aspect-[16/9] h-auto w-full object-cover"
+              className="aspect-video h-auto w-full object-cover"
               height={1000}
               width={1000}
             />
