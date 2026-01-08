@@ -53,24 +53,20 @@ const features: Feature[] = [
 
 export default function LuvyFeaturesSection() {
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section className="py-10 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Desktop Layout */}
         <div className="hidden lg:grid grid-cols-12 gap-8 items-center">
-          {/* Left Column */}
           <div className="col-span-3 space-y-24">
             {features.filter(f => f.side === "left").map((feature) => (
               <FeatureCard key={feature.id} feature={feature} />
             ))}
           </div>
 
-          {/* Center Visual */}
           <div className="col-span-6 flex flex-col items-center justify-center">
              <CenterVisual />
           </div>
 
-          {/* Right Column */}
           <div className="col-span-3 space-y-24">
              {features.filter(f => f.side === "right").map((feature) => (
               <FeatureCard key={feature.id} feature={feature} />
@@ -78,13 +74,12 @@ export default function LuvyFeaturesSection() {
           </div>
         </div>
 
-        {/* Mobile & Tablet Layout */}
         <div className="lg:hidden flex flex-col items-center">
           <CenterVisual className="mb-12 scale-90 md:scale-100" />
           
           <div className="w-full overflow-x-auto no-scrollbar snap-x snap-mandatory flex gap-6 pb-8">
             {features.map((feature) => (
-              <div key={feature.id} className="min-w-[80%] sm:min-w-[350px] snap-center">
+              <div key={feature.id} className="min-w-[80%] sm:min-w-87.5 snap-center">
                 <FeatureCard feature={feature} isMobile />
               </div>
             ))}
@@ -113,7 +108,7 @@ function FeatureCard({ feature, isMobile = false }: FeatureCardProps) {
       <DynamicContent as="h4" className="text-gray-900 font-bold mb-3">
         {feature.title}
       </DynamicContent>
-      <DynamicContent as="p" className="text-gray-500 text-sm leading-relaxed max-w-[240px]">
+      <DynamicContent as="p" className="text-gray-500 text-sm leading-relaxed max-w-60">
         {feature.description}
       </DynamicContent>
     </motion.div>
@@ -127,7 +122,7 @@ function CenterVisual({ className }: { className?: string }) {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.7, ease: "easeOut" }}
-      className={cn("relative w-full max-w-[450px] flex flex-col items-center", className)}
+      className={cn("relative w-full max-w-112.5 flex flex-col items-center", className)}
     >
       {/* Major Expenses Card */}
       <div className="w-full bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/60 border border-gray-100 p-8 relative z-10">

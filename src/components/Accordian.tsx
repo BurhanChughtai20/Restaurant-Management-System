@@ -17,14 +17,13 @@ export default function AccordionCom() {
 
       <Accordion 
         variant="splitted" 
-        className="w-full text-center md:text-start"
+        className="w-full text-start"
         selectionMode="multiple"
       >
         {faqs.map((faq) => (
           <AccordionItem
             key={faq.id}
             aria-label={faq.question}
-            // Title wrapped in DynamicContent as h6
             title={
               <DynamicContent as="h6" className="text-lg md:text-xl font-semibold text-gray-900 cursor-pointer">
                 {faq.question}
