@@ -14,12 +14,12 @@ import ButtonCom from "./Button";
 // Import icons for the menu items
 import { 
   Home, 
-  Info, 
   LayoutGrid, 
   CircleDollarSign, 
   BookText, 
   ArrowRight 
 } from "lucide-react";
+import Link from "next/link";
 
 export function NavbarCom() {
   // 1. Added an 'icon' property to each nav item
@@ -28,11 +28,6 @@ export function NavbarCom() {
       name: "Home",
       link: "/",
       icon: <Home size={18} />,
-    },
-    {
-      name: "About",
-      link: "/about",
-      icon: <Info size={18} />,
     },
     {
       name: "Product",
@@ -90,7 +85,7 @@ export function NavbarCom() {
           >
             <div className="flex flex-col gap-6 py-4">
               {navItems.map((item, idx) => (
-                <a
+                <Link
                   key={`mobile-link-${idx}`}
                   href={item.link}
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -99,7 +94,7 @@ export function NavbarCom() {
                   {/* Rendering the icon next to the text */}
                   <span className="text-black">{item.icon}</span>
                   <span className="text-gray-800 text-sm">{item.name}</span>
-                </a>
+                </Link>
               ))}
             </div>
 

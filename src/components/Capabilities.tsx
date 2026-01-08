@@ -121,7 +121,7 @@ const Capabilities = () => {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl flex flex-col items-center justify-center mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section */}
         <motion.div
@@ -135,7 +135,7 @@ const Capabilities = () => {
             <DynamicContent
               key={index}
               as="h2"
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight "
+              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight "
             >
               {title.split(" ").map((word, i) => (
                 <motion.span
