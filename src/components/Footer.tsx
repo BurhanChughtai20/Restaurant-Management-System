@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { memo } from "react";
 import { UtensilsCrossed, Send, Mail } from "lucide-react";
 import DynamicContent from "./Title";
 import ButtonCom from "./Button";
@@ -57,7 +57,7 @@ const FOOTER_DATA = {
   copyright: "All Rights Reserved.",
 };
 
-const Footer: React.FC = () => {
+const Footer = memo(() => {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -151,6 +151,8 @@ const Footer: React.FC = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = "Footer";
 
 export default Footer;

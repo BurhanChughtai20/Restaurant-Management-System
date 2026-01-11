@@ -4,6 +4,7 @@ import "./globals.css";
 import { NavbarCom } from "@/components/navbar-menu";
 import Footer from "@/components/Footer";
 import { baseMetadata } from "@/lib/metadata";
+import { SuspenseBoundary } from "@/components/SuspenseBoundary";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -77,7 +78,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         {/* Preload fonts for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -89,10 +90,16 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       </head>
-      <body className={`${rubik.variable} font-sans antialiased`}>
-        <NavbarCom/>
-        {children}
-        <Footer/>
+      <body className={`${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
+        <SuspenseBoundary>
+          <NavbarCom/>
+        </SuspenseBoundary>
+        <SuspenseBoundary>
+          {children}
+        </SuspenseBoundary>
+        <SuspenseBoundary>
+          <Footer/>
+        </SuspenseBoundary>
       </body>
     </html>
   );

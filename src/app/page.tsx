@@ -1,11 +1,30 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
-import Capabilities from '@/components/Capabilities'
-import RestaurantLeadersHub from '@/components/RestaurantLeadersHub'
-import { HeroSectionOne } from '@/components/HeroSection'
-import TrendingBlogs from '@/components/TrendingBlogs'
+import dynamic from "next/dynamic";
 import { fadeUpVariants, animationConfig } from '@/lib/animations'
+
+// Dynamic imports for code splitting
+const Capabilities = dynamic(() => import('@/components/Capabilities'), {
+  loading: () => <div className="min-h-[400px]" />,
+  ssr: true,
+});
+
+const RestaurantLeadersHub = dynamic(() => import('@/components/RestaurantLeadersHub'), {
+  loading: () => <div className="min-h-[400px]" />,
+  ssr: true,
+});
+
+const HeroSectionOne = dynamic(() => import('@/components/HeroSection').then(mod => ({ default: mod.HeroSectionOne })), {
+  loading: () => <div className="min-h-[500px]" />,
+  ssr: true,
+});
+
+const TrendingBlogs = dynamic(() => import('@/components/TrendingBlogs'), {
+  loading: () => <div className="min-h-[400px]" />,
+  ssr: true,
+});
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
@@ -13,7 +32,7 @@ const classes = {
   section: "",
 };
 
-const Page = () => {
+const Page = memo(() => {
   return (
     <main className={classes.main}>
       <HeroSectionOne />
@@ -49,6 +68,8 @@ const Page = () => {
       </motion.section>
     </main>
   );
-};
+});
+
+Page.displayName = "HomePage";
 
 export default Page;

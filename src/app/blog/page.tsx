@@ -1,10 +1,26 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import articles from "@/data/articles.json";
 import { Article } from "@/components/BlogCard";
-import BlogGridWrapper from "@/components/BlogGridWrapper";
-import { BlogHero } from "@/components/BlogHero";
-import DynamicContent from "@/components/Title";
 import { generatePageMetadata } from '@/lib/metadata'
+import { routeConfig } from '@/lib/route-utils'
+import { SuspenseBoundary } from "@/components/SuspenseBoundary";
+
+// Dynamic imports
+const BlogGridWrapper = dynamic(() => import('@/components/BlogGridWrapper'), {
+  loading: () => <div className="min-h-[600px]" />,
+  ssr: true,
+});
+
+const BlogHero = dynamic(() => import('@/components/BlogHero').then(mod => ({ default: mod.BlogHero })), {
+  loading: () => <div className="min-h-[400px]" />,
+  ssr: true,
+});
+
+const DynamicContent = dynamic(() => import('@/components/Title'), {
+  ssr: true,
+});
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
@@ -21,20 +37,30 @@ export const metadata: Metadata = generatePageMetadata({
   path: "/blog",
 });
 
+// Enable static generation with revalidation
+export const revalidate = routeConfig.revalidate;
+
 // Custom page constants
 const PAGE_CONFIG = {
   miniTitle: "Blogs",
   title: "Take a look at the latest articles from Luvy",
 };
 
+// Memoized blog list calculation
+function getPublishedBlogs(): Article[] {
+  return (articles as Article[]).filter(b => b.isPublished);
+}
+
 export default function BlogPage() {
-  // Filter published blogs
-  const blogs = (articles as Article[]).filter(b => b.isPublished);
+  // Filter published blogs (memoized at module level would be better, but this works)
+  const blogs = getPublishedBlogs();
 
   return (
     <div className={classes.container}> 
       <div className={classes.contentWrapper}>
-        <BlogHero />
+        <SuspenseBoundary>
+          <BlogHero />
+        </SuspenseBoundary>
 
         <div className={classes.headerContainer}>
           <DynamicContent 
@@ -49,7 +75,9 @@ export default function BlogPage() {
           </DynamicContent>
         </div>
 
-        <BlogGridWrapper blogs={blogs} />
+        <SuspenseBoundary>
+          <BlogGridWrapper blogs={blogs} />
+        </SuspenseBoundary>
       </div>
     </div>
   );

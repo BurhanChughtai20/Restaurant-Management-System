@@ -2,10 +2,17 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import dynamic from "next/dynamic";
 import articles from "@/data/articles.json";
 import { Article } from "@/components/BlogCard";
-import DynamicContent from "@/components/Title";
 import { generatePageMetadata } from "@/lib/metadata";
+import { getValidatedParam, routeConfig } from "@/lib/route-utils";
+import { SuspenseBoundary } from "@/components/SuspenseBoundary";
+
+// Dynamic imports
+const DynamicContent = dynamic(() => import('@/components/Title'), {
+  ssr: true,
+});
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
@@ -37,9 +44,21 @@ interface BlogDetailProps {
   }>;
 }
 
-export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {
-  const { slug } = await params;
+// Memoized blog lookup
+const blogCache = new Map<string, Article | undefined>();
+
+function findBlog(slug: string): Article | undefined {
+  if (blogCache.has(slug)) {
+    return blogCache.get(slug);
+  }
   const blog = (articles as Article[]).find((b) => b.slug === slug && b.isPublished);
+  blogCache.set(slug, blog);
+  return blog;
+}
+
+export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {
+  const slug = await getValidatedParam(params, "slug");
+  const blog = findBlog(slug);
 
   if (!blog) {
     return generatePageMetadata({
@@ -64,9 +83,12 @@ export async function generateStaticParams() {
   }));
 }
 
+// Enable static generation with revalidation
+export const revalidate = routeConfig.revalidate;
+
 export default async function BlogDetail({ params }: BlogDetailProps) {
-  const { slug } = await params;
-  const blog = (articles as Article[]).find((b) => b.slug === slug && b.isPublished);
+  const slug = await getValidatedParam(params, "slug");
+  const blog = findBlog(slug);
 
   if (!blog) {
     notFound();
@@ -99,9 +121,11 @@ export default async function BlogDetail({ params }: BlogDetailProps) {
       </div>
 
       {/* Title Section */}
-      <DynamicContent as="h3" className={classes.title}>
-        {blog.title}
-      </DynamicContent>
+      <SuspenseBoundary>
+        <DynamicContent as="h3" className={classes.title}>
+          {blog.title}
+        </DynamicContent>
+      </SuspenseBoundary>
 
       {/* Featured Image */}
       <div className={classes.imageWrapper}>
@@ -111,26 +135,33 @@ export default async function BlogDetail({ params }: BlogDetailProps) {
           fill
           className={classes.image}
           priority
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
 
       {/* Content Section */}
       <div className={classes.contentWrapper}>
-        <DynamicContent as="p" className={classes.description}>
-          {blog.description}
-        </DynamicContent>
+        <SuspenseBoundary>
+          <DynamicContent as="p" className={classes.description}>
+            {blog.description}
+          </DynamicContent>
+        </SuspenseBoundary>
         
         {/* Placeholder for more content to show UI depth */}
         <div className={classes.quoteBox}>
-          <DynamicContent as="p" className={classes.quoteText}>
-            Food is not just eating fuel, it&apos;s an experience that brings people together.
-          </DynamicContent>
+          <SuspenseBoundary>
+            <DynamicContent as="p" className={classes.quoteText}>
+              Food is not just eating fuel, it&apos;s an experience that brings people together.
+            </DynamicContent>
+          </SuspenseBoundary>
         </div>
         
-        <DynamicContent as="p" className={classes.footerText}>
-          As we continue to explore the culinary landscape, stay tuned for more reviews
-          and deep dives into the world&lsquo;s most beloved kitchens.
-        </DynamicContent>
+        <SuspenseBoundary>
+          <DynamicContent as="p" className={classes.footerText}>
+            As we continue to explore the culinary landscape, stay tuned for more reviews
+            and deep dives into the world&lsquo;s most beloved kitchens.
+          </DynamicContent>
+        </SuspenseBoundary>
       </div>
 
       {/* Footer / Share */}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import {
   Navbar,
   NavBody,
@@ -33,31 +33,31 @@ const classes = {
   mobileButton: "w-full my-primary-btn",
 };
 
-export function NavbarCom() {
-  // 1. Added an 'icon' property to each nav item
-  const navItems = [
-    {
-      name: "Home",
-      link: "/",
-      icon: <Home size={18} />,
-    },
-    {
-      name: "Product",
-      link: "/product",
-      icon: <LayoutGrid size={18} />,
-    },
-    {
-      name: "Pricing",
-      link: "/pricing",
-      icon: <CircleDollarSign size={18} />,
-    },
-    {
-      name: "Blog",
-      link: "/blog",
-      icon: <BookText size={18} />,
-    },
-  ];
+// Memoized nav items to prevent re-creation on every render
+const navItems = [
+  {
+    name: "Home",
+    link: "/",
+    icon: <Home size={18} />,
+  },
+  {
+    name: "Product",
+    link: "/product",
+    icon: <LayoutGrid size={18} />,
+  },
+  {
+    name: "Pricing",
+    link: "/pricing",
+    icon: <CircleDollarSign size={18} />,
+  },
+  {
+    name: "Blog",
+    link: "/blog",
+    icon: <BookText size={18} />,
+  },
+];
 
+export const NavbarCom = memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -65,9 +65,6 @@ export function NavbarCom() {
       <Navbar>
         <NavBody>
           <NavbarLogo />
-          {/* Note: Ensure your NavItems component is updated to handle icons, 
-             otherwise they will only show in the MobileNav below. 
-          */}
           <NavItems items={navItems} />
           
           <div className={classes.desktopButtonContainer}>
@@ -103,7 +100,6 @@ export function NavbarCom() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={classes.mobileLink}
                 >
-                  {/* Rendering the icon next to the text */}
                   <span className={classes.mobileLinkIcon}>{item.icon}</span>
                   <span className={classes.mobileLinkText}>{item.name}</span>
                 </Link>
@@ -125,4 +121,6 @@ export function NavbarCom() {
       </Navbar>
     </div>
   );
-}
+});
+
+NavbarCom.displayName = "NavbarCom";
