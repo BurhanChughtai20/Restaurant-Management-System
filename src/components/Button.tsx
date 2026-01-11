@@ -3,27 +3,30 @@ import { Button } from 'antd';
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
-  gradientButton: "bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2",
-  defaultButton: "flex items-center justify-center gap-2",
+  gradientButton:
+    'bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2',
+  defaultButton: 'flex items-center justify-center gap-2',
 };
 
-export type ButtonComProps = {
+export type ButtonComProps<TPayload = void> = {
   text: string;
   link?: string;
-  onClick?: () => void;
+  onClick?: (payload: TPayload) => void;
+  payload?: TPayload;
   className?: string;
   type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
-  color?: string; 
+  color?: string;
   disabled?: boolean;
   gradient?: boolean;
-  icon?: React.ReactNode; // New Prop
-  iconPosition?: 'left' | 'right'; // New Prop
+  icon?: React.ReactNode;
+  iconPosition?: 'left' | 'right';
 };
 
-const ButtonCom: React.FC<ButtonComProps> = ({
+const ButtonCom = <TPayload,>({
   text,
   link,
   onClick,
+  payload,
   className = '',
   type = 'primary',
   color,
@@ -31,8 +34,7 @@ const ButtonCom: React.FC<ButtonComProps> = ({
   gradient = false,
   icon,
   iconPosition = 'left',
-}) => {
-  // Tailwind gradient class
+}: ButtonComProps<TPayload>) => {
   const gradientClass = gradient
     ? classes.gradientButton
     : classes.defaultButton;
@@ -41,7 +43,6 @@ const ButtonCom: React.FC<ButtonComProps> = ({
     <Button
       type={type}
       href={link}
-      onClick={onClick}
       disabled={disabled}
       className={`${gradientClass} ${className}`}
       style={
@@ -49,6 +50,11 @@ const ButtonCom: React.FC<ButtonComProps> = ({
           ? { backgroundColor: color, borderColor: color, color: '#fff' }
           : undefined
       }
+      onClick={() => {
+        if (onClick) {
+          onClick(payload as TPayload);
+        }
+      }}
     >
       {icon && iconPosition === 'left' && icon}
       <span>{text}</span>
