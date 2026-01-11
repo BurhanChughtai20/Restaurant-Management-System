@@ -1,16 +1,28 @@
+import { Metadata } from "next";
 import LuvyFeaturesSection from '@/components/LuvyFeaturesSection'
 import { ProductHero } from '@/components/ProductHero'
 import ProductShowDataImgComponent from '@/components/ProductShowDataImgComponent'
- import React from 'react'
+import { generatePageMetadata } from '@/lib/metadata'
 
-const page = () => {
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  container: "",
+};
+
+export const metadata: Metadata = generatePageMetadata({
+  title: "Product",
+  description: "Discover our comprehensive restaurant management solutions. Streamline operations, boost efficiency, and grow your business.",
+  path: "/product",
+});
+
+const ProductPage = () => {
   return (
-    <>
-     <ProductHero/> 
-     <ProductShowDataImgComponent/>
-     <LuvyFeaturesSection/>
-    </>
-  )
-}
+    <div className={classes.container}>
+      <ProductHero/> 
+      <ProductShowDataImgComponent/>
+      <LuvyFeaturesSection/>
+    </div>
+  );
+};
 
-export default page
+export default ProductPage;

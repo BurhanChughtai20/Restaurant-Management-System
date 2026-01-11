@@ -3,9 +3,9 @@ import { Rubik } from "next/font/google";
 import "./globals.css";
 import { NavbarCom } from "@/components/navbar-menu";
 import Footer from "@/components/Footer";
-import AccordionCom from "@/components/Accordian";
+import { baseMetadata } from "@/lib/metadata";
 
- const rubik = Rubik({
+const rubik = Rubik({
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
   variable: "--font-rubik",
@@ -13,7 +13,7 @@ import AccordionCom from "@/components/Accordian";
   preload: true,
 });
 
- export const viewport: Viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -25,36 +25,20 @@ import AccordionCom from "@/components/Accordian";
 };
 
 export const metadata: Metadata = {
-  title: {
-    default: "Restaurant Management System",
-    template: "%s | RMS",
-  },
-  description: "An all-in-one solution for managing restaurant orders, inventory, and staff efficiently.",
-  keywords: [
-    "Restaurant Management",
-    "POS System",
-    "Inventory Tracking",
-    "Staff Management",
-    "RMS",
-    "Restaurant Software",
-  ],
-  authors: [{ name: "Muhammad Burhan Chughtai" }],
-  creator: "Muhammad Burhan Chughtai",
+  ...baseMetadata,
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-   openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://your-domain.com",
-    siteName: "Restaurant Management System",
+  openGraph: {
+    ...baseMetadata.openGraph,
+    url: baseMetadata.metadataBase?.toString() || "https://your-domain.com",
     title: "Restaurant Management System",
-    description: "An all-in-one solution for managing restaurant orders, inventory, and staff efficiently.",
+    description: baseMetadata.description || "",
     images: [
       {
-        url: "https://your-domain.com/og-image.png",
+        url: `${baseMetadata.metadataBase || "https://your-domain.com"}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Restaurant Management System",
@@ -62,21 +46,14 @@ export const metadata: Metadata = {
       },
     ],
   },
-   twitter: {
-    card: "summary_large_image",
+  twitter: {
+    ...baseMetadata.twitter,
     title: "Restaurant Management System",
-    description: "An all-in-one solution for managing restaurant orders, inventory, and staff efficiently.",
-    creator: "@yourhandle",
-    images: ["https://your-domain.com/og-image.png"],
-  },
-  // Additional metadata
-  robots: {
-    index: true,
-    follow: true,
-    nocache: false,
+    description: baseMetadata.description || "",
+    images: [`${baseMetadata.metadataBase || "https://your-domain.com"}/og-image.png`],
   },
   alternates: {
-    canonical: "https://your-domain.com",
+    canonical: baseMetadata.metadataBase?.toString() || "https://your-domain.com",
   },
   manifest: "/manifest.json",
 };
@@ -113,9 +90,8 @@ export default function RootLayout({
         />
       </head>
       <body className={`${rubik.variable} font-sans antialiased`}>
-       <NavbarCom/>
+        <NavbarCom/>
         {children}
-        <AccordionCom />
         <Footer/>
       </body>
     </html>

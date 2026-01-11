@@ -4,6 +4,16 @@ import { BentoGrid, BentoGridItem } from "../components/ui/bento-grid";
 import { BlogHeroImage } from "./BlogHeroImage"; 
 import { NewsletterInput, SocialLinks } from "./NewsLetters";
 
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  bentoGrid: "max-w-7xl mx-auto px-4 md:px-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 md:auto-rows-[auto]",
+  firstGrid: "col-span-1",
+  gridItem1: "h-[300px] md:h-full p-2",
+  secondGrid: "col-span-1 flex flex-col gap-4",
+  gridItem2: "min-h-[180px]",
+  gridItem3: "min-h-[220px]",
+};
+
 // Explicitly type the variants object
 const fadeInVariant: Variants = {
   hidden: { 
@@ -22,23 +32,23 @@ const fadeInVariant: Variants = {
 
 export function BlogHero() {
   return (
-    <BentoGrid className="max-w-7xl mx-auto px-4 md:px-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 md:auto-rows-[auto]">
+    <BentoGrid className={classes.bentoGrid}>
       {/* 1st Grid */}
       <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={fadeInVariant}
-        className="col-span-1"
+        className={classes.firstGrid}
       >
         <BentoGridItem
-          className="h-[300px] md:h-full p-2"
+          className={classes.gridItem1}
           header={<BlogHeroImage />}
         />
       </motion.div>
 
       {/* 2nd Grid */}
-      <div className="col-span-1 flex flex-col gap-4">
+      <div className={classes.secondGrid}>
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -48,7 +58,7 @@ export function BlogHero() {
           <BentoGridItem
             title="Join the newsletter!"
             description={<NewsletterInput />}
-            className="min-h-[180px]"
+            className={classes.gridItem2}
           />
         </motion.div>
         
@@ -64,7 +74,7 @@ export function BlogHero() {
           <BentoGridItem
             title="Follow Us:"
             description={<SocialLinks />}
-            className="min-h-[220px]"
+            className={classes.gridItem3}
           />
         </motion.div>
       </div>

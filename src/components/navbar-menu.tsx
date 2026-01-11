@@ -21,6 +21,18 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  container: "relative w-full",
+  desktopButtonContainer: "hidden md:flex items-center gap-4",
+  mobileMenuContent: "flex flex-col gap-6 py-4",
+  mobileLink: "flex items-center gap-3 text-neutral-600 dark:text-neutral-300 hover:text-indigo-600 transition-colors font-medium text-lg",
+  mobileLinkIcon: "text-black",
+  mobileLinkText: "text-gray-800 text-sm",
+  mobileButtonWrapper: "flex w-full flex-col gap-4 mt-4",
+  mobileButton: "w-full my-primary-btn",
+};
+
 export function NavbarCom() {
   // 1. Added an 'icon' property to each nav item
   const navItems = [
@@ -49,7 +61,7 @@ export function NavbarCom() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="relative w-full">
+    <div className={classes.container}>
       <Navbar>
         <NavBody>
           <NavbarLogo />
@@ -58,7 +70,7 @@ export function NavbarCom() {
           */}
           <NavItems items={navItems} />
           
-          <div className="hidden md:flex items-center gap-4">
+          <div className={classes.desktopButtonContainer}>
             <ButtonCom
               icon={<ArrowRight size={16} />}
               iconPosition="right"
@@ -83,28 +95,28 @@ export function NavbarCom() {
             isOpen={isMobileMenuOpen}
             onClose={() => setIsMobileMenuOpen(false)}
           >
-            <div className="flex flex-col gap-6 py-4">
+            <div className={classes.mobileMenuContent}>
               {navItems.map((item, idx) => (
                 <Link
                   key={`mobile-link-${idx}`}
                   href={item.link}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300 hover:text-indigo-600 transition-colors font-medium text-lg"
+                  className={classes.mobileLink}
                 >
                   {/* Rendering the icon next to the text */}
-                  <span className="text-black">{item.icon}</span>
-                  <span className="text-gray-800 text-sm">{item.name}</span>
+                  <span className={classes.mobileLinkIcon}>{item.icon}</span>
+                  <span className={classes.mobileLinkText}>{item.name}</span>
                 </Link>
               ))}
             </div>
 
-            <div className="flex w-full flex-col gap-4 mt-4">
+            <div className={classes.mobileButtonWrapper}>
               <ButtonCom
                 icon={<ArrowRight size={16} />}
                 iconPosition="right"
                 text="Get Started"
                 type="default"
-                className="w-full my-primary-btn"
+                className={classes.mobileButton}
                 onClick={() => alert("Started")}
               />
             </div>

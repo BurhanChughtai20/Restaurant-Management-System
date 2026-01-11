@@ -4,7 +4,32 @@ import React from "react";
 import { motion } from "framer-motion";
 import DynamicContent from "./Title";
 import ButtonCom from "./Button";
- import { ChefHat, TrendingUp, Users, Zap, BarChart3, Clock } from "lucide-react";
+import { ChefHat, TrendingUp, Users, Zap, BarChart3, Clock } from "lucide-react";
+
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  container: "relative w-full py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden transition-colors duration-300",
+  backgroundSvg: "absolute top-0 left-0 w-full h-full hidden md:block opacity-30",
+  floatingOrb1: "absolute top-10 left-10 w-32 h-32 rounded-full bg-blue-500 blur-3xl opacity-20",
+  floatingOrb2: "absolute bottom-20 right-10 w-40 h-40 rounded-full bg-purple-500 blur-3xl opacity-20",
+  mainContainer: "relative z-10 max-w-7xl flex flex-col items-center justify-center mx-auto px-4 sm:px-6 lg:px-8",
+  headerContainer: "text-center mb-12 sm:mb-16 md:mb-20",
+  titleBase: "text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight",
+  titleWord: "inline-block mr-2 text-black",
+  descriptionContainer: "text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto",
+  capabilitiesGrid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8",
+  capabilityCard: "group relative p-6 sm:p-8 rounded-xl bg-gradient-to-br transition-all duration-300 overflow-hidden border",
+  cardBackground: "absolute inset-0 bg-gradient-to-br from-blue-800/0 to-purple-500/0 group-hover:from-gray-800/10 group-hover:to-white-700/10 transition-all duration-300",
+  cardContent: "relative z-10",
+  iconContainer: "mb-4 inline-flex p-3 rounded-lg transition-all duration-300",
+  cardTitle: "text-lg sm:text-xl font-semibold mb-3 transition-colors duration-300",
+  cardDescription: "text-sm sm:text-base transition-colors duration-300",
+  hoverIndicator: "absolute bottom-0 left-0 h-1 bg-gradient-to-r from-gray-800 to-black",
+  ctaContainer: "mt-12 sm:mt-16 md:mt-20 text-center",
+  ctaText: "text-gray-400 text-base sm:text-lg mb-6",
+  ctaButtonWrapper: "inline-block",
+  ctaButton: "text-base sm:text-xl font-semibold px-8 sm:px-10 py-3 sm:py-4 hover:shadow-lg transition-shadow duration-300",
+};
 
 const Capabilities = () => {
    const capabilityTitles = [
@@ -71,11 +96,11 @@ const Capabilities = () => {
   };
 
   return (
-    <div className={`relative w-full py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden transition-colors duration-300`}>
+    <div className={classes.container}>
 
       {/* Animated Background Elements */}
       <svg
-        className="absolute top-0 left-0 w-full h-full hidden md:block opacity-30"
+        className={classes.backgroundSvg}
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
@@ -96,7 +121,7 @@ const Capabilities = () => {
 
       {/* Floating Orbs */}
       <motion.div
-        className="absolute top-10 left-10  w-32 h-32 rounded-full bg-blue-500 blur-3xl opacity-20"
+        className={classes.floatingOrb1}
         animate={{
           x: [0, 30, 0],
           y: [0, -30, 0],
@@ -108,7 +133,7 @@ const Capabilities = () => {
         }}
       />
       <motion.div
-        className="absolute bottom-20 right-10 w-40 h-40 rounded-full bg-purple-500 blur-3xl opacity-20"
+        className={classes.floatingOrb2}
         animate={{
           x: [0, -30, 0],
           y: [0, 30, 0],
@@ -121,11 +146,11 @@ const Capabilities = () => {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 max-w-7xl flex flex-col items-center justify-center mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={classes.mainContainer}>
         
         {/* Header Section */}
         <motion.div
-          className="text-center mb-12 sm:mb-16 md:mb-20"
+          className={classes.headerContainer}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -135,7 +160,7 @@ const Capabilities = () => {
             <DynamicContent
               key={index}
               as="h2"
-              className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight "
+              className={classes.titleBase}
             >
               {title.split(" ").map((word, i) => (
                 <motion.span
@@ -148,7 +173,7 @@ const Capabilities = () => {
                     ease: "easeOut",
                   }}
                   viewport={{ once: true }}
-                  className="inline-block mr-2 text-black"
+                  className={classes.titleWord}
                 >
                   {word}
                 </motion.span>
@@ -166,7 +191,7 @@ const Capabilities = () => {
             >
               <DynamicContent
                 as="p"
-                className="text-base sm:text-lg  md:text-xl text-gray-300 max-w-3xl mx-auto"
+                className={classes.descriptionContainer}
               >
                 {desc}
               </DynamicContent>
@@ -176,7 +201,7 @@ const Capabilities = () => {
 
         {/* Capabilities Grid */}
         <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+          className={classes.capabilitiesGrid}
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -192,18 +217,18 @@ const Capabilities = () => {
                   y: -5,
                   transition: { duration: 0.3 },
                 }}
-                className={`group relative p-6 sm:p-8 rounded-xl bg-gradient-to-br transition-all duration-300 overflow-hidden border `}
+                className={classes.capabilityCard}
               >
                 {/* Card Background Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-800/0 to-purple-500/0 group-hover:from-gray-800/10 group-hover:to-white-700/10 transition-all duration-300" />
+                <div className={classes.cardBackground} />
                 
-                <div className="relative z-10">
+                <div className={classes.cardContent}>
                   {/* Icon */}
                   <motion.div
                     initial={{ scale: 1, rotate: 0 }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                     transition={{ duration: 0.3 }}
-                    className={`mb-4 inline-flex p-3 rounded-lg transition-all duration-300 `}
+                    className={classes.iconContainer}
                   >
                     <IconComponent size={28} />
                   </motion.div>
@@ -211,7 +236,7 @@ const Capabilities = () => {
                   {/* Title */}
                   <DynamicContent
                     as="h3"
-                    className={`text-lg sm:text-xl font-semibold mb-3 transition-colors duration-300`}
+                    className={classes.cardTitle}
                   >
                 
                     {capability.title}
@@ -220,7 +245,7 @@ const Capabilities = () => {
                   {/* Description */}
                   <DynamicContent
                     as="p"
-                    className={`text-sm sm:text-base transition-colors duration-300`}
+                    className={classes.cardDescription}
                   >
                     {capability.description}
                   </DynamicContent>
@@ -230,7 +255,7 @@ const Capabilities = () => {
                     initial={{ opacity: 0, width: 0 }}
                     whileHover={{ opacity: 1, width: "100%" }}
                     transition={{ duration: 0.3 }}
-                    className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-gray-800 to-black"
+                    className={classes.hoverIndicator}
                   />
                 </div>
               </motion.div>
@@ -240,7 +265,7 @@ const Capabilities = () => {
 
         {/* CTA Section */}
         <motion.div
-          className="mt-12 sm:mt-16 md:mt-20 text-center"
+          className={classes.ctaContainer}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -248,21 +273,21 @@ const Capabilities = () => {
         >
           <DynamicContent
             as="p"
-            className="text-gray-400 text-base sm:text-lg mb-6"
+            className={classes.ctaText}
           >
             Ready to transform your restaurant?
           </DynamicContent>
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-block"
+            className={classes.ctaButtonWrapper}
           >
             <ButtonCom
               text="Get Started Today!"
               type="default"
               color=""
               gradient={true}
-              className="text-base sm:text-xl font-semibold px-8 sm:px-10 py-3 sm:py-4 hover:shadow-lg transition-shadow duration-300"
+              className={classes.ctaButton}
               onClick={() => {
                 console.log('Get started clicked');
               }}

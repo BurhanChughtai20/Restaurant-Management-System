@@ -8,6 +8,27 @@ import Image from "next/image";
 import Avatar from "@/assets/icon.svg";
 import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react";
 
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  mobileContainer: "md:hidden flex flex-col items-center w-full",
+  mobileCardWrapper: "w-full flex justify-center",
+  mobileCard: "w-[90%] p-5",
+  mobileCardHeader: "flex gap-4 items-center",
+  mobileName: "font-semibold",
+  mobileRestaurant: "text-sm text-default-400",
+  mobileCardBody: "text-center",
+  mobileControls: "flex gap-6 mt-6",
+  mobileButton: "p-2 rounded-full border",
+  desktopContainer: "hidden md:block relative w-full",
+  desktopGrid: "grid grid-cols-3 gap-6",
+  desktopCard: "p-5",
+  desktopCardHeader: "flex gap-4 items-center",
+  desktopName: "font-semibold",
+  desktopRestaurant: "text-sm text-default-400",
+  desktopControls: "flex justify-center gap-6 mt-8",
+  desktopButton: "p-2 rounded-full cursor-pointer border disabled:opacity-40",
+};
+
 const DESKTOP_VISIBLE_COUNT = 3;
 
 function Testimonials() {
@@ -110,7 +131,7 @@ function Testimonials() {
       {/* ===================== */}
       {/* 📱 MOBILE SLIDER */}
       {/* ===================== */}
-      <div className="md:hidden flex flex-col items-center w-full">
+      <div className={classes.mobileContainer}>
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
             key={mobileIndex}
@@ -119,24 +140,24 @@ function Testimonials() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="w-full flex justify-center"
+            className={classes.mobileCardWrapper}
           >
-            <Card className="w-[90%] p-5">
+            <Card className={classes.mobileCard}>
               <CardHeader>
-                <div className="flex gap-4 items-center">
+                <div className={classes.mobileCardHeader}>
                    <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
                   <div>
-                    <h4 className="font-semibold">
+                    <h4 className={classes.mobileName}>
                       {testimonials[mobileIndex].name}
                     </h4>
-                    <p className="text-sm text-default-400">
+                    <p className={classes.mobileRestaurant}>
                       {testimonials[mobileIndex].restaurantName}
                     </p>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardBody className="text-center">
+              <CardBody className={classes.mobileCardBody}>
                 <DynamicContent as="p">
                   {testimonials[mobileIndex].testimonial}
                 </DynamicContent>
@@ -145,17 +166,17 @@ function Testimonials() {
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex gap-6 mt-6">
-          <button onClick={mobilePrev} className="p-2 rounded-full border">
+        <div className={classes.mobileControls}>
+          <button onClick={mobilePrev} className={classes.mobileButton}>
             <ChevronLeft />
           </button>
-          <button onClick={mobileNext} className="p-2 rounded-full border">
+          <button onClick={mobileNext} className={classes.mobileButton}>
             <ChevronRight />
           </button>
         </div>
       </div>
  
-      <div ref={sectionRef} className="hidden md:block relative w-full">
+      <div ref={sectionRef} className={classes.desktopContainer}>
         <AnimatePresence mode="wait">
           <motion.div
             key={desktopIndex}
@@ -163,18 +184,18 @@ function Testimonials() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.4 }}
-            className="grid grid-cols-3 gap-6"
+            className={classes.desktopGrid}
           >
             {testimonials
               .slice(desktopIndex, desktopIndex + DESKTOP_VISIBLE_COUNT)
               .map((owner, index) => (
-                <Card key={index} className="p-5">
+                <Card key={index} className={classes.desktopCard}>
                   <CardHeader>
-                    <div className="flex gap-4 items-center">
+                    <div className={classes.desktopCardHeader}>
                        <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
                       <div>
-                        <h4 className="font-semibold">{owner.name}</h4>
-                        <p className="text-sm text-default-400">
+                        <h4 className={classes.desktopName}>{owner.name}</h4>
+                        <p className={classes.desktopRestaurant}>
                           {owner.restaurantName}
                         </p>
                       </div>
@@ -192,11 +213,11 @@ function Testimonials() {
         </AnimatePresence>
 
         {isInView && testimonials.length > DESKTOP_VISIBLE_COUNT && (
-          <div className="flex justify-center gap-6 mt-8">
+          <div className={classes.desktopControls}>
             <button
               onClick={desktopPrev}
               disabled={desktopIndex === 0}
-              className="p-2 rounded-full cursor-pointer border disabled:opacity-40"
+              className={classes.desktopButton}
             >
               <ChevronLeft />
             </button>
@@ -206,7 +227,7 @@ function Testimonials() {
               disabled={
                 desktopIndex + DESKTOP_VISIBLE_COUNT >= testimonials.length
               }
-              className="p-2 rounded-full cursor-pointer border disabled:opacity-40"
+              className={classes.desktopButton}
             >
               <ChevronRight />
             </button>

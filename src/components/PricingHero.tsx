@@ -3,6 +3,16 @@ import React from "react";
 import { motion } from "motion/react";
 import DynamicContent from "@/components/Title";
 
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  container: "relative mx-auto mt-20 flex max-w-7xl flex-col items-center justify-center",
+  contentWrapper: "px-4 py-10 md:py-10",
+  heading: "relative z-10 mx-auto max-w-3xl text-center text-2xl font-bold text-balance md:text-4xl lg:text-6xl",
+  headingWord: "mr-2 inline-block",
+  introContainer: "relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal",
+  introText: "text-base md:text-lg",
+};
+
 const PricingHero = () => {
   const headingText = "Manage your own restaurant";
 
@@ -11,23 +21,21 @@ const PricingHero = () => {
   ];
 
   return (
-    <div className="relative mx-auto mt-20 flex max-w-7xl flex-col items-center justify-center">
-      <div className="px-4 py-10 md:py-10">
-        <h3 className="relative z-10 mx-auto max-w-3xl text-center text-2xl font-bold text-balance md:text-4xl lg:text-6xl">
+    <div className={classes.container}>
+      <div className={classes.contentWrapper}>
+        <h3 className={classes.heading}>
           {headingText.split(" ").map((word, index) => (
             <motion.span
               key={index}
               initial={{ opacity: 0, filter: "blur(4px)", y: 10 }}
-              // Use whileInView instead of animate
-              whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-              // viewport: once ensures it doesn't re-animate every time you scroll up/down
+               whileInView={{ opacity: 1, filter: "blur(0px)", y: 0 }} 
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 duration: 0.3,
                 delay: index * 0.1,
                 ease: "easeInOut",
               }}
-              className="mr-2 inline-block"
+              className={classes.headingWord}
             >
               {word}
             </motion.span>
@@ -39,10 +47,10 @@ const PricingHero = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.3, delay: 0.8 }}
-          className="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal"
+          className={classes.introContainer}
         >
           {introTexts.map((text, index) => (
-            <DynamicContent key={index} as="p" className="text-base md:text-lg">
+            <DynamicContent key={index} as="p" className={classes.introText}>
               {text}
             </DynamicContent>
           ))}

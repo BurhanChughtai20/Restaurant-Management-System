@@ -1,33 +1,29 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import Capabilities from '@/components/Capabilities'
 import RestaurantLeadersHub from '@/components/RestaurantLeadersHub'
 import { HeroSectionOne } from '@/components/HeroSection'
 import TrendingBlogs from '@/components/TrendingBlogs'
+import { fadeUpVariants, animationConfig } from '@/lib/animations'
 
-const fadeUpVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { 
-      duration: 0.6, 
-      ease: "easeOut" 
-    } 
-  },
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  main: "",
+  section: "",
 };
 
 const Page = () => {
   return (
-    <main>
+    <main className={classes.main}>
       <HeroSectionOne />
 
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={animationConfig.viewport}
         variants={fadeUpVariants}
+        className={classes.section}
       >
         <Capabilities />
       </motion.section>
@@ -35,8 +31,9 @@ const Page = () => {
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={animationConfig.viewport}
         variants={fadeUpVariants}
+        className={classes.section}
       >
         <RestaurantLeadersHub />
       </motion.section>
@@ -44,12 +41,12 @@ const Page = () => {
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={animationConfig.viewport}
         variants={fadeUpVariants}
+        className={classes.section}
       >
         <TrendingBlogs />
       </motion.section>
-
     </main>
   );
 };

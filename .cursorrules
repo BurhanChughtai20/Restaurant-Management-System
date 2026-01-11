@@ -1,0 +1,33 @@
+# 🏛️ ARCHITECTURE & WORKFLOW
+- **Frontend (FSD)**: Strictly follow Feature-Sliced Design.
+  - No "cross-imports": Features cannot import from other Features.
+  - Logic must be moved to 'Entities' or 'Shared' if needed by multiple features.
+- **Backend (Service Pattern)**: Use a Controller-Service-Repository pattern.
+  - Services must be "pure" business logic; Repositories handle Data Access.
+- **Workflow**: Always generate a `README.md` in new feature folders explaining the data flow.
+
+# 🔐 SECURITY & AUTHENTICATION
+- **Zero Trust**: Never trust client-side data. Validate all inputs using Zod/Joi.
+- **Auth**: Use HttpOnly cookies for JWTs; never use LocalStorage for sensitive tokens.
+- **SQLi/NoSQLi**: Always use parameterized queries or TypeORM/Prisma to prevent injection.
+- **Least Privilege**: Ensure API endpoints check for specific Scopes/Roles, not just "isAuthenticated".
+
+# 💾 DATABASE & SERVICES
+- **Transactions**: Wrap multi-step database writes in ACID transactions. 
+- **Migrations**: Never suggest direct DB schema changes; always provide a migration script.
+- **Naming**: Use `snake_case` for DB columns and `camelCase` for application code.
+
+# 🧪 TESTING & QUALITY
+- **Test-Driven AI**: Before writing feature code, generate the `tests/` integration file first.
+- **Coverage**: Every service must handle "Edge Cases" (e.g., null returns, 404s, 500s) in tests.
+- **Backend**: Use `supertest` or equivalent for integration testing of the service layer.
+
+# ⚛️ FRONTEND & TYPESCRIPT
+- **Function Style**: Prefer `const Name = () => {}` arrow functions for consistency.
+- **Props**: Use Interfaces over Types for public APIs; use `Pick` and `Omit` for prop drilling.
+- **Icons**: Strictly `lucide-react`. If an icon is missing, suggest a similar one; **NEVER** use `<svg>`.
+- **Imports**: Always use absolute paths via `@/`. No `../../../../`.
+
+# 🚀 PERFORMANCE
+- **Frontend**: All heavy computations must be wrapped in `useMemo`.
+- **Backend**: Implement N+1 query detection and use eager/lazy loading strategically.

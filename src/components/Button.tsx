@@ -1,6 +1,12 @@
 import React from 'react';
 import { Button } from 'antd';
 
+// --- Dynamic Tailwind Classes ---
+const classes = {
+  gradientButton: "bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2",
+  defaultButton: "flex items-center justify-center gap-2",
+};
+
 export type ButtonComProps = {
   text: string;
   link?: string;
@@ -28,8 +34,8 @@ const ButtonCom: React.FC<ButtonComProps> = ({
 }) => {
   // Tailwind gradient class
   const gradientClass = gradient
-    ? 'bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2'
-    : 'flex items-center justify-center gap-2';
+    ? classes.gradientButton
+    : classes.defaultButton;
 
   return (
     <Button
