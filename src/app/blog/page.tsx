@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import articles from "@/data/articles.json";
 import { Article } from "@/components/BlogCard";
 import { generatePageMetadata } from '@/lib/metadata'
-import { routeConfig } from '@/lib/route-utils'
 import { SuspenseBoundary } from "@/components/SuspenseBoundary";
 
 // Dynamic imports
@@ -37,8 +36,8 @@ export const metadata: Metadata = generatePageMetadata({
   path: "/blog",
 });
 
-// Enable static generation with revalidation
-export const revalidate = routeConfig.revalidate;
+// Enable static generation with revalidation (revalidate every hour)
+export const revalidate = 3600;
 
 // Custom page constants
 const PAGE_CONFIG = {

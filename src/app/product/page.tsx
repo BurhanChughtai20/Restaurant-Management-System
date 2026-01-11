@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { generatePageMetadata } from '@/lib/metadata'
-import { routeConfig } from '@/lib/route-utils'
 
 // Dynamic imports for code splitting
 const LuvyFeaturesSection = dynamic(() => import('@/components/LuvyFeaturesSection'), {
@@ -30,8 +29,8 @@ export const metadata: Metadata = generatePageMetadata({
   path: "/product",
 });
 
-// Enable static generation with revalidation
-export const revalidate = routeConfig.revalidate;
+// Enable static generation with revalidation (revalidate every hour)
+export const revalidate = 3600;
 
 const ProductPage = () => {
   return (

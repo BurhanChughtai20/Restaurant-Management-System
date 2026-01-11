@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import articles from "@/data/articles.json";
 import { Article } from "@/components/BlogCard";
 import { generatePageMetadata } from "@/lib/metadata";
-import { getValidatedParam, routeConfig } from "@/lib/route-utils";
+import { getValidatedParam } from "@/lib/route-utils";
 import { SuspenseBoundary } from "@/components/SuspenseBoundary";
 
 // Dynamic imports
@@ -83,8 +83,8 @@ export async function generateStaticParams() {
   }));
 }
 
-// Enable static generation with revalidation
-export const revalidate = routeConfig.revalidate;
+// Enable static generation with revalidation (revalidate every hour)
+export const revalidate = 3600;
 
 export default async function BlogDetail({ params }: BlogDetailProps) {
   const slug = await getValidatedParam(params, "slug");
