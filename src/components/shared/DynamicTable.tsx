@@ -2,11 +2,21 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, TablePagination,
-  TableSortLabel, Paper, IconButton,
-  TextField, Box, Tooltip,
-  Typography, Skeleton
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  TableSortLabel,
+  Paper,
+  IconButton,
+  TextField,
+  Box,
+  Tooltip,
+  Typography,
+  Skeleton,
 } from '@mui/material';
 import { Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,7 +49,6 @@ interface DynamicTableProps<T> {
 
 type Order = 'asc' | 'desc';
 
-// Motion-enabled TableRow
 const MotionTableRow = motion(TableRow);
 
 export default function DynamicTable<T extends object>({
@@ -57,15 +66,22 @@ export default function DynamicTable<T extends object>({
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure AnimatePresence only runs after client mount
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
-    return data.filter(row =>
-      columns.some(col =>
-        col.searchable !== false &&
-        String(row[col.id] ?? '')
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+    return data.filter((row) =>
+      columns.some(
+        (col) =>
+          col.searchable !== false &&
+          String(row[col.id] ?? '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       )
     );
   }, [data, searchTerm, columns]);
@@ -92,8 +108,10 @@ export default function DynamicTable<T extends object>({
 
   return (
     <Paper>
+      {/* Search Input */}
       <Box p={2}>
         <TextField
+          id="dynamic-table-search"
           fullWidth
           size="small"
           placeholder="Search..."
@@ -108,8 +126,10 @@ export default function DynamicTable<T extends object>({
           <TableHead>
             <TableRow>
               {columns.map((col, i) => (
-                <TableCell key={`${String(col.id)}-${i}`}>
-                  {col.sortable === false ? col.label : (
+                <TableCell key={`${String(col.id)}-${i}`} align={col.align || 'left'}>
+                  {col.sortable === false ? (
+                    col.label
+                  ) : (
                     <TableSortLabel
                       active={orderBy === col.id}
                       direction={order}
@@ -141,50 +161,56 @@ export default function DynamicTable<T extends object>({
                 </TableRow>
               ))
             ) : (
-              <AnimatePresence>
-                {displayData.map((row, rIndex) => (
-                  <MotionTableRow
-                    key={`${String(row[rowKey])}-${rIndex}`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    whileHover={{ backgroundColor: 'rgba(0,0,0,0.03)' }}
-                  >
-                    {columns.map((col, cIndex) => (
-                      <TableCell key={`${String(col.id)}-${cIndex}`}>
-                        {col.format ? col.format(row[col.id], row) : String(row[col.id])}
-                      </TableCell>
-                    ))}
-                    {actions.length > 0 && (
-                      <TableCell>
-                        {actions.map((action, aIndex) =>
-                          (!action.show || action.show(row)) && (
-                            <Tooltip key={aIndex} title={action.label}>
-                              <IconButton onClick={() => action.onClick(row)}>
-                                {action.icon}
-                              </IconButton>
-                            </Tooltip>
-                          )
-                        )}
-                      </TableCell>
-                    )}
-                  </MotionTableRow>
-                ))}
-              </AnimatePresence>
+              mounted && (
+                <AnimatePresence>
+                  {displayData.map((row, rIndex) => (
+                    <MotionTableRow
+                      key={`${String(row[rowKey])}-${rIndex}`}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2 }}
+                      whileHover={{ backgroundColor: 'rgba(0,0,0,0.03)' }}
+                    >
+                      {columns.map((col, cIndex) => (
+                        <TableCell key={`${String(col.id)}-${cIndex}`}>
+                          {col.format ? col.format(row[col.id], row) : String(row[col.id])}
+                        </TableCell>
+                      ))}
+                      {actions.length > 0 && (
+                        <TableCell>
+                          {actions.map(
+                            (action, aIndex) =>
+                              (!action.show || action.show(row)) && (
+                                <Tooltip key={aIndex} title={action.label}>
+                                  <IconButton onClick={() => action.onClick(row)}>
+                                    {action.icon}
+                                  </IconButton>
+                                </Tooltip>
+                              )
+                          )}
+                        </TableCell>
+                      )}
+                    </MotionTableRow>
+                  ))}
+                </AnimatePresence>
+              )
             )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <TablePagination
-        component="div"
-        count={filteredData.length}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        onPageChange={(_, p) => setPage(p)}
-        onRowsPerPageChange={(e) => setRowsPerPage(+e.target.value)}
-      />
+      {mounted && (
+  <TablePagination
+    component="div"
+    count={filteredData.length}
+    page={page}
+    rowsPerPage={rowsPerPage}
+    onPageChange={(_, p) => setPage(p)}
+    onRowsPerPageChange={(e) => setRowsPerPage(+e.target.value)}
+  />
+)}
+
     </Paper>
   );
 }

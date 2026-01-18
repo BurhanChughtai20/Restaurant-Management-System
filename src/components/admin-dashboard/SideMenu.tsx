@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useState, useCallback, useMemo } from "react";
 import { styled } from "@mui/material/styles";
 import { Box, Stack, Typography, IconButton, Avatar, Drawer as MuiDrawer } from "@mui/material";
 import { ChevronLeft, ChevronRight, Command, MoreVertical } from "lucide-react";
@@ -52,14 +53,22 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [open, setOpen] = useState(!collapsed);
   const { goTo } = useDashboardNavigation();
 
-  const handleToggle = () => {
-    setOpen(!open);
+  /** DRY toggle handler */
+  const handleToggle = useCallback(() => {
+    setOpen((prev) => !prev);
     onToggle?.();
-  };
+  }, [onToggle]);
 
-  const handleNavigation = (item: MenuItem) => {
-    if (item.route) goTo(item.route as DashboardRouteKey);
-  };
+  /** DRY navigation handler */
+  const handleNavigation = useCallback(
+    (item: MenuItem) => {
+      if (item.route) goTo(item.route as DashboardRouteKey);
+    },
+    [goTo]
+  );
+
+  /** Precompute user initials */
+  const userInitial = useMemo(() => userProfile?.name?.charAt(0) ?? "A", [userProfile?.name]);
 
   return (
     <StyledDrawer variant="permanent" open={open}>
@@ -103,7 +112,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
           bgcolor: "#ffffff",
         }}
       >
-        <Avatar sx={{ width: 36, height: 36 }}>{userProfile?.name?.charAt(0)}</Avatar>
+        <Avatar sx={{ width: 36, height: 36 }}>{userInitial}</Avatar>
         {open && (
           <>
             <Box sx={{ flexGrow: 1, overflow: "hidden" }}>

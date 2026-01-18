@@ -1,7 +1,6 @@
-import { IconBrand4chan, IconBrandFacebook, IconBrandInstagram } from "@tabler/icons-react";
 import Link from "next/link";
 import ButtonCom from "./Button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FacebookIcon, InstagramIcon, TwitterIcon } from "lucide-react";
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
@@ -48,9 +47,9 @@ export const SocialLinks = () => (
   <div className={classes.socialContainer}>
     <p className={classes.socialText}>Follow us and don&apos;t miss a thing.</p>
     {[
-      { name: "Twitter", icon: <IconBrand4chan size={18} />, link: "#" },
-      { name: "Instagram", icon: <IconBrandInstagram size={18} />, link: "#" },
-       { name: "Facebook", icon: <IconBrandFacebook size={18} />, link: "#" },
+      { name: "Twitter", icon: <TwitterIcon size={18} />, link: "#" },
+      { name: "Instagram", icon: <InstagramIcon size={18} />, link: "#" },
+       { name: "Facebook", icon: <FacebookIcon size={18} />, link: "#" },
     ].map((social) => (
       <Link
         key={social.name}

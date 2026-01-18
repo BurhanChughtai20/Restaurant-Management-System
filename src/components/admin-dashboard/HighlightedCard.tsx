@@ -1,4 +1,6 @@
 "use client";
+
+import React, { useMemo } from "react";
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
@@ -16,20 +18,7 @@ const DEFAULT_DESCRIPTION = 'Uncover performance and visitor insights with our d
 const DEFAULT_BUTTON_TEXT = 'Get insights';
 const SMALL_SCREEN_BREAKPOINT = 'sm';
 
-const getTitleStyles = () => ({
-  fontWeight: '600',
-});
-
-const getDescriptionStyles = () => ({
-  color: 'text.secondary',
-  marginBottom: DESCRIPTION_MARGIN_BOTTOM,
-});
-
-const getButtonClassName = (isSmallScreen: boolean) => {
-  return isSmallScreen ? 'w-full' : '';
-};
-
-const HighlightedCard = ({
+const HighlightedCardComponent = ({
   title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
   buttonText = DEFAULT_BUTTON_TEXT,
@@ -38,14 +27,19 @@ const HighlightedCard = ({
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down(SMALL_SCREEN_BREAKPOINT));
 
+  // Memoized styles for DRY + performance
+  const titleStyles = useMemo(() => ({ fontWeight: 600 }), []);
+  const descriptionStyles = useMemo(() => ({ color: 'text.secondary', marginBottom: DESCRIPTION_MARGIN_BOTTOM }), []);
+  const buttonClassName = useMemo(() => (isSmallScreen ? 'w-full' : ''), [isSmallScreen]);
+
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
         <TrendingUp size={ICON_SIZE} className="mb-2" />
-        <Typography component="h2" variant="subtitle2" gutterBottom sx={getTitleStyles()}>
+        <Typography component="h2" variant="subtitle2" gutterBottom sx={titleStyles}>
           {title}
         </Typography>
-        <Typography sx={getDescriptionStyles()}>
+        <Typography sx={descriptionStyles}>
           {description}
         </Typography>
         <ButtonCom
@@ -54,11 +48,13 @@ const HighlightedCard = ({
           icon={<ChevronRight size={BUTTON_ICON_SIZE} />}
           iconPosition="right"
           onClick={onButtonClick}
-          className={getButtonClassName(isSmallScreen)}
+          className={buttonClassName}
         />
       </CardContent>
     </Card>
   );
 };
+
+const HighlightedCard = React.memo(HighlightedCardComponent);
 
 export default HighlightedCard;

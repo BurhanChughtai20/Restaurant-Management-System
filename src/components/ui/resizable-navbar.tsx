@@ -1,7 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { IconMenu2, IconX } from "@tabler/icons-react";
-import { UtensilsCrossed } from "lucide-react";
+import { CrossIcon, MenuIcon, UtensilsCrossed } from "lucide-react";
 import {
   motion,
   AnimatePresence,
@@ -247,9 +246,9 @@ export const MobileNavToggle = ({
   onClick: () => void;
 }) => {
   return isOpen ? (
-    <IconX className="text-black dark:text-white" onClick={onClick} />
+    <CrossIcon className="text-black dark:text-white" onClick={onClick} />
   ) : (
-    <IconMenu2 className="text-black dark:text-white" onClick={onClick} />
+    <MenuIcon className="text-black dark:text-white" onClick={onClick} />
   );
 };
 

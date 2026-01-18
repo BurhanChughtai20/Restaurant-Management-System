@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import DynamicCard, { StatsCardProps } from "../shared/DynamicCard";
@@ -16,47 +16,40 @@ export default function MainGrid({
   dataGrid = { rows: [], columns: [] },
   treeView = { items: [], title: "" },
 }: MainGridConfig) {
-  // Mapper function to convert StatCardData to DynamicCard props
-  const mapStatCardDataToProps = (card: StatCardData): StatsCardProps => {
-    let trendValue = 0;
+  // -------------------- Memoized function to map stat card data --------------------
+  const mapStatCardDataToProps = useCallback((card: StatCardData): StatsCardProps => {
+    const maxValue = card.data.length ? Math.max(...card.data) : 0;
     let isPositive: boolean | undefined;
 
     switch (card.trend) {
       case "up":
-        trendValue = Math.max(...card.data);
         isPositive = true;
         break;
       case "down":
-        trendValue = Math.max(...card.data);
         isPositive = false;
         break;
       case "neutral":
-        trendValue = 0;
+      default:
         isPositive = undefined;
-        break;
     }
 
     return {
       title: card.title,
       value: card.value,
       subtitle: card.interval,
-      trend: { value: trendValue, isPositive, label: card.trend },
+      trend: { value: maxValue, isPositive, label: card.trend },
       progress: card.data.length
-        ? {
-            value: card.data[card.data.length - 1],
-            max: Math.max(...card.data),
-          }
+        ? { value: card.data[card.data.length - 1], max: maxValue }
         : undefined,
     };
-  };
+  }, []);
 
   return (
     <Box maxWidth={1700} width="100%" mx="auto" px={2}>
-      {/* Overview Section */}
-      <Typography variant="h6" mb={2}>
-        {overviewTitle}
-      </Typography>
-      {/* Cards Section */}
+      {/* Overview Title */}
+      <Typography variant="h6" mb={2}>{overviewTitle}</Typography>
+
+      {/* Stats Cards Grid */}
       <Box
         display="grid"
         gap={2}
@@ -67,13 +60,11 @@ export default function MainGrid({
             lg: "repeat(4, 1fr)",
           },
           width: "100%",
-          // This ensures all grid items are forced to the height of the tallest item
           alignItems: "stretch",
-          // This ensures all grid items have the exact same width (25% minus gap)
           justifyContent: "stretch",
         }}
       >
-        {statCards.map((card: StatCardData) => (
+        {statCards.map(card => (
           <Box key={card.title} sx={{ height: "100%" }}>
             <DynamicCard {...mapStatCardDataToProps(card)} />
           </Box>
@@ -90,21 +81,18 @@ export default function MainGrid({
           </Box>
         )}
       </Box>
-      {/* Details Section */}
-      {detailsTitle && (dataGrid || treeView) && (
-        <>
-          <Typography variant="h6" mt={4} mb={2}>
-            {detailsTitle}
-          </Typography>
 
+      {/* Details Section */}
+      {detailsTitle && (dataGrid.rows.length || treeView.items.length) && (
+        <>
+          <Typography variant="h6" mt={4} mb={2}>{detailsTitle}</Typography>
           <Box display="flex" flexWrap="wrap" gap={2}>
-            {dataGrid && (
+            {dataGrid.rows.length > 0 && (
               <Box sx={{ flex: "1 1 70%", minWidth: 300 }}>
                 <CustomizedDataGrid {...dataGrid} />
               </Box>
             )}
-
-            {treeView && (
+            {treeView.items.length > 0 && (
               <Box sx={{ flex: "1 1 30%", minWidth: 200 }}>
                 <CustomizedTreeView {...treeView} />
               </Box>

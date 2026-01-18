@@ -1,13 +1,13 @@
 "use client";
+
 import * as React from 'react';
 import clsx from 'clsx';
 import { animated, useSpring } from '@react-spring/web';
-import { TransitionProps } from '@mui/material/transitions';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
+import Collapse from '@mui/material/Collapse';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItem, UseTreeItemParameters } from '@mui/x-tree-view/useTreeItem';
 import {
@@ -18,138 +18,65 @@ import {
 } from '@mui/x-tree-view/TreeItem';
 import { TreeItemIcon } from '@mui/x-tree-view/TreeItemIcon';
 import { TreeItemProvider } from '@mui/x-tree-view/TreeItemProvider';
-import { TreeViewBaseItem } from '@mui/x-tree-view/models';
-import { useTheme } from '@mui/material/styles';
+import type { TreeViewConfig } from './types';
+import type { TransitionProps } from '@mui/material/transitions';
 
-type Color = 'blue' | 'green';
-
-type ExtendedTreeItemProps = {
-  color?: Color;
-  id: string;
-  label: string;
-};
-
-const defaultItems: TreeViewBaseItem<ExtendedTreeItemProps>[] = [
-  {
-    id: '1',
-    label: 'Website',
-    children: [
-      { id: '1.1', label: 'Home', color: 'green' },
-      { id: '1.2', label: 'Pricing', color: 'green' },
-      { id: '1.3', label: 'About us', color: 'green' },
-      {
-        id: '1.4',
-        label: 'Blog',
-        children: [
-          { id: '1.1.1', label: 'Announcements', color: 'blue' },
-          { id: '1.1.2', label: 'April lookahead', color: 'blue' },
-          { id: '1.1.3', label: "What's new", color: 'blue' },
-          { id: '1.1.4', label: 'Meet the team', color: 'blue' },
-        ],
-      },
-    ],
-  },
-  {
-    id: '2',
-    label: 'Store',
-    children: [
-      { id: '2.1', label: 'All products', color: 'green' },
-      {
-        id: '2.2',
-        label: 'Categories',
-        children: [
-          { id: '2.2.1', label: 'Gadgets', color: 'blue' },
-          { id: '2.2.2', label: 'Phones', color: 'blue' },
-          { id: '2.2.3', label: 'Wearables', color: 'blue' },
-        ],
-      },
-      { id: '2.3', label: 'Bestsellers', color: 'green' },
-      { id: '2.4', label: 'Sales', color: 'green' },
-    ],
-  },
-  { id: '4', label: 'Contact', color: 'blue' },
-  { id: '5', label: 'Help', color: 'blue' },
-];
-
-function DotIcon({ color }: { color: string }) {
-  return (
-    <Box sx={{ marginRight: 1, display: 'flex', alignItems: 'center' }}>
-      <Box
-        sx={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          backgroundColor: color,
-        }}
-      />
-    </Box>
-  );
-}
+const TREE_VIEW_GAP = '8px';
+const TREE_VIEW_MARGIN = '0 -8px';
+const TREE_VIEW_PADDING_BOTTOM = '8px';
 
 const AnimatedCollapse = animated(Collapse);
 
-function TransitionComponent(props: TransitionProps) {
+// ---------------- Transition Component ----------------
+// Using proper TransitionProps type instead of 'any'
+const TransitionComponent: React.FC<TransitionProps> = ({ in: open, children, ...props }) => {
   const style = useSpring({
-    to: {
-      opacity: props.in ? 1 : 0,
-      transform: `translate3d(0,${props.in ? 0 : 20}px,0)`,
-    },
+    to: { opacity: open ? 1 : 0, transform: `translate3d(0,${open ? 0 : 20}px,0)` },
   });
+  return (
+    <AnimatedCollapse style={style} in={open} {...props}>
+      {children}
+    </AnimatedCollapse>
+  );
+};
+TransitionComponent.displayName = 'TransitionComponent';
 
-  return <AnimatedCollapse style={style} {...props} />;
-}
+// ---------------- Dot Icon ----------------
+const DotIcon: React.FC<{ color: string }> = React.memo(({ color }) => (
+  <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: color }} />
+  </Box>
+));
+DotIcon.displayName = 'DotIcon';
 
+// ---------------- Custom Label ----------------
 interface CustomLabelProps {
   children: React.ReactNode;
-  color?: Color;
-  expandable?: boolean;
+  color?: string;
 }
 
-function CustomLabel({ color, expandable, children, ...other }: CustomLabelProps) {
-  const theme = useTheme();
-  const colors = {
-    blue: (theme.vars || theme).palette.primary.main,
-    green: (theme.vars || theme).palette.success.main,
-  };
+const CustomLabel: React.FC<CustomLabelProps> = React.memo(({ color, children }) => (
+  <TreeItemLabel sx={{ display: 'flex', alignItems: 'center' }}>
+    {color && <DotIcon color={color} />}
+    <Typography variant="body2" sx={{ color: '#000' }}>{children}</Typography>
+  </TreeItemLabel>
+));
+CustomLabel.displayName = 'CustomLabel';
 
-  const iconColor = color ? colors[color] : null;
-  return (
-    <TreeItemLabel {...other} sx={{ display: 'flex', alignItems: 'center' }}>
-      {iconColor && <DotIcon color={iconColor} />}
-      <Typography
-        className="labelText"
-        variant="body2"
-        sx={{ color: 'text.primary' }}
-      >
-        {children}
-      </Typography>
-    </TreeItemLabel>
-  );
-}
-
+// ---------------- Custom Tree Item ----------------
 interface CustomTreeItemProps
-  extends
-    Omit<UseTreeItemParameters, 'rootRef'>,
+  extends Omit<UseTreeItemParameters, 'rootRef'>,
     Omit<React.HTMLAttributes<HTMLLIElement>, 'onFocus'> {}
 
-const CustomTreeItem = React.forwardRef(function CustomTreeItem(
-  props: CustomTreeItemProps,
-  ref: React.Ref<HTMLLIElement>,
-) {
+const CustomTreeItem = React.forwardRef<HTMLLIElement, CustomTreeItemProps>((props, ref) => {
   const { id, itemId, label, disabled, children, ...other } = props;
 
-  const {
-    getRootProps,
-    getContentProps,
-    getIconContainerProps,
-    getLabelProps,
-    getGroupTransitionProps,
-    status,
-    publicAPI,
-  } = useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
+  const { getRootProps, getContentProps, getIconContainerProps, getLabelProps, getGroupTransitionProps, status, publicAPI } =
+    useTreeItem({ id, itemId, children, label, disabled, rootRef: ref });
 
   const item = publicAPI.getItem(itemId);
-  const color = item?.color;
+  const color = item?.color || '#000';
+
   return (
     <TreeItemProvider id={id} itemId={itemId}>
       <TreeItemRoot {...getRootProps(other)}>
@@ -168,59 +95,52 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(
               <TreeItemIcon status={status} />
             </TreeItemIconContainer>
           )}
-
-          <CustomLabel {...getLabelProps({ color })} />
+          <CustomLabel {...getLabelProps({ color })}>{label}</CustomLabel>
         </TreeItemContent>
-        {children && (
-          <TransitionComponent
-            {...getGroupTransitionProps({ className: 'groupTransition' })}
-          />
-        )}
+        {children && <TransitionComponent {...getGroupTransitionProps()} />}
       </TreeItemRoot>
     </TreeItemProvider>
   );
 });
+CustomTreeItem.displayName = 'CustomTreeItem';
 
-import type { TreeViewConfig } from './types';
- 
-const TREE_VIEW_GAP = '8px';
-const TREE_VIEW_MARGIN = '0 -8px';
-const TREE_VIEW_PADDING_BOTTOM = '8px';
-
-const getCardStyles = () => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: TREE_VIEW_GAP,
-  flexGrow: 1,
-});
-
-const getTreeViewStyles = () => ({
-  margin: TREE_VIEW_MARGIN,
-  paddingBottom: TREE_VIEW_PADDING_BOTTOM,
-  height: 'fit-content',
-  flexGrow: 1,
-  overflowY: 'auto',
-});
-
-// CustomizedTreeView.tsx
-const CustomizedTreeView = ({
+// ---------------- Main Component ----------------
+const CustomizedTreeView: React.FC<TreeViewConfig> = ({
   title,
   items,
   defaultExpanded = [],
   defaultSelected = [],
   multiSelect = true,
-}: TreeViewConfig) => {
+}) => {
+  const cardStyles = React.useMemo(() => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: TREE_VIEW_GAP,
+    flexGrow: 1,
+    backgroundColor: '#fff',
+  }), []);
+
+  const treeViewStyles = React.useMemo(() => ({
+    margin: TREE_VIEW_MARGIN,
+    paddingBottom: TREE_VIEW_PADDING_BOTTOM,
+    height: 'fit-content',
+    flexGrow: 1,
+    overflowY: 'auto',
+  }), []);
+
   return (
-    <Card variant="outlined" sx={{ display: 'flex', flexDirection: 'column', gap: '8px', flexGrow: 1 }}>
+    <Card variant="outlined" sx={cardStyles}>
       <CardContent>
-        <Typography component="h2" variant="subtitle2">{title}</Typography>
+        <Typography component="h2" variant="subtitle2" mb={1}>
+          {title}
+        </Typography>
         <RichTreeView
           items={items}
-          aria-label="tree view"
+          aria-label={title}
           multiSelect={multiSelect}
-          defaultExpandedItems={defaultExpanded} // map to RichTreeView prop
-          defaultSelectedItems={defaultSelected} // map to RichTreeView prop
-          sx={{ margin: '0 -8px', paddingBottom: '8px', height: 'fit-content', overflowY: 'auto' }}
+          defaultExpandedItems={defaultExpanded}
+          defaultSelectedItems={defaultSelected}
+          sx={treeViewStyles}
           slots={{ item: CustomTreeItem }}
         />
       </CardContent>
@@ -228,5 +148,6 @@ const CustomizedTreeView = ({
   );
 };
 
+CustomizedTreeView.displayName = 'CustomizedTreeView';
 
-export default CustomizedTreeView;
+export default React.memo(CustomizedTreeView);

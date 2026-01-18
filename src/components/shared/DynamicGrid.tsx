@@ -1,117 +1,77 @@
-/**
- * Dynamic Grid Component
- * Reusable responsive grid layout
- * Follows SRP - handles only grid layout logic
- */
+"use client";
 
-'use client';
-
-import React from 'react';
-import { Grid, Box, CircularProgress, Typography } from '@mui/material';
+import React from "react";
+import { Grid, Box, CircularProgress, Typography } from "@mui/material";
 
 export interface GridItem {
-    id: string | number;
-    content: React.ReactNode;
-    xs?: number;
-    sm?: number;
-    md?: number;
-    lg?: number;
-    xl?: number;
+  id: string | number;
+  content: React.ReactNode;
 }
 
 interface DynamicGridProps {
-    items: GridItem[];
-    loading?: boolean;
-    error?: string;
-    spacing?: number;
-    emptyStateMessage?: string;
-    emptyStateIcon?: React.ReactNode;
+  items: GridItem[];
+  loading?: boolean;
+  error?: string;
+  spacing?: number;
 }
 
-const DynamicGrid: React.FC<DynamicGridProps> = ({
-    items,
-    loading = false,
-    error,
-    spacing = 3,
-    emptyStateMessage = 'No items to display',
-    emptyStateIcon,
+export const DynamicGrid: React.FC<DynamicGridProps> = ({
+  items,
+  loading = false,
+  error,
+  spacing = 3,
 }) => {
-    if (loading) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: 300,
-                }}
-            >
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: 300,
-                    p: 4,
-                }}
-            >
-                <Typography color="error" variant="h6">
-                    {error}
-                </Typography>
-            </Box>
-        );
-    }
-
-    if (items.length === 0) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: 300,
-                    p: 4,
-                    gap: 2,
-                }}
-            >
-                {emptyStateIcon && (
-                    <Box sx={{ opacity: 0.3, mb: 1 }}>
-                        {emptyStateIcon}
-                    </Box>
-                )}
-                <Typography variant="body1" color="text.secondary">
-                    {emptyStateMessage}
-                </Typography>
-            </Box>
-        );
-    }
-
+  if (loading) {
     return (
-        <Grid container spacing={spacing}>
-            {items.map((item) => (
-                // @ts-expect-error - MUI Grid item prop typing issue in v5
-                <Grid
-                    item={true}
-                    key={item.id}
-                    xs={item.xs ?? 12}
-                    sm={item.sm ?? 6}
-                    md={item.md ?? 4}
-                    lg={item.lg ?? 3}
-                    xl={item.xl ?? 3}
-                >
-                    {item.content}
-                </Grid>
-            ))}
-        </Grid>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+        <CircularProgress />
+      </Box>
     );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+        <Typography color="error" variant="h6">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <Box
+        minHeight={300}
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        gap={2}
+      >
+        <Typography color="text.secondary">No items to display</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Grid container spacing={spacing}>
+      {items.map((item) => (
+        // @ts-expect-error - MUI Grid item prop typing issue in v5
+        <Grid
+          item={true}
+          key={item.id}
+           xs={6} // 2 cards per row on mobile
+          sm={6} // 2 cards per row on small
+          md={6} // 2 cards per row on medium
+          lg={3} // 4 cards per row on large
+          xl={3} // 4 cards per row on extra-large
+        >
+          {item.content}
+        </Grid>
+      ))}
+    </Grid>
+  );
 };
 
 export default DynamicGrid;

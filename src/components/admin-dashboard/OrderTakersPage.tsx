@@ -29,8 +29,9 @@ import {
   useGenerateOrderTakerTokenMutation,
   useUpdateOrderTakerConnectionMutation,
   useDeleteOrderTakerConnectionMutation,
-  OrderTaker, 
+  OrderTaker,
 } from '@/app/store/api';
+import ButtonCom from '../Button';
 
 const OrderTakersPage: React.FC = () => {
   const { data: orderTakers = [], isLoading } = useGetAllOrderTakersQuery();
@@ -46,7 +47,6 @@ const OrderTakersPage: React.FC = () => {
   const [selectedWaiter, setSelectedWaiter] = useState<OrderTaker | null>(null);
   const [timeData, setTimeData] = useState({ fromTime: '', toTime: '' });
 
-  /* =================== TABLE COLUMNS =================== */
   const columns: Column<OrderTaker>[] = [
     {
       id: 'id',
@@ -112,7 +112,6 @@ const OrderTakersPage: React.FC = () => {
     },
   ];
 
-  /* =================== TABLE ACTIONS =================== */
   const actions: TableAction<OrderTaker>[] = [
     {
       icon: <Clock size={18} />,
@@ -138,7 +137,6 @@ const OrderTakersPage: React.FC = () => {
     },
   ];
 
-  /* =================== HANDLERS =================== */
   const handleGenerateQR = async () => {
     try {
       const result = await generateToken().unwrap();
@@ -162,59 +160,103 @@ const OrderTakersPage: React.FC = () => {
     }
   };
 
-  /* =================== STATS CARDS =================== */
+  // Stats Cards for DynamicGrid
   const statsCards: GridItem[] = [
     {
       id: 'total',
-      xs: 12,
-      sm: 6,
-      md: 4,
-      content: <DynamicCard title="Total Waiters" value={stats?.total ?? 0} subtitle="All staff members" />,
+      content: (
+        <DynamicCard
+          title="Total Waiters"
+          value={stats?.total ?? 0}
+          subtitle="All staff members"
+        />
+      ),
     },
     {
       id: 'active',
-      xs: 12,
-      sm: 6,
-      md: 4,
-      content: <DynamicCard title="Active" value={stats?.active ?? 0} subtitle="Currently connected" />,
+      content: (
+        <DynamicCard
+          title="Active"
+          value={stats?.active ?? 0}
+          subtitle="Currently connected"
+          trend={{ value: stats?.active ?? 0, isPositive: true }}
+        />
+      ),
     },
     {
       id: 'inactive',
-      xs: 12,
-      sm: 6,
-      md: 4,
-      content: <DynamicCard title="Inactive" value={stats?.inactive ?? 0} subtitle="Not connected" />,
+      content: (
+        <DynamicCard
+          title="Inactive"
+          value={stats?.inactive ?? 0}
+          subtitle="Not connected"
+          trend={{ value: stats?.inactive ?? 0, isPositive: false }}
+        />
+      ),
     },
   ];
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      {/* Header */}
+      <Box
+        sx={{
+          display: { xs: 'block', md: 'flex' },
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
         <Typography variant="h4" fontWeight={700}>
-          Order Takers (Waiters)
+          Order Takers
         </Typography>
-        <Button variant="contained" startIcon={<QrCode size={20} />} onClick={handleGenerateQR} sx={{ borderRadius: 2 }}>
-          Generate QR Token
-        </Button>
+
+        <ButtonCom
+          text="Generate QR Token"
+          icon={<QrCode size={20} />}
+          iconPosition="left"
+          type="default"
+          gradient
+          className="rounded-lg shadow-md mt-2 md:mt-0"
+          onClick={handleGenerateQR}
+        />
       </Box>
 
-      <Box sx={{ mb: 4 }}>
-        <DynamicGrid items={statsCards} spacing={3} />
+      {/* Stats Cards */}
+      <Box sx={{ my: 4 }}>
+        <DynamicGrid
+          items={statsCards}
+          spacing={3} // spacing between cards
+        />
       </Box>
 
-      <DynamicTable<OrderTaker> columns={columns} data={orderTakers} actions={actions} loading={isLoading} rowKey="id" />
+      {/* Dynamic Table */}
+      <DynamicTable<OrderTaker>
+        columns={columns}
+        data={orderTakers}
+        actions={actions}
+        loading={isLoading}
+        rowKey="id"
+      />
 
       {/* QR Dialog */}
       <Dialog open={qrDialogOpen} onClose={() => setQrDialogOpen(false)} maxWidth="sm">
         <DialogTitle>QR Code for Waiter Registration</DialogTitle>
-        <DialogContent>{qrCode && <img src={qrCode} alt="QR Code" style={{ maxWidth: '100%' }} />}</DialogContent>
+        <DialogContent>
+          {qrCode && <img src={qrCode} alt="QR Code" style={{ maxWidth: '100%' }} />}
+        </DialogContent>
         <DialogActions>
           <Button onClick={() => setQrDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 
       {/* Schedule Dialog */}
-      <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={scheduleDialogOpen}
+        onClose={() => setScheduleDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Set Work Schedule for {selectedWaiter?.name}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
