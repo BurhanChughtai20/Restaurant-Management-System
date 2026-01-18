@@ -1,0 +1,144 @@
+import { ReactNode } from "react";
+import { GridColDef, GridRowsProp, GridRowSelectionModel } from "@mui/x-data-grid";
+import { TreeViewBaseItem } from "@mui/x-tree-view/models";
+import type { Dayjs } from "dayjs";
+
+/* ───────────────── USER ───────────────── */
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
+/* ───────────────── ROUTES ───────────────── */
+
+export type RouteKey = string;
+
+/* ───────────────── MENU ───────────────── */
+
+export interface MenuItem {
+  label: string;
+  icon: ReactNode;
+  route: string;
+  onClick?: () => void;
+}
+
+
+export interface MenuGroup {
+  items: MenuItem[];
+}
+
+export interface SideMenuConfig {
+  userProfile?: UserProfile;
+  mainMenu: MenuGroup;
+  secondaryMenu?: MenuGroup;
+  cardAlertConfig?: CardAlertConfig;
+  onItemSelect?: (item: MenuItem) => void;
+  onOptionsClick?: () => void;
+}
+
+
+/* ───────────────── GRID ───────────────── */
+
+export type TrendDirection = "up" | "down" | "neutral";
+
+export interface StatCardData {
+  title: string;
+  value: string;
+  interval: string;
+  trend: TrendDirection;
+  data: number[];
+}
+
+export interface DataGridConfig {
+  rows: GridRowsProp;
+  columns: GridColDef[];
+  pageSize?: number;
+  pageSizeOptions?: number[];
+  checkboxSelection?: boolean;
+  onSelectionChange?: (model: GridRowSelectionModel) => void;
+}
+
+/* ───────────────── TREE ───────────────── */
+
+export type TreeItemColor = "blue" | "green"; 
+
+export type TreeItem = TreeViewBaseItem<{
+  id: string;
+  label: string;
+  color?: TreeItemColor;
+}>;
+
+export interface TreeViewConfig {
+  title: string;
+  items: TreeItem[];
+  defaultExpanded?: string[];
+  defaultSelected?: string[];
+  multiSelect?: boolean;
+}
+
+/* ───────────────── MAIN GRID ───────────────── */
+
+export interface MainGridConfig {
+  overviewTitle: string;
+  detailsTitle: string;
+  statCards: StatCardData[];
+  highlightedCard?: {
+    title: string;
+    description: string;
+    buttonText: string;
+    onClick?: () => void;
+  };
+  dataGrid?: DataGridConfig;
+  treeView?: TreeViewConfig;
+}
+
+/* ───────────────── LAYOUT ───────────────── */
+
+export interface LayoutConfig {
+  title: string;
+  mainGrid: MainGridConfig;
+  sideMenu: SideMenuConfig;
+}
+
+export interface CardAlertConfig {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  onButtonClick?: () => void;
+}
+
+export interface DatePickerConfig {
+  value?: Dayjs | null;
+  defaultValue?: Dayjs | null;
+  onChange?: (value: Dayjs | null) => void;
+  label?: string;
+  views?: ("day" | "month" | "year")[];
+}
+
+export interface HighlightedCardConfig {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  onButtonClick?: () => void;
+}
+
+export interface StatsCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  trend?: {
+    value: number;
+    isPositive?: boolean;
+    label?: string;
+  };
+  progress?: {
+    value: number;
+    max: number;
+    label?: string;
+  };
+  onClick?: () => void;
+  loading?: boolean;
+}

@@ -53,10 +53,6 @@ const pricingPlans = [
 const PricingCards = () => {
   return (
     <section className={classes.section}>
-      {/* We wrap the container in a motion.div to handle the entrance.
-          once: true prevents re-triggering on every scroll.
-          amount: 0.2 means start when 20% of the section is visible.
-      */}
       <motion.div 
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}

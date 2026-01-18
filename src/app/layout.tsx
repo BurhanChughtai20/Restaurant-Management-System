@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Rubik } from "next/font/google";
 import "./globals.css";
-import { NavbarCom } from "@/components/navbar-menu";
 import Footer from "@/components/Footer";
 import { baseMetadata } from "@/lib/metadata";
 import { SuspenseBoundary } from "@/components/SuspenseBoundary";
+import { NavbarCom } from "@/components/navbar-menu";
+import ReduxProvider from "./providers/ReduxProvider";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -91,8 +92,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
+        <ReduxProvider>
         <SuspenseBoundary>
-          <NavbarCom/>
+        <NavbarCom/>
         </SuspenseBoundary>
         <SuspenseBoundary>
           {children}
@@ -100,6 +102,7 @@ export default function RootLayout({
         <SuspenseBoundary>
           <Footer/>
         </SuspenseBoundary>
+        </ReduxProvider>
       </body>
     </html>
   );

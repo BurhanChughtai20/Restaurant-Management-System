@@ -148,7 +148,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
       )}
     >
       {items.map((item, idx) => (
-        <a
+        <Link
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
           className={classes.navLink}
@@ -162,7 +162,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
             />
           )}
           <span className={classes.navLinkText}>{item.name}</span>
-        </a>
+        </Link>
       ))}
     </motion.div>
   );
