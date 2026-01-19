@@ -2,7 +2,6 @@ import Link from "next/link";
 import ButtonCom from "./Button";
 import { ArrowRight, FacebookIcon, InstagramIcon, TwitterIcon } from "lucide-react";
 
-// --- Dynamic Tailwind Classes ---
 const classes = {
   newsletterContainer: "mt-4 flex flex-col space-y-2",
   newsletterText: "text-sm text-neutral-400 mb-2",
@@ -28,14 +27,13 @@ export const NewsletterInput = () => (
     className={classes.newsletterInput}
   /> 
   
-  {/* The button container */}
   <div className={classes.buttonWrapper}>
     <ButtonCom
       icon={<ArrowRight size={16} />}
       iconPosition="right"
       text="Get Started"
       type="default"
-      className="my-primary-btn w-full md:w-max" // w-full for mobile, natural width for desktop
+      className="my-primary-btn w-full md:w-max"
       onClick={() => alert("Started")}
     />
   </div>

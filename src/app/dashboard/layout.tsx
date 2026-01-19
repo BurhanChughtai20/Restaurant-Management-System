@@ -6,22 +6,19 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import { IconButton } from "@mui/material";
 import SideMenu from "@/components/admin-dashboard/SideMenu";
-import SideMenuMobile from "@/components/admin-dashboard/SideMenuMobile";
-import { CrossIcon, MenuIcon } from "lucide-react";
+ import { CrossIcon, MenuIcon } from "lucide-react";
+import MobileFloatingMenu from "@/components/admin-dashboard/SideMenuMobile";
 
 const EXPANDED_WIDTH = 0;
 const COLLAPSED_WIDTH = -162;
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
-  // DRY toggle functions
   const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), []);
   const toggleMobileMenu = useCallback(() => setMobileMenuOpen(prev => !prev), []);
   const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
-  // Computed styles
   const mainWidth = `calc(100% - ${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px)`;
   const mainMargin = `${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px`;
 
@@ -49,12 +46,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Box>
         </Box>
 
-        {/* Mobile Sidebar */}
-        {mobileMenuOpen && (
-          <Box sx={{ display: { xs: "flex", md: "flex", lg: "none" } }}>
-            <SideMenuMobile isOpen={mobileMenuOpen} onClose={closeMobileMenu} />
-          </Box>
-        )}
+        {/* Mobile Sidebar */} 
+{mobileMenuOpen && (
+  <Box sx={{ display: { xs: "flex", md: "flex", lg: "none" } }}>
+    <MobileFloatingMenu />
+  </Box>
+)}
+
 
         {/* Mobile Toggle Button */}
         <Box

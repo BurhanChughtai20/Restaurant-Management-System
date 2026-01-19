@@ -17,6 +17,46 @@ export enum OrderStatus {
     COMPLETED = 'COMPLETED',
 }
 
+// Auth types
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  role: Role;
+  restaurantId: number;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface SignupRequest {
+  name: string;
+  email: string;
+  password: string;
+  restaurantName: string;
+  role: Role.Admin; // Only admin can signup
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
 export interface MenuItem {
     id: number;
     restaurantId: number;

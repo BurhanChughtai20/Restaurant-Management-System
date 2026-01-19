@@ -1,100 +1,142 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import React, { useState, useCallback } from "react";
 import DynamicContent from "./Title";
 import FormInput from "./FormInput";
-import {
-  IconBrandGithub,
-  IconBrandGoogle,
-  IconBrandOnlyfans,
-} from "@tabler/icons-react";
 import { useAuthNavigation } from "@/auth";
+import { Role, SignupRequest } from "@/app/store/api";
+import { useSignupAdminMutation } from "@/app/store/api/authApi";
 
- const FORM_FIELDS = [
+const FORM_FIELDS = [
   { id: "firstname", label: "First name", placeholder: "Tyler", type: "text", halfWidth: true },
   { id: "lastname", label: "Last name", placeholder: "Durden", type: "text", halfWidth: true },
   { id: "email", label: "Email Address", placeholder: "projectmayhem@fc.com", type: "email" },
   { id: "password", label: "Password", placeholder: "••••••••", type: "password" },
+  { id: "restaurantName", label: "Restaurant Name", placeholder: "Project Mayhem", type: "text" },
 ];
 
 const SOCIAL_PLATFORMS = [
-  { label: "GitHub", icon: <IconBrandGithub className="h-4 w-4" /> },
-  { label: "Google", icon: <IconBrandGoogle className="h-4 w-4" /> },
-  { label: "Fans", icon: <IconBrandOnlyfans className="h-4 w-4" /> },
+  { label: "GitHub" },
+  { label: "Google" },
+  { label: "Fans" },
 ];
- 
-const classes = {
-  wrapper: "mx-auto w-[95%] sm:w-[90%] md:max-w-md lg:max-w-lg xl:max-w-xl shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
-  title: "text-neutral-800 dark:text-neutral-200 text-center md:text-left",
-  description: "mt-2 max-w-sm text-neutral-600 dark:text-neutral-300 text-center md:text-left text-xs md:text-sm",
-  form: "my-8",
-  nameRow: "flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4",
-  fieldSpacing: "mb-4 md:mb-6",
-  submitBtn: "group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-input dark:bg-zinc-800",
-  divider: "my-8 h-[1px] w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700",
-  socialGroup: "grid grid-cols-1 sm:grid-cols-3 gap-4",
-  socialBtn: "group/btn shadow-input relative flex h-10 w-full items-center justify-center space-x-2 rounded-md bg-gray-50 px-4 text-black dark:bg-zinc-900 dark:text-white",
-  footerContainer: "mt-6 text-center",
+
+type SignupFormState = {
+  name: string;
+  email: string;
+  password: string;
+  restaurantName: string;
+};
+
+const initialState: SignupFormState = {
+  name: "",
+  email: "",
+  password: "",
+  restaurantName: "",
 };
 
 export function SignupFormDemo() {
   const { goToLogin } = useAuthNavigation();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted");
-  };
+  // --- Form state dynamically generated from fields ---
+  const initialState = FORM_FIELDS.reduce((acc, f) => ({ ...acc, [f.id]: "" }), {});
+  const [formData, setFormData] = useState(initialState);
 
-  const nameRowFields = FORM_FIELDS.filter(f => f.halfWidth);
-  const fullWidthFields = FORM_FIELDS.filter(f => !f.halfWidth);
+  // --- RTK Query mutation ---
+  const [signupAdmin, { isLoading, isSuccess, error }] = useSignupAdminMutation();
+
+  // --- Handle input change (DRY) ---
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  }, []);
+
+  // --- Handle form submit ---
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      const payload: SignupRequest = {
+        name: `${formData.name}`,
+        email: formData.email,
+        password: formData.password,
+        restaurantName: formData.restaurantName,
+        role: Role.Admin, // enforced by type
+      };
+
+      try {
+        await signupAdmin(payload).unwrap();
+        console.log("Signup successful!");
+      } catch (err) {
+        console.error("Signup failed", err);
+      }
+    },
+    [formData, signupAdmin]
+  );
+
+  // --- Split fields for layout ---
+  const nameRowFields = FORM_FIELDS.filter((f) => f.halfWidth);
+  const fullWidthFields = FORM_FIELDS.filter((f) => !f.halfWidth);
 
   return (
-    <div className={classes.wrapper}>
-      <DynamicContent as="h2" className={classes.title}>
+    <div className="mx-auto w-[95%] sm:w-[90%] md:max-w-md lg:max-w-lg xl:max-w-xl shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800">
+      <DynamicContent as="h2" className="text-neutral-800 dark:text-neutral-200 text-center md:text-left">
         Welcome to Aceternity
       </DynamicContent>
-      <DynamicContent as="p" className={classes.description}>
+      <DynamicContent as="p" className="mt-2 max-w-sm text-neutral-600 dark:text-neutral-300 text-center md:text-left text-xs md:text-sm">
         Create an account to unlock full access to our AI tools.
       </DynamicContent>
 
-      <form className={classes.form} onSubmit={handleSubmit}>
-        <div className={classes.nameRow}>
+      <form onSubmit={handleSubmit} className="my-8">
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4">
           {nameRowFields.map((field) => (
-            <FormInput key={field.id} {...field} />
+            <FormInput
+              key={field.id}
+              {...field}
+              value={formData[field.id] as string}
+              onChange={handleChange}
+            />
           ))}
         </div>
 
         {fullWidthFields.map((field) => (
-          <FormInput 
-            key={field.id} 
-            {...field} 
-            containerClassName={classes.fieldSpacing} 
+          <FormInput
+            key={field.id}
+            {...field}
+            value={formData[field.id]}
+            onChange={handleChange}
+            containerClassName="mb-4 md:mb-6"
           />
         ))}
 
-        <button className={classes.submitBtn} type="submit">
-          Sign up &rarr;
-          <BottomGradient />
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="group/btn relative block h-10 w-full rounded-md bg-linear-to-br from-black to-neutral-600 font-medium text-white shadow-input dark:bg-zinc-800"
+        >
+          {isLoading ? "Signing up..." : "Sign up →"}
         </button>
 
-        <div className={classes.divider} />
+        {isSuccess && <p className="mt-2 text-green-600">Signup successful!</p>}
+        {error && <p className="mt-2 text-red-600">Signup failed. Please try again.</p>}
 
-        <div className={classes.socialGroup}>
+        <div className="my-8 h-px w-full bg-linear-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700" />
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {SOCIAL_PLATFORMS.map((platform) => (
-            <SocialButton 
-              key={platform.label} 
-              icon={platform.icon} 
-              label={platform.label} 
-            />
+            <button
+              key={platform.label}
+              type="button"
+              className="group/btn shadow-input relative flex h-10 w-full items-center justify-center space-x-2 rounded-md bg-gray-50 px-4 text-black dark:bg-zinc-900 dark:text-white"
+            >
+              <span className="text-sm font-medium">{platform.label}</span>
+            </button>
           ))}
         </div>
       </form>
 
-      {/* --- INSERTED LOGIN LINK SECTION --- */}
-      <div className={classes.footerContainer}>
-      <DynamicContent as="span" className="text-neutral-600 dark:text-neutral-400">
+      <div className="mt-6 text-center">
+        <DynamicContent as="span" className="text-neutral-600 dark:text-neutral-400">
           Already have an account?{" "}
           <button onClick={goToLogin} className="text-black dark:text-white font-bold hover:underline">
             Login
@@ -104,19 +146,3 @@ export function SignupFormDemo() {
     </div>
   );
 }
-
-// --- Helper Components ---
-const SocialButton = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <button className={classes.socialBtn} type="button">
-    {icon}
-    <span className="text-sm font-medium">{label}</span>
-    <BottomGradient />
-  </button>
-);
-
-const BottomGradient = () => (
-  <>
-    <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-linear-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-    <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-linear-to-r from-transparent via-indigo-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
-  </>
-);
