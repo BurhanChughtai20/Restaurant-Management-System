@@ -1,6 +1,6 @@
 "use client";
+
 import React, { useState, memo, useCallback } from "react";
-import { useRouter } from "next/navigation"; // Import the router for navigation
 import {
   Navbar,
   NavBody,
@@ -12,15 +12,9 @@ import {
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
 import ButtonCom from "./Button";
-import { 
-  Home, 
-  LayoutGrid, 
-  CircleDollarSign, 
-  BookText, 
-  ArrowRight 
-} from "lucide-react";
-import Link from "next/link";
-import { APP_ROUTES } from "@/auth/routes";
+import { Home, LayoutGrid, CircleDollarSign, BookText, ArrowRight } from "lucide-react";
+import { useAppNavigation } from "@/lib/useAppNavigation";
+import { APP_ROUTES } from "@/config/routes";
 
 const classes = {
   container: "relative w-full fixed top-0 left-0 right-0 z-50",
@@ -33,31 +27,37 @@ const classes = {
   mobileButton: "w-full my-primary-btn",
 };
 
+// --- Nav items using centralized APP_ROUTES ---
 const navItems = [
-  { name: "Home", link: APP_ROUTES.home, icon: <Home size={18} /> },
-  { name: "Product", link: APP_ROUTES.product, icon: <LayoutGrid size={18} /> },
-  { name: "Pricing", link: APP_ROUTES.pricing, icon: <CircleDollarSign size={18} /> },
-  { name: "Blog", link: APP_ROUTES.blog, icon: <BookText size={18} /> },
+  { name: "Home", routeKey: "home" as const, icon: <Home size={18} /> },
+  { name: "Product", routeKey: "product" as const, icon: <LayoutGrid size={18} /> },
+  { name: "Pricing", routeKey: "pricing" as const, icon: <CircleDollarSign size={18} /> },
+  { name: "Blog", routeKey: "blog" as const, icon: <BookText size={18} /> },
 ];
 
 export const NavbarCom = memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
+  const { app: appNav } = useAppNavigation(); // centralized navigation
 
-  // Optimized click handler for navigation
   const handleSignUpClick = useCallback(() => {
-    setIsMobileMenuOpen(false); // Ensure menu closes on mobile
-    router.push("/signup");      // Navigate to your new SEO-optimized page
-  }, [router]);
+    setIsMobileMenuOpen(false);
+    appNav.goTo("home"); // type-safe navigation
+  }, [appNav]);
 
   return (
     <div className={classes.container}>
       <Navbar>
         <NavBody>
           <NavbarLogo />
-          <NavItems items={navItems} />
-          
-          {/* --- Desktop Action Button --- */}
+
+          <NavItems
+            items={navItems.map((item) => ({
+              name: item.name,
+              link: APP_ROUTES[item.routeKey],
+              icon: item.icon,
+            }))}
+          />
+
           <div className={classes.desktopButtonContainer}>
             <ButtonCom
               icon={<ArrowRight size={16} />}
@@ -70,6 +70,7 @@ export const NavbarCom = memo(() => {
           </div>
         </NavBody>
 
+        {/* --- Mobile Navigation --- */}
         <MobileNav>
           <MobileNavHeader>
             <NavbarLogo />
@@ -85,15 +86,17 @@ export const NavbarCom = memo(() => {
           >
             <div className={classes.mobileMenuContent}>
               {navItems.map((item, idx) => (
-                <Link
+                <button
                   key={`mobile-link-${idx}`}
-                  href={item.link}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    appNav.goTo(item.routeKey); // type-safe
+                    setIsMobileMenuOpen(false);
+                  }}
                   className={classes.mobileLink}
                 >
                   <span className={classes.mobileLinkIcon}>{item.icon}</span>
                   <span className={classes.mobileLinkText}>{item.name}</span>
-                </Link>
+                </button>
               ))}
             </div>
 

@@ -6,6 +6,7 @@ import { baseMetadata } from "@/lib/metadata";
 import { SuspenseBoundary } from "@/components/SuspenseBoundary";
 import { NavbarCom } from "@/components/navbar-menu";
 import ReduxProvider from "./providers/ReduxProvider";
+import { AlertProvider } from "@/components/DynamicAlert";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -81,11 +82,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
-        {/* Preload fonts for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Structured data for search engines */}
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -93,15 +92,19 @@ export default function RootLayout({
       </head>
       <body className={`${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
         <ReduxProvider>
-        <SuspenseBoundary>
-        <NavbarCom/>
-        </SuspenseBoundary>
-        <SuspenseBoundary>
-          {children}
-        </SuspenseBoundary>
-        <SuspenseBoundary>
-          <Footer/>
-        </SuspenseBoundary>
+          <AlertProvider> {/* <-- Wrap everything inside AlertProvider */}
+            <SuspenseBoundary>
+              <NavbarCom />
+            </SuspenseBoundary>
+
+            <SuspenseBoundary>
+              {children}
+            </SuspenseBoundary>
+
+            <SuspenseBoundary>
+              <Footer />
+            </SuspenseBoundary>
+          </AlertProvider>
         </ReduxProvider>
       </body>
     </html>

@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { FloatingDock } from "@/components/ui/floating-dock";
 import { X, Menu } from "lucide-react";
-import { useDashboardNavigation } from "@/lib/useDashboardNavigation";
+import { useDashboardNavigation } from "@/lib/useAppNavigation";
 import { DASHBOARD_ROUTES, MAIN_MENU_ITEMS } from "@/config/menuConfig";
 
 const NAVBAR_HEIGHT = 50;

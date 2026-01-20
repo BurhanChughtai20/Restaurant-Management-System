@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 import { baseApi } from '@/app/store/api/baseApi';
 import menuReducer from '@/app/store/slices/menuSlice';
 import dashboardReducer from '@/app/store/slices/dashboardSlice';
-import userReducer from '@/app/store/slices/userSlice';
+import userReducer from '@/app/store/slices/authSlice';
 import type { RootState } from '@/app/store/store';
 
 // Type for partial Redux state

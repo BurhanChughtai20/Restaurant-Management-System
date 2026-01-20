@@ -7,6 +7,7 @@ import {
   VerifyEmailRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  VerifyEmailResponse,
 } from './types';
 
 export const authApi = baseApi.injectEndpoints({
@@ -29,7 +30,7 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['Auth'],
     }),
 
-    verifyEmail: builder.mutation<void, VerifyEmailRequest>({
+    verifyEmail: builder.mutation<VerifyEmailResponse, VerifyEmailRequest>({
       query: (body) => ({
         url: '/auth/verify-email',
         method: 'POST',

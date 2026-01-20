@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Command, MoreVertical } from "lucide-react";
 import MenuContent from "./MenuContent";
 import { SideMenuConfig, MenuItem } from "./types";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS, DashboardRouteKey } from "@/config/menuConfig";
-import { useDashboardNavigation } from "@/lib/useDashboardNavigation";
+import { useDashboardNavigation } from "@/lib/useAppNavigation";
 
 const EXPANDED_WIDTH = 240;
 const COLLAPSED_WIDTH = 52;

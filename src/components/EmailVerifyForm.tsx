@@ -1,84 +1,86 @@
 "use client";
 
-import React from "react";
-import DynamicContent from "./Title";
-import FormInput from "./FormInput";
+import React, { useState, useCallback, useMemo } from "react";
 import { useAuthNavigation } from "@/auth";
+import { useVerifyEmailMutation } from "@/app/store/api";
+import { useAlert } from "./DynamicAlert";
 
-// --- Configuration Data (Static) ---
-const VERIFY_FIELDS = [
-  { id: "email", label: "Email Address", placeholder: "tyler@durden.com", type: "email" },
-  { id: "otp", label: "Verification Code", placeholder: "123456", type: "text" },
-];
-
-const UI_TEXT = {
-  title: "Verify your email",
-  description: "We've sent a 6-digit code to your email. Please enter it below to activate your account.",
-  submitLabel: "Verify Account",
-  resendText: "Didn't receive a code?",
-  resendLink: "Resend Code",
-};
-
-const CLASSES = {
-  wrapper: "mx-auto w-[95%] sm:w-[90%] md:max-w-md shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
-  title: "text-neutral-800 dark:text-neutral-200 text-center",
-  description: "mt-2 text-neutral-600 dark:text-neutral-300 text-center text-xs md:text-sm",
-  form: "my-8",
-  fieldSpacing: "mb-4",
-  submitBtn: "group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-input dark:bg-zinc-800",
-  footerContainer: "mt-6 text-center",
-  resendAction: "text-black dark:text-white font-bold hover:underline cursor-pointer ml-1",
-};
-
-// --- Component ---
 export function EmailVerifyForm() {
-  const { goToLogin } = useAuthNavigation();
+  const { goToDashboard } = useAuthNavigation();
+  const { showAlert } = useAlert();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Verifying OTP...");
-  };
+  const [otp, setOtp] = useState("");
+
+  const email = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("signupEmail") || "";
+    }
+    return "";
+  }, []);
+
+  const [verifyEmail, result] = useVerifyEmailMutation();
+  const { isLoading } = result;
+
+  const handleAlert = useCallback(
+    (message: string, type: "error" | "success") => showAlert(message, type),
+    [showAlert],
+  );
+
+  const getErrorMessage = useCallback((err: unknown) => {
+    if (err && typeof err === "object" && "data" in err) {
+      const e = err as { data?: { message?: string }; error?: string };
+      return (
+        e.data?.message || e.error || "Verification failed. Please try again."
+      );
+    }
+    return "Verification failed. Please try again.";
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+
+      if (!otp || otp.length < 4) {
+        return handleAlert("Please enter a valid OTP", "error");
+      }
+
+      if (!email) {
+        return handleAlert("Email not found. Please signup again.", "error");
+      }
+
+      try {
+        const response = await verifyEmail({ email, token: otp }).unwrap();
+
+        if (response.token) {
+          localStorage.setItem("authToken", response.token);
+        }
+
+        handleAlert("Email verified successfully!", "success");
+        goToDashboard();
+      } catch (err: unknown) {
+        handleAlert(getErrorMessage(err), "error");
+      }
+    },
+    [otp, email, verifyEmail, handleAlert, getErrorMessage, goToDashboard],
+  );
 
   return (
-    <div className={CLASSES.wrapper}>
-      <DynamicContent as="h2" className={CLASSES.title}>
-        {UI_TEXT.title}
-      </DynamicContent>
-      <DynamicContent as="p" className={CLASSES.description}>
-        {UI_TEXT.description}
-      </DynamicContent>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <input
+        type="text"
+        placeholder="Enter OTP"
+        value={otp}
+        onChange={(e) => setOtp(e.target.value)}
+        className="border p-2 rounded"
+      />
 
-      <form className={CLASSES.form} onSubmit={handleSubmit}>
-        {VERIFY_FIELDS.map((field) => (
-          <FormInput
-            key={field.id}
-            {...field}
-            containerClassName={CLASSES.fieldSpacing}
-          />
-        ))}
-
-        <button className={CLASSES.submitBtn} type="submit">
-          {UI_TEXT.submitLabel} &rarr;
-          <BottomGradient />
-        </button>
-      </form>
-
-      <div className={CLASSES.footerContainer}>
-        <DynamicContent as="span" className="text-neutral-600 dark:text-neutral-400">
-          {UI_TEXT.resendText}
-          <button onClick={goToLogin} className={CLASSES.resendAction}>
-            {UI_TEXT.resendLink}
-          </button>
-        </DynamicContent>
-      </div>
-    </div>
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="bg-blue-500 text-white p-2 rounded disabled:opacity-50"
+      >
+        {isLoading ? "Verifying..." : "Verify Email"}
+      </button>
+    </form>
   );
 }
-
-// --- Bottom Gradient Component ---
-const BottomGradient = () => (
-  <>
-    <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-    <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-teal-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
-  </>
-);

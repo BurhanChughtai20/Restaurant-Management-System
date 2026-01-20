@@ -2,26 +2,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { AUTH_ROUTES } from "./routes";
+import { AUTH_ROUTES, DASHBOARD_ROUTES } from "@/config/routes";
 
 export const useAuthNavigation = () => {
   const router = useRouter();
 
   return {
+    // Auth routes
     goToLogin: () => router.push(AUTH_ROUTES.login),
     goToSignup: () => router.push(AUTH_ROUTES.signup),
     goToForgotPassword: () => router.push(AUTH_ROUTES.forgotPassword),
     goToResetPassword: () => router.push(AUTH_ROUTES.resetPassword),
     goToVerifyEmail: () => router.push(AUTH_ROUTES.verifyEmail),
 
-    // Generic navigation by route key
-    goTo: (route: keyof typeof AUTH_ROUTES) => {
-      router.push(AUTH_ROUTES[route]);
-    },
+    // Dashboard routes
+    goToDashboard: () => router.push(DASHBOARD_ROUTES.dashboard),
 
-    // Replace navigation
-    replaceWith: (route: keyof typeof AUTH_ROUTES) => {
-      router.replace(AUTH_ROUTES[route]);
-    }
+    // Generic navigation
+    goTo: (route: keyof typeof AUTH_ROUTES) => router.push(AUTH_ROUTES[route]),
+    replaceWith: (route: keyof typeof AUTH_ROUTES) => router.replace(AUTH_ROUTES[route]),
   };
 };

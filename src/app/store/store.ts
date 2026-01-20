@@ -2,21 +2,16 @@ import { configureStore } from "@reduxjs/toolkit";
 import { baseApi } from "./api/baseApi";
 import menuReducer from "./slices/menuSlice";
 import dashboardReducer from "./slices/dashboardSlice";
-import userReducer from "./slices/userSlice";
-
-/**
- * Redux store configuration with RTK Query
- * Centralizes all state management with automatic API caching
- */
+import authReducer from "./slices/authSlice";
+ 
 export const store = configureStore({
   reducer: {
-    // RTK Query API reducer
     [baseApi.reducerPath]: baseApi.reducer,
 
     // Feature slices
     menu: menuReducer,
     dashboard: dashboardReducer,
-    user: userReducer,
+    user: authReducer,
   },
 
   // Adding RTK Query middleware for caching, invalidation, polling, etc.
