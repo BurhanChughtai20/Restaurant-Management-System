@@ -1,4 +1,5 @@
-import { v2 as cloudinary, UploadApiOptions } from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
+import type { UploadApiOptions } from "cloudinary";
 
 const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
 const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -28,7 +29,9 @@ export async function uploadImage(
       ...options,
     };
 
-    const uploadFile = Buffer.isBuffer(file) ? `data:image/jpeg;base64,${file.toString("base64")}` : file;
+    const uploadFile = Buffer.isBuffer(file)
+      ? `data:image/jpeg;base64,${file.toString("base64")}`
+      : file;
 
     const result = await cloudinary.uploader.upload(uploadFile, defaultOptions);
     return result.secure_url;

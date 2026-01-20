@@ -1,81 +1,47 @@
-import { FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
+import type { CreateArticleBody } from "../../types/article.types.ts";
 
-interface CreateArticleBody {
-  title: string;
-  description: string;
-  image?: string | Buffer;
-  restaurantName: string;
-  restaurantWebsite?: string;
+export async function createArticle(
+  req: FastifyRequest<{ Body: CreateArticleBody }>
+) {
+  const user = req.user as { id: number };
 
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords?: string;
-  address?: string;
-  mapLink?: string;
-  phoneNumber?: string;
-  openingHours?: string;
-  socialLinks?: Record<string, string>;
-
-  isPublished?: boolean;
-}
-
-export async function createArticle(req: FastifyRequest<{ Body: CreateArticleBody }>) {
   const {
     title,
     description,
     image,
-    restaurantName,
-    restaurantWebsite,
+    restaurantId,
     metaTitle,
     metaDescription,
-    keywords,
-    address,
-    mapLink,
-    phoneNumber,
     openingHours,
     socialLinks,
     isPublished = false,
   } = req.body;
 
-  if (!title || !description || !restaurantName) {
-    throw new Error("Title, description, and restaurant name are required");
-  }
+  if (!title?.trim()) throw new Error("Title is required");
+  if (!description?.trim()) throw new Error("Description is required");
 
-  const user = req.user as { id: number };
+  const imageUrl = image
+    ? await uploadImage(image, { folder: "articles" })
+    : null;
 
-  let imageUrl: string | null = null;
-  if (image) {
-    try {
-      imageUrl = await uploadImage(image, { folder: "articles" });
-    } catch (err: any) {
-      throw new Error("Failed to upload image: " + err.message);
-    }
-  }
-
-  const seoTitle = metaTitle || title;
-  const seoDescription = metaDescription || description.slice(0, 150);
-
-  const article = await prisma.article.create({
+  return prisma.article.create({
     data: {
-      title,
-      description,
-      image: imageUrl,
-      restaurantName,
-      restaurantWebsite: restaurantWebsite ?? null,
-      metaTitle: seoTitle,
-      metaDescription: seoDescription,
-      keywords: keywords ?? null,
-      address: address ?? null,
-      mapLink: mapLink ?? null,
-      phoneNumber: phoneNumber ?? null,
+      title: title.trim(),
+      description: description.trim(),
+      metaTitle: metaTitle?.trim() ?? title.trim(),
+      metaDescription:
+        metaDescription?.trim() ?? description.slice(0, 150),
+
       openingHours: openingHours ?? null,
-      socialLinks: socialLinks ?? null,
+      socialLinks: socialLinks ? JSON.stringify(socialLinks) : null,
+      image: imageUrl,
+
       isPublished,
       publisherId: user.id,
+      restaurantId,
     },
   });
-
-  return article;
 }

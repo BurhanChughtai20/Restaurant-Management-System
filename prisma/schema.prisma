@@ -176,15 +176,19 @@ model Order {
 }
 
 model Article {
-  id             Int      @id @default(autoincrement())
-  restaurantId   Int
-  title          String   @db.VarChar(200)
-  description    String   @db.Text
-  image          String?
-  isPublished    Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  publisherId    Int
+  id              Int      @id @default(autoincrement())
+  restaurantId    Int
+  title           String   @db.VarChar(200)
+  description     String   @db.Text
+  metaTitle       String?
+  metaDescription String?
+  openingHours    String?  // ✅ add this line
+  socialLinks     String?  // ✅ add this line if needed
+  image           String?
+  isPublished     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  publisherId     Int
 
   publisher   Users      @relation(fields: [publisherId], references: [id], onDelete: Cascade)
   restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -193,6 +197,7 @@ model Article {
   @@index([restaurantId])
   @@index([title])
 }
+
 
 model WhatsAppNumber {
   id           Int      @id @default(autoincrement())

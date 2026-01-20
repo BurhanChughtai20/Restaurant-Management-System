@@ -1,10 +1,9 @@
-import type { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import prisma from '../libs/prisma.ts';
 
 export async function restaurantAuth(
   request: FastifyRequest,
-  reply: FastifyReply,
-  done: HookHandlerDoneFunction
+  reply: FastifyReply
 ) {
   const authHeader = request.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
@@ -12,9 +11,11 @@ export async function restaurantAuth(
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const decoded: any = request.server.jwt.verify(token);
   
-  const { userId, role } = decoded;
+  // JWT verification
+  const decoded: any = request.server.jwt.verify(token);
+  const { role } = decoded;
+
   const userRole = await prisma.userRole.findFirst({
     where: { token, role, isActive: true },
     include: { 
@@ -37,5 +38,6 @@ export async function restaurantAuth(
   (request as any).user = userRole.user;
   (request as any).restaurantId = userRole.user.restaurantId;
 
-  done();
+  // Async function mein done() likhne ki zaroorat nahi hai.
+  // Function khatam hona hi kafi hai.
 }

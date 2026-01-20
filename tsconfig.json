@@ -21,6 +21,6 @@
     "types": ["node"],
     "esModuleInterop": true
   },
-  "include": ["src"],
+  "include": ["src", "src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["node_modules"]
 }

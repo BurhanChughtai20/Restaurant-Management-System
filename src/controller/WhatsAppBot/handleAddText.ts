@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { indexName, pc } from "../../libs/Pinecone.ts";
 import { OpenAIEmbeddings } from "@langchain/openai";
 

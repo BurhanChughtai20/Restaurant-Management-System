@@ -22,8 +22,13 @@ export async function buildApp() {
   });
   await fastify.register(fastifyCookie);
   await fastify.register(fastifyJwt, { secret: jwtSecret });
-  await registerAuthenticate(fastify);
-  await fastify.register(fastifyCors, { origin: true });
+  await fastify.register(registerAuthenticate);
+  await fastify.register(fastifyCors, {
+  origin: ["http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+});
+
   await fastify.register(fastifyResponseValidation);
   fastify.setErrorHandler((error, req, reply) => {
     req.log.error(error);

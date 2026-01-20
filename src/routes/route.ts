@@ -11,7 +11,7 @@ import whatsapp_bot_order_routes from "./whatsapp.bot.order.ts";
 import { whatsappBotRoutes } from "./whatsapp.bot.ts";
 
 export async function registerRoutes(fastify: FastifyInstance) {
-  const API_PREFIX = process.env.API_PREFIX || "/api";
+  const API_PREFIX = process.env.API_PREFIX || "/v1";
 
   await fastify.register(authRoutes, { prefix: `${API_PREFIX}/auth` });
   await fastify.register(orderTakerManagementRoutes, {

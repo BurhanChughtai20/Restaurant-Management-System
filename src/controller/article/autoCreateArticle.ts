@@ -1,59 +1,44 @@
-import { FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
-import { generateArticleAI } from "../../ai/generateArticle.ts";
-
-interface AutoArticleBody {
-  title: string;
-  restaurantName: string;
-  keywords?: string;
-  address?: string;
-  mapLink?: string;
-  phoneNumber?: string;
-  image?: string | Buffer;
-  isPublished?: boolean;
-}
+import { generateArticleAI } from "../ai/generateArticle.ts";
+import type { AutoArticleBody } from "../../types/article.types.ts";
 
 export async function autoCreateArticle(
   req: FastifyRequest<{ Body: AutoArticleBody }>
 ) {
   const user = req.user as { id: number };
 
-const aiArticle = await generateArticleAI({
-  title: req.body.title,
-  restaurantName: req.body.restaurantName,
-  ...(req.body.keywords && { keywords: req.body.keywords }),
-  ...(req.body.address && { address: req.body.address }),
-  ...(req.body.phoneNumber && { phoneNumber: req.body.phoneNumber }),
-  ...(req.body.mapLink && { mapLink: req.body.mapLink }),
-});
+  const { title, restaurantId, keywords, address, mapLink, phoneNumber, image, isPublished } = req.body;
 
+  // Generate AI content
+  const aiArticle = await generateArticleAI({
+    title,
+    restaurantName: "dummy", // optional, for AI prompt
+    ...(keywords && { keywords }),
+    ...(address && { address }),
+    ...(phoneNumber && { phoneNumber }),
+    ...(mapLink && { mapLink }),
+  });
 
-  let imageUrl: string | null = null;
-  if (req.body.image) {
-    imageUrl = await uploadImage(req.body.image, {
-      folder: "articles",
-    });
-  }
+  // Upload image if provided
+  const imageUrl: string | null = image
+    ? await uploadImage(image, { folder: "articles" })
+    : null;
 
+  // Prisma-safe creation
   const article = await prisma.article.create({
     data: {
       title: aiArticle.title,
       description: aiArticle.description,
-      metaTitle: aiArticle.metaTitle,
-      metaDescription: aiArticle.metaDescription,
-      keywords: aiArticle.keywords,
+      metaTitle: aiArticle.metaTitle ?? aiArticle.title,
+      metaDescription: aiArticle.metaDescription ?? aiArticle.description.slice(0, 150),
       openingHours: aiArticle.openingHours ?? null,
-      socialLinks: aiArticle.socialLinks ?? null,
-
-      restaurantName: req.body.restaurantName,
-      address: req.body.address ?? null,
-      mapLink: req.body.mapLink ?? null,
-      phoneNumber: req.body.phoneNumber ?? null,
-
+      socialLinks: aiArticle.socialLinks ? JSON.stringify(aiArticle.socialLinks) : null,
       image: imageUrl,
-      isPublished: req.body.isPublished ?? false,
+      isPublished: isPublished ?? false,
       publisherId: user.id,
+      restaurantId, // Use directly
     },
   });
 

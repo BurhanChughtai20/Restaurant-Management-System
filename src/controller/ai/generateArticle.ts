@@ -1,4 +1,4 @@
-import { llm } from "../libs/langchain.ts";
+ import { llm } from "../../libs/langchain.ts";
 import { articlePrompt } from "./prompts/articlePrompt.ts";
 
 export async function generateArticleAI(input: {
