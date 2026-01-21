@@ -1,13 +1,6 @@
 import prisma from "../../../libs/prisma.ts";
+import { MenuItemParams } from "../../../shared/index.ts";
 import { generateSKU } from "../../../utils/generateSKU.ts";
-
-interface MenuItemParams {
-  name: string;
-  price: number;
-  description?: string;
-  restaurantId: number;
-}
-
 
 export async function CreateMenuItem({
   name,

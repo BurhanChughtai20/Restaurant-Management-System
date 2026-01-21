@@ -31,7 +31,6 @@ model Restaurant {
   slug      String   @unique
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-
   users              Users[]
   menuItems          MenuItem[]
   orders             Order[]

@@ -1,17 +1,9 @@
 import prisma from "../../../libs/prisma.ts";
-
-interface UpdateMenuItemParams {
-  id: number;
-  restaurantId: number; // ✅ required
-  name?: string;
-  price?: number;
-  description?: string;
-  isActive?: boolean;
-}
+import { UpdateMenuItemParams } from "../../../shared/index.ts";
 
 export async function updateMenuItem({
   id,
-  restaurantId, // ✅ ADD THIS
+  restaurantId,
   name,
   price,
   description,

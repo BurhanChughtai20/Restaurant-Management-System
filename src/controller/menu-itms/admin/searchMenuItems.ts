@@ -1,17 +1,6 @@
 import prisma from "../../../libs/prisma.ts";
-import {
-  generateCacheKey,
-  getCachedData,
-  setCachedData,
-} from "../../../libs/redisCache.ts";
-
-interface SearchMenuItemsParams {
-  restaurantId: number; // ✅ REQUIRED
-  search?: string;
-  page: number;
-  limit: number;
-  isActive?: boolean;
-}
+import { getCachedData, setCachedData } from "../../../libs/redisCache.ts";
+import { SearchMenuItemsParams } from "../../../shared/index.ts";
 
 export async function searchMenuItems({
   restaurantId,
@@ -20,63 +9,41 @@ export async function searchMenuItems({
   limit,
   isActive,
 }: SearchMenuItemsParams) {
-  // Generate cache key based on search parameters
-  const cacheKey = generateCacheKey("search:menu_items", {
-    restaurantId,
-    search,
-    page,
-    limit,
-    isActive,
-  });
+  const cacheKey = [
+    "search:menu_items",
+    `restaurant:${restaurantId}`,
+    `search:${search || "all"}`,
+    `page:${page}`,
+    `limit:${limit}`,
+    `active:${isActive ?? "all"}`,
+  ].join("|");
 
-  // Check if data exists in Redis cache
-  const cachedResult = await getCachedData(cacheKey);
+  const cachedResult = await getCachedData<string>(cacheKey);
   if (cachedResult) {
     return cachedResult;
   }
 
-  const skip = (page - 1) * limit;
-
   const where: any = {
-    restaurantId, // 🔐 restaurant isolation
+    restaurantId,
+    ...(isActive !== undefined ? { isActive } : {}),
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
   };
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-    ];
-  }
+  const menuItems = await prisma.menuItem.findMany({
+    where,
+    skip: (page - 1) * limit,
+    take: limit,
+    orderBy: { name: "asc" },
+  });
 
-  if (isActive !== undefined) {
-    where.isActive = isActive;
-  }
+  await setCachedData(cacheKey, menuItems);
 
-  const [items, total] = await Promise.all([
-    prisma.menuItem.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { id: "desc" },
-    }),
-
-    prisma.menuItem.count({
-      where,
-    }),
-  ]);
-
-  const result = {
-    data: items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-
-  // Cache the result for 3 minutes
-  await setCachedData(cacheKey, result);
-
-  return result;
+  return menuItems;
 }

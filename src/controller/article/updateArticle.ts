@@ -1,11 +1,11 @@
 import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
-import type { UpdateArticleBody } from "../../types/article.types.ts";
+import type { UpdateArticleBody } from "../../interfaces/article.types.ts";
 import { Prisma } from "@prisma/client";
 
 export async function updateArticle(
-  req: FastifyRequest<{ Params: { id: string }; Body: UpdateArticleBody }>
+  req: FastifyRequest<{ Params: { id: string }; Body: UpdateArticleBody }>,
 ) {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {

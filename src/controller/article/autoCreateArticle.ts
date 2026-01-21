@@ -2,14 +2,23 @@ import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
 import { generateArticleAI } from "../ai/generateArticle.ts";
-import type { AutoArticleBody } from "../../types/article.types.ts";
+import type { AutoArticleBody } from "../../interfaces/article.types.ts";
 
 export async function autoCreateArticle(
-  req: FastifyRequest<{ Body: AutoArticleBody }>
+  req: FastifyRequest<{ Body: AutoArticleBody }>,
 ) {
   const user = req.user as { id: number };
 
-  const { title, restaurantId, keywords, address, mapLink, phoneNumber, image, isPublished } = req.body;
+  const {
+    title,
+    restaurantId,
+    keywords,
+    address,
+    mapLink,
+    phoneNumber,
+    image,
+    isPublished,
+  } = req.body;
 
   // Generate AI content
   const aiArticle = await generateArticleAI({
@@ -32,9 +41,12 @@ export async function autoCreateArticle(
       title: aiArticle.title,
       description: aiArticle.description,
       metaTitle: aiArticle.metaTitle ?? aiArticle.title,
-      metaDescription: aiArticle.metaDescription ?? aiArticle.description.slice(0, 150),
+      metaDescription:
+        aiArticle.metaDescription ?? aiArticle.description.slice(0, 150),
       openingHours: aiArticle.openingHours ?? null,
-      socialLinks: aiArticle.socialLinks ? JSON.stringify(aiArticle.socialLinks) : null,
+      socialLinks: aiArticle.socialLinks
+        ? JSON.stringify(aiArticle.socialLinks)
+        : null,
       image: imageUrl,
       isPublished: isPublished ?? false,
       publisherId: user.id,

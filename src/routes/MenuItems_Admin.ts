@@ -1,127 +1,104 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { CreateMenuItem } from "../controller/menu-itms/admin/createMenuItem.ts";
-import { getAllMenuItems } from "../controller/menu-itms/admin/getAllMenuItems.ts";
-import { updateMenuItem } from "../controller/menu-itms/admin/updateMenuItem.ts";
-import { deleteMenuItem } from "../controller/menu-itms/admin/deleteMenuItem.ts";
-import { searchMenuItems } from "../controller/menu-itms/admin/searchMenuItems.ts";
-import { paginateMenuItems } from "../controller/menu-itms/admin/paginateMenuItems.ts";
+import type { FastifyInstance } from "fastify";
+import {
+  CreateMenuItem,
+  getAllMenuItems,
+  updateMenuItem,
+  deleteMenuItem,
+  searchMenuItems,
+  paginateMenuItems,
+  MenuItemBody,
+  UpdateMenuItemBody,
+} from "../shared/index.ts";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
 
-interface MenuItemBody {
-  name: string;
-  price: number;
-  description?: string;
-}
-
-interface UpdateMenuItemBody {
-  name?: string;
-  price?: number;
-  description?: string;
-  isActive?: boolean;
-}
-
 async function MenuItemsRoutes(fastify: FastifyInstance) {
-  // Create Menu Item
-  fastify.post<{ Body: MenuItemBody }>(
-    "/create-menu-item",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const createdMenuItem = await CreateMenuItem({
-        ...request.body,
-        restaurantId: (request as any).restaurantId,
-      });
-      return reply.status(201).send(createdMenuItem);
-    }
+
+  function registerPost<T>(path: string, handler: (body: T, restaurantId: number) => Promise<any>) {
+    fastify.post<{ Body: T }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId);
+        return reply.send(result);
+      }
+    );
+  }
+  function registerGet(path: string, handler: (restaurantId: number, query?: any) => Promise<any>) {
+    fastify.get(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(restaurantId, req.query);
+        return reply.send(result);
+      }
+    );
+  }
+  function registerPatch<T>(path: string, handler: (body: T, restaurantId: number, params: any) => Promise<any>) {
+    fastify.patch<{ Body: T; Params: any }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId, req.params);
+        return reply.send(result);
+      }
+    );
+  }
+  function registerDelete(path: string, handler: (restaurantId: number, params: any) => Promise<any>) {
+    fastify.delete<{ Params: any }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(restaurantId, req.params);
+        return reply.send(result);
+      }
+    );
+  }
+
+  registerPost<MenuItemBody>("/create-menu-item", (body, restaurantId) =>
+    CreateMenuItem({ ...body, restaurantId })
   );
 
-  // Get All Menu Items
-  fastify.get(
-    "/",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const menuItems = await getAllMenuItems({ restaurantId });
-      return reply.send(menuItems);
-    }
+  registerGet("/", (restaurantId) => getAllMenuItems({ restaurantId }));
+
+  registerPatch<UpdateMenuItemBody>("/update-menu-item/:id", (body, restaurantId, params) =>
+    updateMenuItem({
+      id: Number(params.id),
+      restaurantId,
+      ...(body.name !== undefined && { name: body.name }),
+      ...(body.price !== undefined && { price: body.price }),
+      ...(body.description !== undefined && { description: body.description }),
+      ...(body.isActive !== undefined && { isActive: body.isActive }),
+    })
   );
 
-  // Update Menu Item
-  fastify.patch<{ Body: UpdateMenuItemBody; Params: { id: string } }>(
-    "/update-menu-item/:id",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { id } = request.params;
-      const { name, price, description, isActive } = request.body;
-
-      const updatedMenuItem = await updateMenuItem({
-        id: Number(id),
-        restaurantId,
-        ...(name !== undefined && { name }),
-        ...(price !== undefined && { price }),
-        ...(description !== undefined && { description }),
-        ...(isActive !== undefined && { isActive }),
-      });
-
-      return reply.send(updatedMenuItem);
-    }
+  registerDelete("/delete-menu-item/:id", (restaurantId, params) =>
+    deleteMenuItem({ id: Number(params.id), restaurantId })
   );
 
-  // Delete Menu Item
-  fastify.delete<{ Params: { id: string } }>(
-    "/delete-menu-item/:id",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { id } = request.params;
-
-      const result = await deleteMenuItem({
-        id: Number(id),
-        restaurantId,
-      });
-      return reply.send(result);
-    }
+  registerGet("/search", (restaurantId, query) =>
+    searchMenuItems({
+      restaurantId,
+      search: query?.search || "",
+      page: Number(query?.page) || 1,
+      limit: Number(query?.limit) || 10,
+      ...(query?.isActive !== undefined && { isActive: query.isActive === "true" }),
+    })
   );
+  
+registerGet("/paginate", (restaurantId, query) =>
+  paginateMenuItems({
+    restaurantId,
+    page: Number(query?.page) || 1,
+    limit: Number(query?.limit) || 10,
+    ...(query?.cursorId && { cursorId: Number(query.cursorId) }),
+  })
+);
 
-  // Search Menu Items
-  fastify.get(
-    "/search",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const query = request.query as any;
 
-      const results = await searchMenuItems({
-        restaurantId,
-        search: query.search || "",
-        page: Number(query.page) || 1,
-        limit: Number(query.limit) || 10,
-        ...(query.isActive !== undefined && {
-          isActive: query.isActive === "true",
-        }),
-      });
-
-      return reply.send(results);
-    }
-  );
-
-  // Paginate Menu Items
-  fastify.get(
-    "/paginate",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const query = request.query as any;
-
-      const result = await paginateMenuItems({
-        restaurantId,
-        page: Number(query.page) || 1,
-        limit: Number(query.limit) || 10,
-      });
-
-      return reply.send(result);
-    }
-  );
 }
 
 export default MenuItemsRoutes;

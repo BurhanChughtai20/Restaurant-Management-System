@@ -1,10 +1,10 @@
 import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
-import type { CreateArticleBody } from "../../types/article.types.ts";
+import type { CreateArticleBody } from "../../interfaces/article.types.ts";
 
 export async function createArticle(
-  req: FastifyRequest<{ Body: CreateArticleBody }>
+  req: FastifyRequest<{ Body: CreateArticleBody }>,
 ) {
   const user = req.user as { id: number };
 
@@ -32,8 +32,7 @@ export async function createArticle(
       title: title.trim(),
       description: description.trim(),
       metaTitle: metaTitle?.trim() ?? title.trim(),
-      metaDescription:
-        metaDescription?.trim() ?? description.slice(0, 150),
+      metaDescription: metaDescription?.trim() ?? description.slice(0, 150),
 
       openingHours: openingHours ?? null,
       socialLinks: socialLinks ? JSON.stringify(socialLinks) : null,

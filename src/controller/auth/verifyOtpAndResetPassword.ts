@@ -2,51 +2,49 @@ import { redisClient } from "../../libs/redis.ts";
 import prisma from "../../libs/prisma.ts";
 import { ApiError } from "../../utils/ApiError.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
-
-interface OtpData {
-  otp: string;
-  userId: string;
-  expiresAt: string;
-  used?: string;
-}
-
+import { OtpData } from "../../shared/index.ts";
 async function findOtpInRedis(otp: string): Promise<{ key: string; data: OtpData }> {
-  const keys = await redisClient.keys("password-reset:*");
+  const key = `password-reset:${otp}`;
+  const dataRaw = await redisClient.hGetAll(key);
 
-  for (const key of keys) {
-    const fields = await redisClient.hKeys(key);
+  if (!dataRaw || Object.keys(dataRaw).length === 0) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
 
-    for (const field of fields) {
-      const value = await redisClient.hGet(key, field);
-      if (!value) continue;
-
-      let data: OtpData;
-      try {
-        data = JSON.parse(value);
-      } catch {
-        continue;
-      }
-
-      if (data.otp === otp) {
-        return { key, data };
-      }
+  // Hash-map style validation
+  const requiredFields: (keyof OtpData)[] = ["otp", "userId", "expiresAt"];
+  for (const field of requiredFields) {
+    if (!dataRaw[field]) {
+      throw new ApiError(400, `Invalid OTP data: missing ${field}`);
     }
   }
 
-  throw new ApiError(400, "Invalid or expired OTP");
+  const data: OtpData = {
+    otp: dataRaw.otp!,
+    userId: dataRaw.userId!,
+    expiresAt: dataRaw.expiresAt!,
+  };
+
+  return { key, data };
 }
 
 function validateOtpData(otpData: OtpData) {
-  if (!otpData.userId) {
-    throw new ApiError(400, "Invalid OTP data: missing userId");
-  }
+  const validators: Record<string, () => void> = {
+    userId: () => {
+      if (!otpData.userId) throw new ApiError(400, "Invalid OTP data: missing userId");
+    },
+    used: () => {
+      if (otpData.used === "true") throw new ApiError(400, "OTP already used");
+    },
+    expiresAt: () => {
+      if (!otpData.expiresAt || parseInt(otpData.expiresAt, 10) < Date.now())
+        throw new ApiError(400, "OTP expired");
+    },
+  };
 
-  if (otpData.used === "true") {
-    throw new ApiError(400, "OTP already used");
-  }
+  for (const key in validators) {
+    validators[key]?.();
 
-  if (!otpData.expiresAt || parseInt(otpData.expiresAt) < Date.now()) {
-    throw new ApiError(400, "OTP expired");
   }
 }
 
@@ -68,7 +66,7 @@ export async function verifyOtpAndResetPassword({
   const hashedPassword = await hashPassword(password);
 
   await prisma.users.update({
-    where: { id: parseInt(otpData.userId) },
+    where: { id: parseInt(otpData.userId, 10) },
     data: { password: hashedPassword },
   });
 

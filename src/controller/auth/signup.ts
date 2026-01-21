@@ -2,18 +2,11 @@ import { redisClient } from "../../libs/redis.ts";
 import { sendOtpEmail } from "../../libs/mailer.ts";
 import { generateOtp } from "../../libs/generateOtp.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
-import type { Role } from "@prisma/client";
-
-interface SignupParams {
-  name: string;
-  email: string;
-  password: string;
-  role: Role;
-}
+import { SignupBody } from "../../shared/index.ts";
 
 const OTP_EXPIRATION_SECONDS = 30;
 
-export async function signup({ name, email, password, role }: SignupParams) {
+export async function signup({ name, email, password, role }: SignupBody) {
   const key = `signup:${email}:${role}`;
 
   const exists = await redisClient.exists(key);
@@ -25,23 +18,13 @@ export async function signup({ name, email, password, role }: SignupParams) {
   const otp = generateOtp();
   const otpExpiresAt = Date.now() + OTP_EXPIRATION_SECONDS * 1000;
 
-  // **NEW: Auto-create restaurant data for Admin**
-  let restaurantData = null;
-  if (role === 'Admin') {
-    restaurantData = {
-      name: `${name}'s Restaurant`,
-      slug: `${email.split('@')[0]}-${Date.now()}` // Unique slug
-    };
-  }
-
-  await redisClient.hSet(key, {
+   await redisClient.hSet(key, {
     name,
     email,
     password: hashedPassword,
     role,
     otp,
     otpExpiresAt: otpExpiresAt.toString(),
-    restaurantData: JSON.stringify(restaurantData),
   });
 
   await redisClient.expire(key, OTP_EXPIRATION_SECONDS);

@@ -1,4 +1,10 @@
 
+export interface Article {
+  id: number;
+  title: string;
+  description: string;
+}
+
 export interface SocialLinks {
   facebook?: string;
   instagram?: string;

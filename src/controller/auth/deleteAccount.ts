@@ -1,31 +1,25 @@
 import { prisma } from "../../libs/prisma.ts";
+import type { Role } from "@prisma/client";
 
-export async function deleteAccount(token: string, role: string) {
-  const userRole = await prisma.userRole.findUnique({
-    where: { token },
+export async function deleteAccount(userId: number, role: Role) {
+  const userRole = await prisma.userRole.findFirst({
+    where: {
+      userId,
+      role,
+      isActive: true,
+    },
   });
 
   if (!userRole) {
-    throw new Error("Invalid token or role");
+    throw new Error("Role mismatch or role not found for this user");
   }
 
-  if (userRole.role !== role) {
-    throw new Error("Role mismatch");
-  }
+  await prisma.otp.deleteMany({ where: { userId } });
+  await prisma.passwordReset.deleteMany({ where: { userId } });
 
-  const userId = userRole.userId;
+  await prisma.userRole.deleteMany({ where: { userId } });
 
-  await prisma.otp.deleteMany({
-    where: { userId },
-  });
-
-  await prisma.passwordReset.deleteMany({
-    where: { userId },
-  });
-
-  await prisma.users.delete({
-    where: { id: userId },
-  });
+  await prisma.users.delete({ where: { id: userId } });
 
   return { message: "Account deleted permanently" };
 };
