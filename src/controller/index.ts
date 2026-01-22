@@ -19,3 +19,7 @@ export { getAllChefs } from "./staff/chef/getAllChefs.ts";
 export { deleteChefConnection } from "./sockets/deleteChefConnection.ts";
 export { updateChefConnection } from "./sockets/updateChefConnection.ts";
 export { searchChefs } from "./staff/chef/searchChefs.ts";
+export { getMenuItemsForChef } from "./orders/chef/getMenuItemsForChef.ts";
+export { getAllCompletedOrdersForChef } from "./orders/chef/getAllCompletedOrders.Chef.ts";
+export { getChefReport } from "./orders/chef/chefReport.service.ts";
+export { getWeeklyTopChefs } from "./orders/chef/getWeeklyTopChefs.Admin.ts";

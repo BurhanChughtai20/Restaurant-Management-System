@@ -30,7 +30,9 @@ async function AdminOrdersRoutes(fastify: FastifyInstance) {
   })
 );
 
-  registerGet("/top-order-takers/weekly", getWeeklyTopOrderTakers);
+registerGet("/top-orderTaker-Weekly", (restaurantId) =>
+  getWeeklyTopOrderTakers({ restaurantId })
+);
 }
 
 export default AdminOrdersRoutes;

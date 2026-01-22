@@ -1,107 +1,60 @@
 import type { FastifyInstance } from "fastify";
+import { Role } from "@prisma/client";
+import { allowRoles } from "../preHandler/roleGuard.ts";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
-import { generateQRToken } from "../utils/generateQRToken.ts";
 import {
-  getOrderTakers,
-  deleteOrderTakerConnection,
-  updateOrderTakerConnection,
-  getOrderTakerStats,
-  searchWaiters,
+  getMenuItemsForChef,
+  getAllCompletedOrdersForChef,
+  getChefReport,
+  getWeeklyTopChefs,
 } from "../controller/index.ts";
-import { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
+import type { MenuItemForChef } from "../controller/orders/chef/getMenuItemsForChef.ts";
 
-async function waitersManagementRoutes(fastify: FastifyInstance) {
-  function registerGet(
+interface AuthenticatedUser {
+  id: number;
+}
+
+async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
+  function registerGet<T = any>(
     path: string,
+    roles: Role[],
     handler: (
       restaurantId: number,
-      query?: any,
-      req?: any,
-      reply?: any,
-    ) => Promise<any>,
+      user: AuthenticatedUser | undefined,
+      query?: any
+    ) => Promise<T>
   ) {
-    fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
+    fastify.get(path, { preHandler: [restaurantAuth, allowRoles(roles)] }, async (req, reply) => {
       const restaurantId = (req as any).restaurantId;
-      const result = await handler(restaurantId, req.query, req, reply);
+      const user = req.user as AuthenticatedUser | undefined;
+      const query = (req.query as any) || {};
+      const result = await handler(restaurantId, user, query);
       return reply.send(result);
     });
   }
 
-  function registerPatch<T>(
-    path: string,
-    handler: (body: T, restaurantId: number, params?: any) => Promise<any>,
-  ) {
-    fastify.patch<{ Body: T; Params: any }>(
-      path,
-      { preHandler: [restaurantAuth] },
-      async (req, reply) => {
-        const restaurantId = (req as any).restaurantId;
-        const result = await handler(req.body as T, restaurantId, req.params);
-        return reply.send(result);
-      },
-    );
-  }
-
-  function registerDelete<T>(
-    path: string,
-    handler: (body: T, restaurantId: number) => Promise<any>,
-  ) {
-    fastify.delete<{ Body: T }>(
-      path,
-      { preHandler: [restaurantAuth] },
-      async (req, reply) => {
-        const restaurantId = (req as any).restaurantId;
-        const result = await handler(req.body as T, restaurantId);
-        return reply.send(result);
-      },
-    );
-  }
-
-  registerGet("/waiters", (restaurantId, query) =>
-    getOrderTakers({
-      restaurantId,
-      limit: Number(query?.limit) || 10,
-      ...(query.cursorId ? { cursorId: Number(query?.cursorId) } : {}),
-    }),
+  // Menu Items for Chef
+  registerGet<MenuItemForChef[]>("/menu-items", [Role.Chef], (restaurantId) =>
+    getMenuItemsForChef(restaurantId)
   );
 
-  // QR token routes
-  registerGet("/token-order-taker", async (_restaurantId, _query, req, reply) =>
-    generateQRToken(req, reply),
-  );
+  // Completed Orders for Chef
+  registerGet("/completed-orders", [Role.Chef], (restaurantId, user) => {
+    if (!user?.id) throw new Error("Unauthorized: Chef ID missing");
+    return getAllCompletedOrdersForChef(restaurantId, user.id);
+  });
 
-  registerDelete<DeleteOrderTakerBody>(
-    "/token-order-taker",
-    (body, restaurantId) =>
-      deleteOrderTakerConnection({ ...body, restaurantId }),
-  );
+  // Chef Performance Reports
+  registerGet("/chef/reports", [Role.Chef], (restaurantId, user, query) => {
+    if (!user?.id) throw new Error("Unauthorized: Chef ID missing");
+    const period = query?.period || "daily";
+    return getChefReport(restaurantId, user.id, period);
+  });
 
-  registerPatch<UpdateOrderTakerBody>(
-    "/token-order-taker",
-    async (body, restaurantId) =>
-      updateOrderTakerConnection({
-        restaurantId,
-        orderTakerId: body.orderTakerId,
-        ...(body.fromTime !== undefined && { fromTime: body.fromTime }),
-        ...(body.toTime !== undefined && { toTime: body.toTime }),
-      }),
-  );
-
-  registerGet("/order-taker/stats", (restaurantId, _query, req, reply) =>
-    getOrderTakerStats(req, reply),
-  );
-
-  registerGet("/waiters/search", (restaurantId, query) =>
-    searchWaiters({
-      restaurantId,
-      search: query?.search,
-      page: Number(query?.page) || 1,
-      limit: Number(query?.limit) || 10,
-      ...(query?.isActive !== undefined && {
-        isActive: query.isActive === "true",
-      }),
-    }),
+  // Weekly Top Chefs (Admin Only)
+  registerGet("/top-chefs/weekly", [Role.Admin], (restaurantId) =>
+    getWeeklyTopChefs(restaurantId)
   );
 }
 
-export default waitersManagementRoutes;
+export default Chef_Orders_Mobile_Routes;

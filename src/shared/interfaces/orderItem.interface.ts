@@ -39,3 +39,16 @@ export interface GetAllOrdersParams {
   limit?: number;
   cursorId?: number;
 }
+
+export interface GetWeeklyTopOrderTakersParams {
+  restaurantId: number;
+  limit?: number;
+  cursorId?: number;
+}
+
+export interface TopOrderTaker {
+  orderTakerId: number;
+  name?: string;
+  email?: string;
+  totalOrders: number;
+}
