@@ -4,23 +4,16 @@ import {
   getCachedData,
   setCachedData,
 } from "../../../libs/redisCache.ts";
-
-interface SearchWaitersParams {
-  restaurantId: number;
-  search?: string;
-  page: number;
-  limit: number;
-  isActive?: boolean | undefined;
-}
+import { SearchOrderTakerParams } from "../../../shared/index.ts";
 
 export async function searchWaiters({
   restaurantId,
   search,
-  page,
-  limit,
+  page = 1,
+  limit = 10,
   isActive,
-}: SearchWaitersParams) {
-  // Generate cache key based on search parameters
+}: SearchOrderTakerParams) {
+
   const cacheKey = generateCacheKey("search:waiters", {
     restaurantId,
     search,
@@ -29,62 +22,32 @@ export async function searchWaiters({
     isActive,
   });
 
-  // Check if data exists in Redis cache
-  const cachedResult = await getCachedData(cacheKey);
+  const cachedResult = await getCachedData<any[]>(cacheKey);
   if (cachedResult) {
     return cachedResult;
   }
-
-  const skip = (page - 1) * limit;
-
+ 
   const where: any = {
     waiter: {
-      restaurantId, // 🔥 Ensure restaurant isolation
+      restaurantId,
+      ...(isActive !== undefined && { isActive }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
     },
   };
 
-  if (search) {
-    where.waiter = {
-      ...where.waiter,
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-      ],
-    };
-  }
+  const waiterSearch = await prisma.waiterConnection.findMany({
+    where,
+    take: limit,
+    skip: (page - 1) * limit,
+    orderBy: { id: "asc" },
+  });
 
-  if (isActive !== undefined) {
-    where.isActive = isActive;
-  }
+  await setCachedData(cacheKey, waiterSearch);
 
-  const [waiters, total] = await Promise.all([
-    prisma.waiterConnection.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { id: "desc" },
-      include: {
-        waiter: {
-          select: { id: true, name: true, email: true, restaurantId: true },
-        },
-      },
-    }),
-
-    prisma.waiterConnection.count({ where }),
-  ]);
-
-  const result = {
-    data: waiters,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-
-  // Cache the result for 3 minutes
-  await setCachedData(cacheKey, result);
-
-  return result;
+  return waiterSearch;
 }

@@ -1,12 +1,7 @@
 import { Role } from "@prisma/client";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { allowRoles } from "../preHandler/roleGuard.ts";
-
-import type {
-  CreateArticleBody,
-  UpdateArticleBody,
-  AutoArticleBody,
-} from "../interfaces/article.types.ts";
+ 
 
 import { createArticle } from "../controller/article/createArticle.ts";
 import { getArticle } from "../controller/article/getArticle.ts";
@@ -14,6 +9,7 @@ import { updateArticle } from "../controller/article/updateArticle.ts";
 import { deleteArticle } from "../controller/article/deleteArticle.ts";
 import { searchArticle } from "../controller/article/searchArticle.ts";
 import { autoCreateArticle } from "../controller/article/autoCreateArticle.ts";
+import { AutoArticleBody, CreateArticleBody, UpdateArticleBody } from "../shared/index.ts";
 
 export default async function articleAdmin(fastify: FastifyInstance) {
   // Create Article

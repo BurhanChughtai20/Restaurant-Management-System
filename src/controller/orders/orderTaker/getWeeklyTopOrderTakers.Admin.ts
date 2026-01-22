@@ -4,7 +4,6 @@ export async function getWeeklyTopOrderTakers(restaurantId: number) {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  // 1️⃣ Group orders by orderTakerId with restaurant isolation
   const grouped = await prisma.order.groupBy({
     by: ["orderTakerId"],
     where: {

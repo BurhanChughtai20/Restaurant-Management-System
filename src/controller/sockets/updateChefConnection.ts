@@ -13,7 +13,6 @@ export const updateChefConnection = async ({
   fromTime,
   toTime,
 }: UpdateChefConnectionParams) => {
-  // 🔥 Verify chef belongs to the restaurant
   const chef = await prisma.users.findFirst({
     where: {
       id: chefId,
@@ -21,6 +20,7 @@ export const updateChefConnection = async ({
       userRoles: {
         some: { role: "Chef" },
       },
+      select: { id: true },
     },
   });
 
@@ -28,19 +28,11 @@ export const updateChefConnection = async ({
     throw new Error("Unauthorized - Chef not in your restaurant");
   }
 
-  const connection = await prisma.chefConnection.findUnique({
-    where: { chefId },
-  });
-
-  if (!connection) {
-    throw new Error("Chef connection not found");
-  }
-
   const updatedConnection = await prisma.chefConnection.update({
     where: { chefId },
     data: {
-      fromTime: fromTime ?? connection.fromTime,
-      toTime: toTime ?? connection.toTime,
+      ...(fromTime && { fromTime }),
+      ...(toTime && { toTime }),
     },
   });
 

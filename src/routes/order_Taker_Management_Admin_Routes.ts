@@ -1,122 +1,106 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { generateQRToken } from "../utils/generateQRToken.ts";
-import { deleteOrderTakerConnection } from "../controller/sockets/deleteOrderTakerConnection.ts";
-import { updateOrderTakerConnection } from "../controller/sockets/updateOrderTakerConnection.ts";
-import { getAllOrderTakers } from "../controller/staff/order_taker/getAllOrderTakers.ts";
-import { getOrderTakerStats } from "../controller/staff/order_taker/getOrderTakerStatsAdmin.ts";
-import { searchWaiters } from "../controller/staff/order_taker/searchWaiters.ts";
-import { paginateWaiters } from "../controller/staff/order_taker/paginateWaiters.ts";
+import type { FastifyInstance } from "fastify";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
-
-interface UpdateOrderTakerBody {
-  orderTakerId: number;
-  fromTime: string;
-  toTime: string;
-}
-
-interface DeleteOrderTakerBody {
-  orderTakerId: number;
-}
+import { generateQRToken } from "../utils/generateQRToken.ts";
+import {
+  getOrderTakers,
+  deleteOrderTakerConnection,
+  updateOrderTakerConnection,
+  getOrderTakerStats,
+  searchWaiters,
+} from "../controller/index.ts";
+import { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
 
 async function waitersManagementRoutes(fastify: FastifyInstance) {
-  // Get all order takers
-  fastify.get(
-    "/",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest) => {
-      const restaurantId = (request as any).restaurantId;
-      return getAllOrderTakers(restaurantId);
-    }
-  );
-
-  // Generate QR Token
-  fastify.get(
-    "/token-order-taker",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const tokenData = await generateQRToken(request, reply);
-      return reply.send(tokenData);
-    }
-  );
-
-  // Delete Order Taker Connection
-  fastify.delete<{ Body: DeleteOrderTakerBody }>(
-    "/token-order-taker",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const result = await deleteOrderTakerConnection(request, reply);
+  function registerGet(
+    path: string,
+    handler: (
+      restaurantId: number,
+      query?: any,
+      req?: any,
+      reply?: any,
+    ) => Promise<any>,
+  ) {
+    fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
+      const restaurantId = (req as any).restaurantId;
+      const result = await handler(restaurantId, req.query, req, reply);
       return reply.send(result);
-    }
+    });
+  }
+
+  function registerPatch<T>(
+    path: string,
+    handler: (body: T, restaurantId: number, params?: any) => Promise<any>,
+  ) {
+    fastify.patch<{ Body: T; Params: any }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId, req.params);
+        return reply.send(result);
+      },
+    );
+  }
+
+  function registerDelete<T>(
+    path: string,
+    handler: (body: T, restaurantId: number) => Promise<any>,
+  ) {
+    fastify.delete<{ Body: T }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId);
+        return reply.send(result);
+      },
+    );
+  }
+
+  registerGet("/waiters", (restaurantId, query) =>
+    getOrderTakers({
+      restaurantId,
+      limit: Number(query?.limit) || 10,
+      ...(query.cursorId ? { cursorId: Number(query?.cursorId) } : {}),
+    }),
   );
 
-  // Update Order Taker Timing
-  fastify.patch<{ Body: UpdateOrderTakerBody }>(
+  // QR token routes
+  registerGet("/token-order-taker", async (_restaurantId, _query, req, reply) =>
+    generateQRToken(req, reply),
+  );
+
+  registerDelete<DeleteOrderTakerBody>(
     "/token-order-taker",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { orderTakerId, fromTime, toTime } = request.body;
-
-      const updated = await updateOrderTakerConnection({
-        restaurantId,
-        orderTakerId,
-        ...(fromTime !== undefined && { fromTime }),
-        ...(toTime !== undefined && { toTime }),
-      });
-
-      return reply.send({
-        message: "Order Taker timing updated successfully",
-        data: updated,
-      });
-    }
+    (body, restaurantId) =>
+      deleteOrderTakerConnection({ ...body, restaurantId }),
   );
 
-  // Get Stats
-  fastify.get(
-    "/order-taker/stats",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const stats = await getOrderTakerStats(request, reply);
-      return reply.send(stats);
-    }
+  registerPatch<UpdateOrderTakerBody>(
+    "/token-order-taker",
+    async (body, restaurantId) =>
+      updateOrderTakerConnection({
+        restaurantId,
+        orderTakerId: body.orderTakerId,
+        ...(body.fromTime !== undefined && { fromTime: body.fromTime }),
+        ...(body.toTime !== undefined && { toTime: body.toTime }),
+      }),
   );
 
-  // Search Waiters
-  fastify.get(
-    "/waiters/search",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { page = 1, limit = 10, search, isActive } = request.query as any;
-
-      const result = await searchWaiters({
-        restaurantId,
-        search,
-        page: Number(page),
-        limit: Number(limit),
-        isActive: isActive !== undefined ? isActive === "true" : undefined,
-      });
-
-      return reply.send(result);
-    }
+  registerGet("/order-taker/stats", (restaurantId, _query, req, reply) =>
+    getOrderTakerStats(req, reply),
   );
 
-  // Paginate Waiters
-  fastify.get(
-    "/waiters/paginate",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { page = 1, limit = 10 } = request.query as any;
-
-      const result = await paginateWaiters({
-        restaurantId,
-        page: Number(page),
-        limit: Number(limit),
-      });
-
-      return reply.send(result);
-    }
+  registerGet("/waiters/search", (restaurantId, query) =>
+    searchWaiters({
+      restaurantId,
+      search: query?.search,
+      page: Number(query?.page) || 1,
+      limit: Number(query?.limit) || 10,
+      ...(query?.isActive !== undefined && {
+        isActive: query.isActive === "true",
+      }),
+    }),
   );
 }
 

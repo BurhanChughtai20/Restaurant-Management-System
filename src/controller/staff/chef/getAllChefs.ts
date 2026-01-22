@@ -1,13 +1,20 @@
 import prisma from "../../../libs/prisma.ts";
-
-export async function getAllChefs(restaurantId: number) {
+import { GetAllChefsInput, PaginatedChefs } from "../../../shared/interfaces/chef.interface.ts";
+export async function getAllChefs({
+  restaurantId,
+  limit = 10,
+  cursorId,
+}: GetAllChefsInput): Promise<PaginatedChefs> {
   const chefs = await prisma.users.findMany({
     where: {
       restaurantId,
-      userRoles: {
-        some: { role: "Chef", isActive: true },
-      },
+      userRoles: { some: { role: "Chef", isActive: true } },
     },
+    take: limit,
+    ...(cursorId !== undefined
+      ? { cursor: { id: cursorId }, skip: 1 }
+      : {}),
+    orderBy: { id: "asc" },
     select: {
       id: true,
       name: true,
@@ -15,10 +22,10 @@ export async function getAllChefs(restaurantId: number) {
       restaurantId: true,
       createdAt: true,
       isEmailVerified: true,
-      chefConnection: {
+      waiterConnection: {
         select: {
           id: true,
-          chefId: true,
+          orderTakerId: true,
           isActive: true,
           fromTime: true,
           toTime: true,
@@ -28,5 +35,8 @@ export async function getAllChefs(restaurantId: number) {
     },
   });
 
-  return chefs;
+  return {
+    data: chefs,
+    nextCursor: chefs[chefs.length - 1]?.id ?? null,
+  };
 }

@@ -13,7 +13,6 @@ export const updateOrderTakerConnection = async ({
   fromTime,
   toTime,
 }: UpdateOrderTakerParams) => {
-  // 🔥 Verify order taker belongs to the restaurant
   const orderTaker = await prisma.users.findFirst({
     where: {
       id: orderTakerId,
@@ -22,25 +21,18 @@ export const updateOrderTakerConnection = async ({
         some: { role: "Order_Taker" },
       },
     },
+    select: { id: true },
   });
 
   if (!orderTaker) {
     throw new Error("Unauthorized - Order Taker not in your restaurant");
   }
 
-  const connection = await prisma.waiterConnection.findUnique({
-    where: { orderTakerId },
-  });
-
-  if (!connection) {
-    throw new Error("Order Taker connection not found");
-  }
-
   const updatedConnection = await prisma.waiterConnection.update({
     where: { orderTakerId },
     data: {
-      fromTime: fromTime ?? connection.fromTime,
-      toTime: toTime ?? connection.toTime,
+      ...(fromTime && { fromTime }),
+      ...(toTime && { toTime }),
     },
   });
 

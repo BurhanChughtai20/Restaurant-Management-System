@@ -6,34 +6,31 @@ import { getWeeklyTopOrderTakers } from "../controller/orders/orderTaker/getWeek
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
 
 async function AdminOrdersRoutes(fastify: FastifyInstance) {
-  
-  // Get all orders for Admin
-  fastify.get(
-    "/",
-    {
-      preHandler: [restaurantAuth, allowRoles([Role.Admin])],
-    },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      
-      const orders = await getAllOrders(restaurantId);
-      return reply.send(orders);
+    function registerGet(
+      path: string,
+      handler: (
+        restaurantId: number,
+        query?: any,
+        req?: any,
+        reply?: any,
+      ) => Promise<any>,
+    ) {
+      fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(restaurantId, req.query, req, reply);
+        return reply.send(result);
+      });
     }
-  );
 
-  // Get Weekly Top Order Takers for Admin
-  fastify.get(
-    "/top-order-takers/weekly",
-    {
-      preHandler: [restaurantAuth, allowRoles([Role.Admin])],
-    },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      
-      const data = await getWeeklyTopOrderTakers(restaurantId);
-      return reply.send(data);
-    }
-  );
+ registerGet("/", (restaurantId, query) =>
+  getAllOrders({
+    restaurantId,
+     limit: Math.min(Number(query?.limit) || 20, 100), 
+    ...(query?.cursorId && { cursorId: Number(query.cursorId) }),
+  })
+);
+
+  registerGet("/top-order-takers/weekly", getWeeklyTopOrderTakers);
 }
 
 export default AdminOrdersRoutes;

@@ -52,3 +52,24 @@ export interface PaginateParams {
   limit: number;
   cursorId: number;
 }
+
+export interface GetAllMenuItemsParams {
+  restaurantId: number;
+  limit?: number;
+  cursorId?: number;
+}
+
+export interface MenuItem {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  restaurantId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PaginatedMenuItems {
+  data: MenuItem[];
+  nextCursor: number | null;
+}

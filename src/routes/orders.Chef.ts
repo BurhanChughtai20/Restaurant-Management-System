@@ -14,7 +14,6 @@ interface AuthenticatedUser {
 
 async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
   
-  // Get Menu Items for Chef
   fastify.get(
     "/menu-items",
     { preHandler: [restaurantAuth, allowRoles([Role.Chef])] },

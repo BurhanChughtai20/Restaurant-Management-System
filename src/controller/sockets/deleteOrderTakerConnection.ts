@@ -1,54 +1,30 @@
-import type { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
+import { DeleteOrderTakerBody } from "../../shared/index.ts";
 
-export interface DeleteOrderTakerBody {
-  orderTakerId: number;
-}
+export const deleteOrderTakerConnection = async ({
+  orderTakerId,
+  restaurantId,
+}: DeleteOrderTakerBody & { restaurantId: number }) => {
 
-export const deleteOrderTakerConnection = async (
-  req: FastifyRequest<{ Body: DeleteOrderTakerBody }>,
-  reply: FastifyReply
-) => {
-  const { orderTakerId } = req.body;
-  const restaurantId = (req as any).restaurantId;
+  const authorized = await prisma.users.findFirst({
+    where: {
+      id: orderTakerId,
+      restaurantId,
+      userRoles: { some: { role: "Order_Taker" } },
+    },
+    select: { id: true }, 
+  });
 
+  if (!authorized) {
+    throw new Error("Unauthorized - Order Taker not in your restaurant");
+  }
   try {
-    // 🔥 Verify order taker belongs to the restaurant
-    const orderTaker = await prisma.users.findFirst({
-      where: {
-        id: orderTakerId,
-        restaurantId,
-        userRoles: {
-          some: { role: "Order_Taker" },
-        },
-      },
-    });
-
-    if (!orderTaker) {
-      return reply
-        .status(403)
-        .send({ message: "Unauthorized - Order Taker not in your restaurant" });
-    }
-
-    const connection = await prisma.waiterConnection.findUnique({
-      where: { orderTakerId },
-    });
-
-    if (!connection) {
-      return reply
-        .status(404)
-        .send({ message: "Order Taker connection not found" });
-    }
-
     await prisma.waiterConnection.delete({
       where: { orderTakerId },
     });
-
-    return reply.send({
-      message: "Order Taker connection deleted successfully",
-    });
-  } catch (err) {
-    console.error(err);
-    return reply.status(500).send({ message: "Server error" });
+  } catch {
+    throw new Error("Order Taker connection not found");
   }
+
+  return { message: "Order Taker connection deleted successfully" };
 };

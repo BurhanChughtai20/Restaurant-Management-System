@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { getCachedData, setCachedData } from "../../../libs/redisCache.ts";
+import { generateCacheKey, getCachedData, setCachedData } from "../../../libs/redisCache.ts";
 import { SearchMenuItemsParams } from "../../../shared/index.ts";
 
 export async function searchMenuItems({
@@ -9,14 +9,13 @@ export async function searchMenuItems({
   limit,
   isActive,
 }: SearchMenuItemsParams) {
-  const cacheKey = [
-    "search:menu_items",
-    `restaurant:${restaurantId}`,
-    `search:${search || "all"}`,
-    `page:${page}`,
-    `limit:${limit}`,
-    `active:${isActive ?? "all"}`,
-  ].join("|");
+  const cacheKey = generateCacheKey("search:menu_items", {
+    restaurantId,
+    search,
+    page,
+    limit,
+    isActive,
+  });
 
   const cachedResult = await getCachedData<string>(cacheKey);
   if (cachedResult) {

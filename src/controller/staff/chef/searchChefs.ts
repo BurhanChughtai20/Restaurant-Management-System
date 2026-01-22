@@ -16,11 +16,10 @@ interface SearchChefParams {
 export async function searchChefs({
   restaurantId,
   search,
-  page,
-  limit,
+  page=1,
+  limit=10,
   isActive,
 }: SearchChefParams) {
-  // Generate cache key based on search parameters
   const cacheKey = generateCacheKey("search:chefs", {
     restaurantId,
     search,
@@ -29,61 +28,32 @@ export async function searchChefs({
     isActive,
   });
 
-  // Check if data exists in Redis cache
-  const cachedResult = await getCachedData(cacheKey);
+  const cachedResult = await getCachedData<any[]>(cacheKey);
   if (cachedResult) {
     return cachedResult;
   }
 
-  const skip = (page - 1) * limit;
-
-  const where: any = {
-    chef: {
-      restaurantId, // 🔥 Ensure restaurant isolation
+   const where: any = {
+    waiter: {
+      restaurantId,
+      ...(isActive !== undefined && { isActive }),
+      ...(search && {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
+        ],
+      }),
     },
   };
 
-  if (search) {
-    where.chef = {
-      ...where.chef,
-      OR: [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-      ],
-    };
-  }
+  const chefsSearch = await prisma.waiterConnection.findMany({
+    where,
+    take: limit,
+    skip: (page - 1) * limit,
+    orderBy: { id: "asc" },
+  });
 
-  if (isActive !== undefined) {
-    where.isActive = isActive;
-  }
+  await setCachedData(cacheKey, chefsSearch);
 
-  const [chefs, total] = await Promise.all([
-    prisma.chefConnection.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { id: "desc" },
-      include: {
-        chef: {
-          select: { id: true, name: true, email: true, restaurantId: true },
-        },
-      },
-    }),
-    prisma.chefConnection.count({ where }),
-  ]);
-
-  const result = {
-    data: chefs,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-
-  // Cache the result for 3 minutes
-  await setCachedData(cacheKey, result);
-
-  return result;
+  return chefsSearch;
 }

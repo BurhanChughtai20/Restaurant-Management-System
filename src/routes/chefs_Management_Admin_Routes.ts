@@ -1,125 +1,108 @@
-import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { generateQRToken } from "../utils/generateQRToken.ts";
-import { getChefStats } from "../controller/staff/chef/getChefStatsAdmin.ts";
-import { deleteChefConnection } from "../controller/sockets/deleteChefConnection.ts";
-import { updateChefConnection } from "../controller/sockets/updateChefConnection.ts";
-import { getAllChefs } from "../controller/staff/chef/getAllChefs.ts";
-import { searchChefs } from "../controller/staff/chef/searchChefs.ts";
-import { paginateChefs } from "../controller/staff/chef/paginateChefs.ts";
+import type { FastifyInstance } from "fastify";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
+import { generateQRToken } from "../utils/generateQRToken.ts";
 
-interface UpdateChefBody {
-  chefId: number;
-  fromTime?: string;
-  toTime?: string;
-}
-
-interface DeleteChefBody {
-  chefId: number;
-}
+import {
+  DeleteChefBody,
+  UpdateChefBody,
+} from "../shared/interfaces/chef.interface.ts";
+import { 
+  deleteChefConnection,
+  getAllChefs, 
+  searchChefs,
+  updateChefConnection,
+} from "../controller/index.ts";
+import { getChefStats } from "../controller/staff/chef/getChefStatsAdmin.ts";
 
 async function chefsManagementRoutes(fastify: FastifyInstance) {
-  
-  // Get all chefs
-  fastify.get(
-    "/",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      const chefs = await getAllChefs(restaurantId);
-      return reply.send(chefs);
-    }
-  );
 
-  // Generate QR Token for Chef
-  fastify.get(
-    "/token-chef",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const tokenData = await generateQRToken(request, reply);
-      return reply.send(tokenData);
-    }
-  );
-
-  // Delete Chef Connection
-  fastify.delete<{ Body: DeleteChefBody }>(
-    "/token-chef",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const result = await deleteChefConnection(request, reply);
+  function registerGet(
+    path: string,
+    handler: (
+      restaurantId: number,
+      query?: any,
+      req?: any,
+      reply?: any,
+    ) => Promise<any>,
+  ) {
+    fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
+      const restaurantId = (req as any).restaurantId;
+      const result = await handler(restaurantId, req.query, req, reply);
       return reply.send(result);
-    }
+    });
+  }
+
+  function registerPatch<T>(
+    path: string,
+    handler: (body: T, restaurantId: number) => Promise<any>,
+  ) {
+    fastify.patch<{ Body: T }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId);
+        return reply.send(result);
+      },
+    );
+  }
+
+  function registerDelete<T>(
+    path: string,
+    handler: (body: T, restaurantId: number) => Promise<any>,
+  ) {
+    fastify.delete<{ Body: T }>(
+      path,
+      { preHandler: [restaurantAuth] },
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId);
+        return reply.send(result);
+      },
+    );
+  }
+
+  registerGet("/chefs", (restaurantId, query) => 
+   getAllChefs({
+        restaurantId, 
+        limit: Number(query?.limit) || 10,
+        ...(query.cursorId ? { cursorId: Number(query?.cursorId) } : {}),
+      }));
+
+  registerGet("/token-chef", async (_restaurantId, _query, req, reply) =>
+    generateQRToken(req, reply),
   );
 
-  // Update Chef Timing
-  fastify.patch<{ Body: UpdateChefBody }>(
-    "/token-chef",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const restaurantId = (request as any).restaurantId;
-      const { chefId, fromTime, toTime } = request.body;
-      
-      const updated = await updateChefConnection({
-        restaurantId,
-        chefId,
-        ...(fromTime !== undefined && { fromTime }),
-        ...(toTime !== undefined && { toTime }),
-      });
-
-      return reply.send({
-        message: "Chef timing updated successfully",
-        data: updated,
-      });
-    }
+  registerDelete<DeleteChefBody>("/token-chef", (body, restaurantId) =>
+    deleteChefConnection({ ...body, restaurantId }),
   );
 
-  // Get Chef Stats
-  fastify.get(
-    "/chef/stats",
-    { preHandler: [restaurantAuth] },
-    async (request, reply) => {
-      const stats = await getChefStats(request, reply);
-      return reply.send(stats);
-    }
+  // Update chef timing
+  registerPatch<UpdateChefBody>("/token-chef", (body, restaurantId) =>
+    updateChefConnection({
+      restaurantId,
+      chefId: body.chefId,
+      ...(body.fromTime !== undefined && { fromTime: body.fromTime }),
+      ...(body.toTime !== undefined && { toTime: body.toTime }),
+    }),
   );
 
-  // Search Chefs with Pagination & Filters
-  fastify.get(
-    "/search",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      const query = request.query as any;
-
-      const result = await searchChefs({
-        restaurantId,
-        search: query.search || "",
-        page: Number(query.page) || 1,
-        limit: Number(query.limit) || 10,
-        ...(query.isActive !== undefined && { isActive: query.isActive === "true" }),
-      });
-
-      return reply.send(result);
-    }
+  // Chef stats
+  registerGet("/chef/stats", (_restaurantId, _query, req, reply) =>
+    getChefStats(req, reply),
   );
 
-  // Paginate Chefs
-  fastify.get(
-    "/paginate",
-    { preHandler: [restaurantAuth] },
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const restaurantId = (request as any).restaurantId;
-      const query = request.query as any;
-
-      const result = await paginateChefs({
-        restaurantId,
-        page: Number(query.page) || 1,
-        limit: Number(query.limit) || 10,
-      });
-
-      return reply.send(result);
-    }
-  );
+  registerGet("/search", (restaurantId, query) =>
+    searchChefs({
+      restaurantId,
+      search: query?.search || "",
+      page: Number(query?.page) || 1,
+      limit: Number(query?.limit) || 10,
+      ...(query?.isActive !== undefined && {
+        isActive: query.isActive === "true",
+      }),
+    }),
+  ); 
 }
 
 export default chefsManagementRoutes;

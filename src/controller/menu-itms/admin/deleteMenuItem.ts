@@ -12,6 +12,7 @@ export async function deleteMenuItem({
       id,
       restaurantId, 
     },
+    select:{id: true},
   });
 
   if (!existingItem) {
