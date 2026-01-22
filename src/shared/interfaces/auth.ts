@@ -53,3 +53,13 @@ export interface OtpData {
   expiresAt: string;
   used?: string;
 }
+
+export interface AuthenticatedUser {
+  id: number;
+}
+export interface AuthenticatedUserExtended {
+  id: number;
+  role?: Role; // optional if you ever want to check role
+  name?: string; // optional extra info
+}
+

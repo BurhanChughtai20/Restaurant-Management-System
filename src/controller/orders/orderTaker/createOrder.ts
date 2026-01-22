@@ -1,15 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-
-interface OrderItemInput {
-  menuItemId: number;
-  quantity: number;
-}
-
-interface CreateOrderInput {
-  restaurantId: number;
-  orderTakerId: number;
-  items: OrderItemInput[];
-}
+import { CreateOrderInput } from "../../../shared/index.ts";
 
 export async function createOrder({
   restaurantId,
@@ -17,8 +7,7 @@ export async function createOrder({
   items,
 }: CreateOrderInput) {
   if (!items.length) throw new Error("Order must have at least one item");
-
-  // 🔥 Verify order taker belongs to restaurant
+ 
   const orderTaker = await prisma.users.findFirst({
     where: {
       id: orderTakerId,

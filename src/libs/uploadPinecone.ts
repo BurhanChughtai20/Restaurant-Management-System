@@ -1,6 +1,6 @@
+import { RestaurantData } from "../shared/index.ts";
 import { prepareVectors } from "./embedData.ts";
 import { indexName, pc } from "./Pinecone.ts";
-import type { RestaurantData } from "../types/user.ts";
 
 export async function uploadToPinecone(
   restaurantId: number,

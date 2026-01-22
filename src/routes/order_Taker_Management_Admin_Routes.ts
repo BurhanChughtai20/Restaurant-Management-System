@@ -9,10 +9,7 @@ import {
   getWeeklyTopChefs,
 } from "../controller/index.ts";
 import type { MenuItemForChef } from "../controller/orders/chef/getMenuItemsForChef.ts";
-
-interface AuthenticatedUser {
-  id: number;
-}
+import { AuthenticatedUser } from "../shared/index.ts";
 
 async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
   function registerGet<T = any>(

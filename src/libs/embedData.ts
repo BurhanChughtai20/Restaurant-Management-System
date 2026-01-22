@@ -1,10 +1,5 @@
-import type {
-  RestaurantData,
-  MenuItem,
-  Order,
-  OrderItem,
-  Article,
-} from "../types/user.ts";
+import { Article, MenuItem, Order, OrderItem, RestaurantData } from "../shared/index.ts";
+
 
 export function prepareVectors(data: RestaurantData, restaurantId: number) {
   const records: {

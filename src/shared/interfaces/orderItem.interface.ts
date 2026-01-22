@@ -52,3 +52,25 @@ export interface TopOrderTaker {
   email?: string;
   totalOrders: number;
 }
+
+
+export interface OrderItemInput {
+  menuItemId: number;
+  quantity: number;
+}
+
+export interface CreateOrderRequestBody {
+  items: OrderItemInput[];
+}
+
+
+export interface OrderItemInput {
+  menuItemId: number;
+  quantity: number;
+}
+
+export interface CreateOrderInput {
+  restaurantId: number;
+  orderTakerId: number;
+  items: OrderItemInput[];
+}

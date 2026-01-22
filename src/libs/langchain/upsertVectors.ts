@@ -1,8 +1,8 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
 import { pc, indexName } from "../Pinecone.ts";
-import type { RestaurantData } from "../../types/user.ts";
 import { prepareVectors } from "../embedData.ts";
+import { RestaurantData } from "../../shared/index.ts";
 
 export async function upsertVectors(
   restaurantId: number,

@@ -1,93 +1,108 @@
-import { Role } from "@prisma/client";
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { allowRoles } from "../preHandler/roleGuard.ts";
- 
+// import { Role } from "@prisma/client";
+// import type { FastifyInstance } from "fastify";
+// import { allowRoles } from "../preHandler/roleGuard.ts";
 
-import { createArticle } from "../controller/article/createArticle.ts";
-import { getArticle } from "../controller/article/getArticle.ts";
-import { updateArticle } from "../controller/article/updateArticle.ts";
-import { deleteArticle } from "../controller/article/deleteArticle.ts";
-import { searchArticle } from "../controller/article/searchArticle.ts";
-import { autoCreateArticle } from "../controller/article/autoCreateArticle.ts";
-import { AutoArticleBody, CreateArticleBody, UpdateArticleBody } from "../shared/index.ts";
+// import{
+//    CreateArticleBody,
+//    AutoArticleBody,
+//    UpdateArticleBody,
+//   createArticle,
+//   autoCreateArticle,
+//   getArticle,
+//   updateArticle,
+//   searchArticle,
+//   deleteArticle,
+//   AuthenticatedUser,
+// } from "../shared/index.ts";
 
-export default async function articleAdmin(fastify: FastifyInstance) {
-  // Create Article
-  fastify.post<{ Body: CreateArticleBody }>(
-    "/create",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const article = await createArticle(req);
-      return reply.code(201).send(article);
-    },
-  );
+// export default async function articleAdmin(fastify: FastifyInstance) {
+  
+//   // Generic POST route helper
+//   function registerPost<T = any>(
+//     path: string,
+//     roles: Role[],
+//     handler: (req: any, user?: AuthenticatedUser) => Promise<T>
+//   ) {
+//     fastify.post<{ Body: T }>(
+//       path,
+//       { preHandler: [fastify.authenticate, allowRoles(roles)] },
+//       async (req, reply) => {
+//         const user = req.user as AuthenticatedUser | undefined;
+//         const result = await handler(req, user);
+//         return reply.code(201).send(result);
+//       }
+//     );
+//   }
 
-  // Auto Create Article
-  fastify.post<{ Body: AutoArticleBody }>(
-    "/auto-create",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const article = await autoCreateArticle(req);
-      return reply.code(201).send(article);
-    },
-  );
+//   // Generic GET route helper
+//   function registerGet<T = any>(
+//     path: string,
+//     roles: Role[],
+//     handler: (req: any, user?: AuthenticatedUser) => Promise<T>
+//   ) {
+//     fastify.get(
+//       path,
+//       { preHandler: [fastify.authenticate, allowRoles(roles)] },
+//       async (req, reply) => {
+//         const user = req.user as AuthenticatedUser | undefined;
+//         const result = await handler(req, user);
+//         return reply.send(result);
+//       }
+//     );
+//   }
 
-  // Get All Articles (Paginated)
-  fastify.get(
-    "/",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const query = req.query as { page?: string };
-      const page = Number(query.page || 1);
+//   // Generic PATCH route helper
+//   function registerPatch<T = any>(
+//     path: string,
+//     roles: Role[],
+//     handler: (req: any, user?: AuthenticatedUser) => Promise<T>
+//   ) {
+//     fastify.patch<{ Body: T; Params: { id: string } }>(
+//       path,
+//       { preHandler: [fastify.authenticate, allowRoles(roles)] },
+//       async (req, reply) => {
+//         const user = req.user as AuthenticatedUser | undefined;
+//         const result = await handler(req, user);
+//         return reply.send(result);
+//       }
+//     );
+//   }
 
-      const result = await getArticle(page, 10);
-      return reply.send(result);
-    },
-  );
+//   // Generic DELETE route helper
+//   function registerDelete(
+//     path: string,
+//     roles: Role[],
+//     handler: (id: number, user?: AuthenticatedUser) => Promise<any>
+//   ) {
+//     fastify.delete<{ Params: { id: string } }>(
+//       path,
+//       { preHandler: [fastify.authenticate, allowRoles(roles)] },
+//       async (req, reply) => {
+//         const id = Number(req.params.id);
+//         const user = req.user as AuthenticatedUser | undefined;
+//         const result = await handler(id, user);
+//         return reply.send({ message: "Deleted successfully", result });
+//       }
+//     );
+//   }
 
-  // Update Article
-  fastify.patch<{ Params: { id: string }; Body: UpdateArticleBody }>(
-    "/:id",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const result = await updateArticle(req);
-      return reply.send(result);
-    },
-  );
+//   // Routes
+//   registerPost<CreateArticleBody>("/create", [Role.Admin], createArticle);
+//   registerPost<AutoArticleBody>("/auto-create", [Role.Admin], autoCreateArticle);
 
-  // Delete Article
-  fastify.delete<{ Params: { id: string } }>(
-    "/:id",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const id = Number(req.params.id);
-      const article = await deleteArticle(id);
-      return reply.send({ message: "Article deleted successfully", article });
-    },
-  );
+//   registerGet("/", [Role.Admin], async (req) => {
+//     const query = req.query as { page?: string };
+//     const page = Number(query.page || 1);
+//     return getArticle(page, 10);
+//   });
 
-  // Search Article
-  fastify.get(
-    "/search",
-    {
-      preHandler: [fastify.authenticate, allowRoles([Role.Admin])],
-    },
-    async (req, reply) => {
-      const query = req.query as { q?: string };
-      const keyword = query.q || "";
+//   registerPatch<UpdateArticleBody>("/:id", [Role.Admin], updateArticle);
 
-      const results = await searchArticle(keyword);
-      return reply.send(results);
-    },
-  );
-}
+//   registerDelete("/:id", [Role.Admin], deleteArticle);
+
+//   registerGet("/search", [Role.Admin], async (req) => {
+//     const query = req.query as { q?: string };
+//     const keyword = query.q || "";
+//     return searchArticle(keyword);
+//   });
+// }

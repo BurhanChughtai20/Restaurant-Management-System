@@ -17,7 +17,7 @@ export interface CreateArticleBody {
   title: string;
   description: string;
 
-  metaTitle?: string;
+  metaTitle?: string | null;
   metaDescription?: string;
   openingHours?: string;
 
@@ -26,6 +26,7 @@ export interface CreateArticleBody {
 
   isPublished?: boolean;
 }
+
 
 export interface UpdateArticleBody {
   title?: string;

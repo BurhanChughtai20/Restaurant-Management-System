@@ -1,7 +1,7 @@
 import type { FastifyRequest } from "fastify";
 import prisma from "../../libs/prisma.ts";
 import { uploadImage } from "../../utils/imageUploader.ts";
-import type { CreateArticleBody } from "../../interfaces/article.types.ts";
+import { CreateArticleBody } from "../../shared/index.ts";
 
 export async function createArticle(
   req: FastifyRequest<{ Body: CreateArticleBody }>,
