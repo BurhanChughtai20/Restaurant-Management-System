@@ -146,23 +146,25 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         className,
       )}
     >
-      {items.map((item, idx) => (
-        <Link
-          onMouseEnter={() => setHovered(idx)}
-          onClick={onItemClick}
-          className={classes.navLink}
-          key={`link-${idx}`}
-          href={item.link}
-        >
-          {hovered === idx && (
-            <motion.div
-              layoutId="hovered"
-              className={classes.navLinkHover}
-            />
-          )}
-          <span className={classes.navLinkText}>{item.name}</span>
-        </Link>
-      ))}
+      {items
+        .filter((item) => item && item.link) // Filter out items with missing/undefined links
+        .map((item, idx) => (
+          <Link
+            onMouseEnter={() => setHovered(idx)}
+            onClick={onItemClick}
+            className={classes.navLink}
+            key={`link-${idx}`}
+            href={item.link || "/"} // Fallback to "/" if link is somehow still undefined
+          >
+            {hovered === idx && (
+              <motion.div
+                layoutId="hovered"
+                className={classes.navLinkHover}
+              />
+            )}
+            <span className={classes.navLinkText}>{item.name}</span>
+          </Link>
+        ))}
     </motion.div>
   );
 };
@@ -217,7 +219,6 @@ export const MobileNavMenu = ({
   children,
   className,
   isOpen,
-  onClose,
 }: MobileNavMenuProps) => {
   return (
     <AnimatePresence>

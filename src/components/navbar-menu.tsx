@@ -12,7 +12,7 @@ import {
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
 import ButtonCom from "./Button";
-import { Home, LayoutGrid, CircleDollarSign, BookText, ArrowRight } from "lucide-react";
+import { Home,  CircleDollarSign, BookText, ArrowRight } from "lucide-react";
 import { useAppNavigation } from "@/lib/useAppNavigation";
 import { APP_ROUTES } from "@/config/routes";
 
@@ -30,7 +30,6 @@ const classes = {
 // --- Nav items using centralized APP_ROUTES ---
 const navItems = [
   { name: "Home", routeKey: "home" as const, icon: <Home size={18} /> },
-  { name: "Product", routeKey: "product" as const, icon: <LayoutGrid size={18} /> },
   { name: "Pricing", routeKey: "pricing" as const, icon: <CircleDollarSign size={18} /> },
   { name: "Blog", routeKey: "blog" as const, icon: <BookText size={18} /> },
 ];

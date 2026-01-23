@@ -4,17 +4,12 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 // Dynamic imports for code splitting
 const PricingCards = dynamic(() => import('@/components/PricingCards'), {
-  loading: () => <div className="min-h-[600px]" />,
-  ssr: true,
-});
-
-const PricingHero = dynamic(() => import('@/components/PricingHero'), {
-  loading: () => <div className="min-h-[300px]" />,
+  loading: () => <div className="min-h-150" />,
   ssr: true,
 });
 
 const TrustedBy = dynamic(() => import('@/components/TrustedBy'), {
-  loading: () => <div className="min-h-[400px]" />,
+  loading: () => <div className="min-h-100" />,
   ssr: true,
 });
 
@@ -34,8 +29,7 @@ export const revalidate = 3600;
 
 const PricingPage = () => {
   return (
-    <div className={classes.container}>
-      <PricingHero/>
+    <div className={classes.container}> 
       <PricingCards/>
       <TrustedBy/>
     </div>

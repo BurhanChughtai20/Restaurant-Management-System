@@ -21,7 +21,6 @@ export const DASHBOARD_ROUTES = {
 
 export const APP_ROUTES = {
   home: "/",
-  product: "/product",
   pricing: "/pricing",
   blog: "/blog",
 } as const;
