@@ -1,21 +1,15 @@
 import prisma from "../../../libs/prisma.ts";
+import { GetRestaurantIdForChef, MenuItemForChef } from "../../../shared/interfaces/chef.interface.ts";
 
-export interface MenuItemForChef {
-  id: number;
-  name: string;
-  description?: string | null;
-  quantity?: number;
-  orderId?: number;
-}
-
+const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
 export async function getMenuItemsForChef(
-  restaurantId: number
+  restaurant: GetRestaurantIdForChef
 ): Promise<MenuItemForChef[]> {
-  const twentySecondsAgo = new Date(Date.now() - 60 * 1000);
+  const { restaurantId } = restaurant;
 
   const recentOrders = await prisma.order.findMany({
     where: {
-      restaurantId, // 🔥 Ensure restaurant isolation
+      restaurantId,
       status: "PENDING",
       createdAt: { gte: twentySecondsAgo },
     },
@@ -29,15 +23,20 @@ export async function getMenuItemsForChef(
         } as const,
       },
     },
+    orderBy: { createdAt: "desc" },
   });
 
-  return recentOrders.flatMap((order) =>
-    order.items.map((item) => ({
+return recentOrders.reduce<MenuItemForChef[]>((acc, order) => {
+  for (const item of order.items) {
+    acc.push({
       id: item.menuItemId,
       name: item.name,
       description: item.description,
       quantity: item.quantity,
       orderId: order.id,
-    }))
-  );
+    });
+  }
+  return acc;
+}, []);
+
 }

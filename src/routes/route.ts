@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
 
 import authRoutes from "./auth.ts";
-import orderTakerManagementRoutes from "./order_Taker_Management_Admin_Routes.ts";
-import chefsManagementRoutes from "./chefs_Management_Admin_Routes.ts";
+import orderTakerManagementRoutes from "./orderTakerManagementAdminRoutes.ts";
+import chefsManagementRoutes from "./chefsManagementAdminRoutes.ts";
 import MenuItemsAdminRoutes from "./MenuItems_Admin.ts";
 import OrderTaker_Mobile_Routes from "./orders.Order_Taker.ts";
 import MenuItems_Chef_Mobile_Routes from "./orders.Chef.ts";

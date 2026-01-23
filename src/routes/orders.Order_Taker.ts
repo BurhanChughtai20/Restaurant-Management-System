@@ -157,7 +157,7 @@ async function OrderTaker_Orders_Mobile_Routes(fastify: FastifyInstance) {
         restaurantId,
         orderTakerId: user.id,
         items: body.items,
-      })
+      }),
   );
 
   registerPatch<CreateOrderRequestBody>(
@@ -166,9 +166,7 @@ async function OrderTaker_Orders_Mobile_Routes(fastify: FastifyInstance) {
     (restaurantId, user, params, body) => {
       const orderId = parseInt(params.id, 10);
       
-      if (isNaN(orderId) || orderId <= 0) {
-        throw new ApiError(400, "Invalid order ID");
-      }
+      if (isNaN(orderId) || orderId <= 0) throw new ApiError(400, "Invalid order ID");
 
       return updateOrder({
         restaurantId,

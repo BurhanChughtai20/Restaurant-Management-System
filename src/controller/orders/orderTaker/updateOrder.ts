@@ -1,126 +1,78 @@
 import prisma from "../../../libs/prisma.ts";
-
-interface OrderItemUpdateInput {
-  menuItemId: number;
-  quantity: number;
-}
-
-interface UpdateOrderInput {
-  restaurantId: number;
-  orderId: number;
-  items: OrderItemUpdateInput[];
-}
-
-interface OrderChangeMessage {
-  type: "ADDED" | "UPDATED" | "REMOVED";
-  message: string;
-}
+import { OrderChangeMessage, OrderItem, UpdateOrderInput } from "../../../shared/index.ts";
 
 export async function updateOrder({
   restaurantId,
   orderId,
   items,
-}: UpdateOrderInput) {
+}: UpdateOrderInput): Promise<{ orderItems: OrderItem[]; changeLogs: OrderChangeMessage[] }> {
   const changeLogs: OrderChangeMessage[] = [];
   let totalAmount = 0;
 
-  const updatedOrder = await prisma.$transaction(async (tx) => {
-    // 🔥 Verify order belongs to restaurant
+  const updatedOrderItems = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findFirst({
-      where: {
-        id: orderId,
-        restaurantId,
+      where: { id: orderId, restaurantId },
+      include: {
+        items: {
+          select: {
+            id: true,
+            menuItemId: true,
+            name: true,
+            description: true,
+            price: true,
+            quantity: true,
+            total: true,
+          },
+        },
       },
     });
 
-    if (!order) {
-      throw new Error("Unauthorized - Order not in your restaurant");
-    }
+    if (!order) throw new Error("Order not found");
 
-    // ⚡ Select all needed fields
-    const existingItems = await tx.orderItem.findMany({
-      where: { orderId },
-      select: {
-        id: true,
-        menuItemId: true,
-        name: true,
-        description: true,
-        quantity: true,
-        price: true,
-        total: true,
-      },
-    });
-
-    const existingMap = new Map(
-      existingItems.map((item) => [item.menuItemId, item])
+    const mapItems: Map<number, typeof order.items[0]> = new Map(
+      order.items.map((item) => [item.menuItemId, item])
     );
 
-    for (const item of items) {
-      const menuItem = await tx.menuItem.findFirst({
-        where: {
-          id: item.menuItemId,
-          restaurantId, // 🔥 Ensure menu item belongs to restaurant
-        },
-      });
+    for (const newItem of items) {
+  if (mapItems.has(newItem.menuItemId)) {
+  } else {
+    const menuItem = await tx.menuItem.findUnique({ where: { id: newItem.menuItemId } });
+    if (!menuItem) throw new Error("Menu item not found");
 
-      if (!menuItem) {
-        throw new Error(
-          `Menu item ${item.menuItemId} not found in your restaurant`
-        );
-      }
+    await tx.orderItem.create({
+      data: {
+        orderId,
+        menuItemId: menuItem.id,
+        name: menuItem.name,
+        description: menuItem.description,
+        price: menuItem.price,
+        quantity: newItem.quantity,
+        total: menuItem.price * newItem.quantity,
+      },
+    });
+  }
+}
+    const newMenuItemIds = new Set(items.map((i) => i.menuItemId));
 
-      const total = menuItem.price * item.quantity;
-      totalAmount += total;
+    for (const [menuItemId, existingItem] of mapItems.entries()) {
+      if (!newMenuItemIds.has(menuItemId)) {
+        await tx.orderItem.delete({ where: { id: existingItem.id } });
+        totalAmount -= existingItem.total;
 
-      if (existingMap.has(item.menuItemId)) {
-        const existing = existingMap.get(item.menuItemId)!;
-        if (existing.quantity !== item.quantity) {
-          changeLogs.push({
-            type: "UPDATED",
-            message: `${menuItem.name} quantity updated from ${existing.quantity} → ${item.quantity}`,
-          });
-        }
-
-        await tx.orderItem.update({
-          where: { id: existing.id },
-          data: { quantity: item.quantity, total },
-        });
-
-        existingMap.delete(item.menuItemId);
-      } else {
         changeLogs.push({
-          type: "ADDED",
-          message: `${menuItem.name} added (qty: ${item.quantity})`,
-        });
-
-        await tx.orderItem.create({
-          data: {
-            orderId,
-            menuItemId: menuItem.id,
-            name: menuItem.name,
-            description: menuItem.description,
-            quantity: item.quantity,
-            price: menuItem.price,
-            total,
-          },
+          type: "REMOVED",
+          message: `${existingItem.name} removed`,
         });
       }
     }
 
-    for (const removed of existingMap.values()) {
-      changeLogs.push({
-        type: "REMOVED",
-        message: `${removed.name} removed`,
-      });
-      await tx.orderItem.delete({ where: { id: removed.id } });
-    }
-
-    return tx.order.update({
+    await tx.order.update({
       where: { id: orderId },
       data: { totalAmount },
-      include: { items: true },
     });
+
+    return tx.orderItem.findMany({ where: { orderId } });
   });
 
-  return { order: updatedOrder, changes: changeLogs };
+  return { orderItems: updatedOrderItems, changeLogs };
 }

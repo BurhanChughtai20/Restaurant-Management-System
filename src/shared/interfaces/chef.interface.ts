@@ -34,7 +34,39 @@ export interface PaginatedChefs {
 }
 
 
-export interface DeleteChefInput {
+export interface ChefInput {
   restaurantId: number;
   chefId: number;
+}
+
+
+export interface MenuItemForChef {
+  id: number;
+  name: string;
+  description?: string | null;
+  quantity?: number;
+  orderId?: number;
+}
+
+export interface GetRestaurantIdForChef {
+  restaurantId: number
+}
+
+export interface CompletedOrderItem {
+  id: number;
+  quantity: number;
+  menuItem: {
+    id: number;
+    name: string;
+    description?: string | null;
+  };
+}
+
+export interface CompletedOrder {
+  id: number;
+  chefId: number;
+  restaurantId: number;
+  status: "COMPLETED";
+  createdAt: Date;
+  items: CompletedOrderItem[];
 }

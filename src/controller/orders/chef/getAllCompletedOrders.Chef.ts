@@ -1,39 +1,44 @@
 import prisma from "../../../libs/prisma.ts";
+import {
+  ChefInput,
+  CompletedOrder,
+} from "../../../shared/interfaces/chef.interface.ts";
 
 export async function getAllCompletedOrdersForChef(
-  restaurantId: number,
-  chefId: number
-) {
-  try {
-    // 🔥 Verify chef belongs to restaurant
-    const chef = await prisma.users.findFirst({
-      where: {
-        id: chefId,
-        restaurantId,
-        userRoles: { some: { role: "Chef" } },
-      },
-    });
+  input: ChefInput,
+): Promise<CompletedOrder[]> {
+  const { restaurantId, chefId } = input;
 
-    if (!chef) {
-      throw new Error("Unauthorized - Chef not in your restaurant");
-    }
+  const chef = await prisma.users.findFirst({
+    where: {
+      id: chefId,
+      restaurantId,
+      userRoles: { some: { role: "Chef" } },
+    },
+  });
 
-    const orders = await prisma.order.findMany({
-      where: {
-        restaurantId, // 🔥 Ensure restaurant isolation
-        chefId,
-        status: "COMPLETED",
-      },
-      include: {
-        items: {
-          include: { menuItem: true },
+  if (!chef) {
+    throw new Error("Unauthorized - Chef not in your restaurant");
+  }
+
+  const orders = await prisma.order.findMany({
+    where: {
+      restaurantId,
+      chefId,
+      status: "COMPLETED",
+      users: { some: { id: chefId, userRoles: { some: { role: "Chef" } } } },
+    },
+    include: {
+      items: {
+        select: {
+          id: true,
+          quantity: true,
+          menuItem: { select: { id: true, name: true, description: true } },
         },
       },
-      orderBy: { createdAt: "desc" },
-    });
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    return orders;
-  } catch (error) {
-    throw new Error("Failed to fetch completed orders for chef");
-  }
+  return orders as CompletedOrder[];
 }

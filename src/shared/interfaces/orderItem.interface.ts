@@ -10,7 +10,9 @@ export interface OrderItem {
   description?: string | null;
   quantity: number;
   price: number;
+  total?: number; // optional
 }
+
 export interface AdminOrderItem {
   id: number;
   orderId: number;           // Add this!
@@ -73,4 +75,28 @@ export interface CreateOrderInput {
   restaurantId: number;
   orderTakerId: number;
   items: OrderItemInput[];
+}
+
+export interface OrderItemUpdateInput {
+  price: any;
+  description: null;
+  name: any;
+  menuItemId: number;
+  quantity: number;
+}
+
+export interface UpdateOrderInput {
+  restaurantId: number;
+  orderId: number;
+  items: OrderItemInput[]; // keep only client fields
+}
+
+export interface OrderChangeMessage {
+  type: "ADDED" | "UPDATED" | "REMOVED";
+  message: string;
+}
+
+export interface GetOrdersByOrderTakerInput {
+  restaurantId: number;
+  orderTakerId: number;
 }

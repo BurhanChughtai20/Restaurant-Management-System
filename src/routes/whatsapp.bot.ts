@@ -1,4 +1,4 @@
-import type{ FastifyInstance } from "fastify";
+import type { FastifyInstance } from "fastify";
 import {
   registerWhatsAppNumber,
   handleClientMessage,
@@ -6,35 +6,66 @@ import {
   getPendingWhatsAppOrders,
   completeWhatsAppOrder,
 } from "../controller/WhatsAppBot/whatsappBotController.ts";
+
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
 import { allowRoles } from "../preHandler/roleGuard.ts";
 
 export async function whatsappBotRoutes(fastify: FastifyInstance) {
-  // 🔥 ADMIN ROUTES - Register and manage WhatsApp numbers
-  fastify.post(
+
+
+  function registerAdminGet(
+    path: string,
+    handler: any,
+  ) {
+    fastify.get(path, {
+      preHandler: [restaurantAuth, allowRoles(["Admin"])],
+    }, handler);
+  }
+
+  function registerAdminPost(
+    path: string,
+    handler: any,
+  ) {
+    fastify.post(path, {
+      preHandler: [restaurantAuth, allowRoles(["Admin"])],
+    }, handler);
+  }
+
+  function registerPublicPost(
+    path: string,
+    handler: any,
+  ) {
+    fastify.post(path, handler);
+  }
+
+  // Register WhatsApp number
+  registerAdminPost(
     "/admin/whatsapp/numbers",
-    { preHandler: [restaurantAuth, allowRoles(["Admin"])] },
-    registerWhatsAppNumber
+    registerWhatsAppNumber,
   );
 
-  // 🔥 ADMIN ROUTE - Get pending WhatsApp orders for order takers
-  fastify.get(
+  // Get pending WhatsApp orders
+  registerAdminGet(
     "/admin/whatsapp/orders/pending",
-    { preHandler: [restaurantAuth, allowRoles(["Admin"])] },
-    getPendingWhatsAppOrders
+    getPendingWhatsAppOrders,
   );
 
-  // 🔥 ADMIN ROUTE - Convert WhatsApp order to regular order
-  fastify.post(
+  // Convert WhatsApp order to regular order
+  registerAdminPost(
     "/admin/whatsapp/orders/complete",
-    { preHandler: [restaurantAuth, allowRoles(["Admin"])] },
-    completeWhatsAppOrder
+    completeWhatsAppOrder,
   );
 
-  // 🔥 PUBLIC ROUTES - Client messaging (no auth required, but restaurantId must match registered number)
-  // Client: POST /whatsapp/message { phoneNumber, message, restaurantId }
-  fastify.post("/whatsapp/message", handleClientMessage);
 
-  // Client: POST /whatsapp/order { phoneNumber, restaurantId, clientName, address, items }
-  fastify.post("/whatsapp/order", handleOrderMessage);
+  // Client sends message
+  registerPublicPost(
+    "/whatsapp/message",
+    handleClientMessage,
+  );
+
+  // Client places order
+  registerPublicPost(
+    "/whatsapp/order",
+    handleOrderMessage,
+  );
 }

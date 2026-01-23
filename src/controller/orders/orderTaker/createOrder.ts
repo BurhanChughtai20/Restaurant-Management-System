@@ -1,13 +1,21 @@
 import prisma from "../../../libs/prisma.ts";
-import { CreateOrderInput } from "../../../shared/index.ts";
-
+import { 
+  CreateOrderInput, 
+  Order, 
+  OrderItem, 
+  OrderItemInput 
+} from "../../../shared/index.ts";
+import { OrderStatus } from "@prisma/client";
 export async function createOrder({
   restaurantId,
   orderTakerId,
   items,
-}: CreateOrderInput) {
-  if (!items.length) throw new Error("Order must have at least one item");
- 
+}: CreateOrderInput): Promise<Order> {
+
+  if (!items.length) {
+    throw new Error("Order must have at least one item");
+  }
+
   const orderTaker = await prisma.users.findFirst({
     where: {
       id: orderTakerId,
@@ -22,54 +30,66 @@ export async function createOrder({
 
   let totalAmount = 0;
 
-  const order = await prisma.$transaction(async (tx) => {
+  const createdOrder = await prisma.$transaction(async (tx) => {
+
     const newOrder = await tx.order.create({
       data: {
-        restaurantId, // 🔥 Set restaurantId
+        restaurantId,
         orderTakerId,
-        status: "PENDING",
+        status: OrderStatus.PENDING,
         totalAmount: 0,
       },
     });
 
-    const orderItemsData = await Promise.all(
-      items.map(async (item) => {
-        const menuItem = await tx.menuItem.findFirst({
-          where: {
-            id: item.menuItemId,
-            restaurantId, // 🔥 Ensure menu item belongs to restaurant
-          },
-        });
+    const createOrderItem = async (item: OrderItemInput) => {
+      const menuItem = await tx.menuItem.findFirst({
+        where: { id: item.menuItemId, restaurantId },
+      });
 
-        if (!menuItem) {
-          throw new Error(
-            `Menu item ${item.menuItemId} not found in your restaurant`
-          );
-        }
+      if (!menuItem) {
+        throw new Error(`Menu item ${item.menuItemId} not found in this restaurant`);
+      }
 
-        const total = menuItem.price * item.quantity;
-        totalAmount += total;
+      const total = menuItem.price * item.quantity;
+      totalAmount += total;
 
-        return tx.orderItem.create({
-          data: {
-            orderId: newOrder.id,
-            menuItemId: menuItem.id,
-            name: menuItem.name,
-            description: menuItem.description,
-            quantity: item.quantity,
-            price: menuItem.price,
-            total,
-          },
-        });
-      })
+      const created = await tx.orderItem.create({
+        data: {
+          orderId: newOrder.id,
+          menuItemId: menuItem.id,
+          name: menuItem.name,
+          description: menuItem.description ?? null,
+          quantity: item.quantity,
+          price: menuItem.price,
+          total,
+        },
+      });
+
+      return {
+        id: created.id,
+        name: created.name,
+        description: created.description,
+        quantity: created.quantity,
+        price: created.price,
+        total: created.total,
+      } as OrderItem;
+    };
+
+    const orderItemsData: OrderItem[] = await Promise.all(
+      items.map(item => createOrderItem(item))
     );
 
-    return tx.order.update({
+    await tx.order.update({
       where: { id: newOrder.id },
       data: { totalAmount },
-      include: { items: true },
     });
+
+    return {
+      id: newOrder.id,
+      items: orderItemsData,
+    } as Order;
+
   });
 
-  return order;
+  return createdOrder;
 }
