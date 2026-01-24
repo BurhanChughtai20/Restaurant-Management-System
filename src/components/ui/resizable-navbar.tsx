@@ -14,17 +14,19 @@ import React, { useRef, useState } from "react";
 // --- Dynamic Tailwind Classes ---
 const classes = {
   navbar: "relative inset-x-0 top-7 z-40 w-full",
-  navBody: "relative z-[60] mx-auto hidden w-full max-w-7xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 py-2 lg:flex dark:bg-transparent",
+  // FIX: Add max-lg:hidden to ensure NavBody NEVER shows on mobile/tablet
+  navBody: "relative z-[60] mx-auto hidden w-full max-w-7xl flex-row items-center justify-between self-start rounded-full bg-transparent px-4 py-2 max-lg:hidden lg:flex dark:bg-transparent",
   navBodyVisible: "bg-white/80 dark:bg-neutral-950/80",
   navItems: "absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-zinc-600 transition duration-200 hover:text-zinc-800 lg:flex lg:space-x-2",
   navLink: "relative px-4 py-2 text-neutral-600 dark:text-neutral-300",
   navLinkHover: "absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800",
   navLinkText: "relative z-20",
-  mobileNav: "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between bg-transparent px-0 py-2 lg:hidden",
+  // FIX: Add max-lg:flex to ensure MobileNav shows only on mobile/tablet
+  mobileNav: "relative z-50 mx-auto flex w-full max-w-[calc(100vw-2rem)] flex-col items-center justify-between bg-transparent px-0 py-2 max-lg:flex lg:hidden",
   mobileNavVisible: "bg-white/80 dark:bg-neutral-950/80",
   mobileNavHeader: "flex w-full flex-row items-center justify-between",
   mobileNavMenu: "absolute inset-x-0 top-16 z-50 flex w-full flex-col items-start justify-start gap-4 rounded-lg bg-white px-4 py-8 shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset] dark:bg-neutral-950",
-  logoLink: "relative z-20  mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black cursor-pointer",
+  logoLink: "relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black cursor-pointer",
   logoText: "font-medium text-black dark:text-white",
   buttonBase: "px-4 py-2 rounded-md bg-white button bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center",
   buttonPrimary: "shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
@@ -247,9 +249,9 @@ export const MobileNavToggle = ({
   onClick: () => void;
 }) => {
   return isOpen ? (
-    <CrossIcon className="text-black dark:text-white" onClick={onClick} />
+    <CrossIcon className="text-black dark:text-white cursor-pointer" onClick={onClick} />
   ) : (
-    <MenuIcon className="text-black dark:text-white" onClick={onClick} />
+    <MenuIcon className="text-black dark:text-white cursor-pointer" onClick={onClick} />
   );
 };
 
@@ -259,7 +261,7 @@ export const NavbarLogo = () => {
       href="/"
       className={classes.logoLink}
     >
-      <UtensilsCrossed className="w-6 h-6 text-black " strokeWidth={2.5} />
+      <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
       <span className={classes.logoText}>Startup</span>
     </Link>
   );

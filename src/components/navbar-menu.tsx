@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   Navbar,
   NavBody,
-  NavItems,
   MobileNav,
   NavbarLogo,
   MobileNavHeader,
@@ -30,6 +29,8 @@ import ButtonCom from "./Button";
 
 const classes = {
   container: "relative w-full",
+  // Hide entire navbar on lg+ screens when on dashboard routes
+  containerDashboard: "relative w-full lg:hidden",
   navBodyWithButton: "flex items-center gap-4",
   leftSection: "flex items-center gap-4",
   rightSection: "flex items-center gap-4 ml-auto",
@@ -38,8 +39,8 @@ const classes = {
   mobileLinkIcon: "text-black",
   mobileLinkText: "text-gray-800 text-sm",
   mobileButton: "mt-4",
-  mobileButtonWrapper: "md:hidden px-4 py-2",
-  desktopButton: "hidden md:flex",
+  mobileButtonWrapper: "px-4 py-2",
+  desktopButton: "flex",
 };
 
 // Dashboard nav items using DASHBOARD_ROUTES
@@ -60,20 +61,10 @@ export const DashboardNavbar = memo(() => {
   const { dashboard } = useAppNavigation();
   const pathname = usePathname();
 
-  // Check if current route is a dashboard route - more precise check
+  // Check if current route is a dashboard route
   const isDashboardRoute = useMemo(
     () => pathname.startsWith('/dashboard'),
     [pathname]
-  );
-
-  // Memoize nav items mapping
-  const navItems = useMemo(
-    () => dashboardNavItems.map((item) => ({
-      name: item.name,
-      link: DASHBOARD_ROUTES[item.routeKey],
-      icon: item.icon,
-    })),
-    []
   );
 
   // Memoized callbacks
@@ -87,11 +78,6 @@ export const DashboardNavbar = memo(() => {
     dashboard.goTo("dashboard");
   }, [dashboard]);
 
-  const handleDashboardClick = useCallback(() => {
-    console.log('Dashboard clicked');
-    dashboard.goTo("dashboard");
-  }, [dashboard]);
-
   const handleMobileMenuToggle = useCallback(() => {
     setIsMobileMenuOpen(prev => !prev);
   }, []);
@@ -100,14 +86,8 @@ export const DashboardNavbar = memo(() => {
     setIsMobileMenuOpen(false);
   }, []);
 
-  const handleMobileDashboardClick = useCallback(() => {
-    console.log('Mobile dashboard clicked');
-    dashboard.goTo("dashboard");
-    setIsMobileMenuOpen(false);
-  }, [dashboard]);
-
-  // Memoized button components
-  const DesktopGetStartedButton = useMemo(
+  // Memoized button component for non-dashboard routes
+  const GetStartedButton = useMemo(
     () => (
       <ButtonCom
         text="Get Started Today!"
@@ -122,37 +102,24 @@ export const DashboardNavbar = memo(() => {
     [handleGetStartedClick]
   );
 
-  const DesktopDashboardButton = useMemo(
-    () => (
-      <ButtonCom
-        text="Dashboard"
-        type="primary"
-        icon={<LayoutDashboard size={18} />}
-        onClick={handleDashboardClick}
-        className={classes.desktopButton}
-      />
-    ),
-    [handleDashboardClick]
-  );
-
+  // If on dashboard route, only render for mobile/tablet (handled by container class)
+  // If on non-dashboard route, render both NavBody and MobileNav properly
   return (
-    <div className={classes.container}>
+    <div className={isDashboardRoute ? classes.containerDashboard : classes.container}>
       <Navbar>
-        <NavBody className={classes.navBodyWithButton}>
-          <div className={classes.leftSection}>
-            <NavbarLogo />
+        {/* Desktop Navigation - ONLY for non-dashboard routes */}
+        {!isDashboardRoute && (
+          <NavBody className={classes.navBodyWithButton}>
+            <div className={classes.leftSection}>
+              <NavbarLogo />
+            </div>
+            <div className={classes.rightSection}>
+              {GetStartedButton}
+            </div>
+          </NavBody>
+        )}
 
-            {/* Desktop navigation items - Never show on mobile/tablet */}
-            {isDashboardRoute && <NavItems items={navItems} />}
-          </div>
-
-          {/* Right side button - Always visible on desktop */}
-          <div className={classes.rightSection}>
-            {!isDashboardRoute ? DesktopGetStartedButton : DesktopDashboardButton}
-          </div>
-        </NavBody>
-
-        {/* Mobile Navigation - Only for xs, sm, md screens */}
+        {/* Mobile Navigation */}
         <MobileNav>
           <MobileNavHeader>
             <NavbarLogo />
@@ -165,8 +132,9 @@ export const DashboardNavbar = memo(() => {
             )}
           </MobileNavHeader>
 
-          {/* Mobile menu - Only show nav items on dashboard routes */}
+          {/* Different content based on route type */}
           {isDashboardRoute ? (
+            /* Dashboard routes: Show dropdown menu */
             <MobileNavMenu
               isOpen={isMobileMenuOpen}
               onClose={handleMobileMenuClose}
@@ -182,21 +150,10 @@ export const DashboardNavbar = memo(() => {
                     <span className={classes.mobileLinkText}>{item.name}</span>
                   </button>
                 ))}
-
-                {/* Mobile dashboard button at the bottom of menu */}
-                <div className={classes.mobileButton}>
-                  <ButtonCom
-                    text="Dashboard"
-                    type="primary"
-                    icon={<LayoutDashboard size={18} />}
-                    onClick={handleMobileDashboardClick}
-                    className="w-full"
-                  />
-                </div>
               </div>
             </MobileNavMenu>
           ) : (
-            /* Show "Get Started" button on non-dashboard routes for mobile */
+            /* Non-dashboard routes: Show button */
             <div className={classes.mobileButtonWrapper}>
               <ButtonCom
                 text="Get Started Today!"

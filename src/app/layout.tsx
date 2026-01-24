@@ -92,7 +92,8 @@ export default function RootLayout({
       </head>
       <body className={`${rubik.variable} font-sans antialiased`} suppressHydrationWarning>
         <ReduxProvider>
-          <AlertProvider> {/* <-- Wrap everything inside AlertProvider */}
+          <AlertProvider>
+            {/* Navbar handles its own visibility logic */}
             <SuspenseBoundary>
               <DashboardNavbar/>
             </SuspenseBoundary>
