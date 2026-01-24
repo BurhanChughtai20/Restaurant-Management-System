@@ -11,8 +11,10 @@ import {
   Settings,
   HelpCircle,
 } from "lucide-react";
+import { DASHBOARD_ROUTES } from "@/config/routes";
 
-// Keep only menu items with route keys
+export type DashboardRouteKey = keyof typeof DASHBOARD_ROUTES;
+
 export const MAIN_MENU_ITEMS: MenuItem[] = [
   { label: "Dashboard", icon: <LayoutDashboard size={20} />, route: "dashboard" },
   { label: "Menu", icon: <Utensils size={20} />, route: "MenuItem" },

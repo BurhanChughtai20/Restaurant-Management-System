@@ -4,9 +4,9 @@ import "./globals.css";
 import Footer from "@/components/Footer";
 import { baseMetadata } from "@/lib/metadata";
 import { SuspenseBoundary } from "@/components/SuspenseBoundary";
-import { NavbarCom } from "@/components/navbar-menu";
 import ReduxProvider from "./providers/ReduxProvider";
 import { AlertProvider } from "@/components/DynamicAlert";
+import { DashboardNavbar } from "@/components/navbar-menu";
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -94,7 +94,7 @@ export default function RootLayout({
         <ReduxProvider>
           <AlertProvider> {/* <-- Wrap everything inside AlertProvider */}
             <SuspenseBoundary>
-              <NavbarCom />
+              <DashboardNavbar/>
             </SuspenseBoundary>
 
             <SuspenseBoundary>

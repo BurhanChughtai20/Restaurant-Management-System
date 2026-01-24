@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Command, MoreVertical } from "lucide-react";
 import MenuContent from "./MenuContent";
 import { SideMenuConfig, MenuItem } from "./types";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS, DashboardRouteKey } from "@/config/menuConfig";
-import { useDashboardNavigation } from "@/lib/useAppNavigation";
+import { useAppNavigation } from "@/lib/useAppNavigation";
 
 const EXPANDED_WIDTH = 240;
 const COLLAPSED_WIDTH = 52;
@@ -51,7 +51,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
   secondaryMenu = { items: SECONDARY_MENU_ITEMS },
 }) => {
   const [open, setOpen] = useState(!collapsed);
-  const { goTo } = useDashboardNavigation();
+  const { dashboard } = useAppNavigation();
 
   /** DRY toggle handler */
   const handleToggle = useCallback(() => {
@@ -62,9 +62,9 @@ const SideMenu: React.FC<SideMenuProps> = ({
   /** DRY navigation handler */
   const handleNavigation = useCallback(
     (item: MenuItem) => {
-      if (item.route) goTo(item.route as DashboardRouteKey);
+      if (item.route) dashboard.goTo(item.route as DashboardRouteKey);
     },
-    [goTo]
+    [dashboard]
   );
 
   /** Precompute user initials */

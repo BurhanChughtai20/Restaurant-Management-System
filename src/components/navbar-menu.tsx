@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, memo, useCallback } from "react";
+import React, { useState, memo, useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import {
   Navbar,
   NavBody,
@@ -11,110 +12,207 @@ import {
   MobileNavToggle,
   MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import ButtonCom from "./Button";
-import { Home,  CircleDollarSign, BookText, ArrowRight } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  UtensilsCrossed, 
+  ClipboardList, 
+  ChefHat,
+  FileText,
+  MessageSquare,
+  User,
+  Settings,
+  HelpCircle,
+  LogIn
+} from "lucide-react";
 import { useAppNavigation } from "@/lib/useAppNavigation";
-import { APP_ROUTES } from "@/config/routes";
+import { DASHBOARD_ROUTES } from "@/config/routes";
+import ButtonCom from "./Button";
 
 const classes = {
-  container: "relative w-full fixed top-0 left-0 right-0 z-50",
-  desktopButtonContainer: "hidden md:flex items-center gap-4",
+  container: "relative w-full",
+  navBodyWithButton: "flex items-center gap-4",
+  leftSection: "flex items-center gap-4",
+  rightSection: "flex items-center gap-4 ml-auto",
   mobileMenuContent: "flex flex-col gap-6 py-4",
   mobileLink: "flex items-center gap-3 text-neutral-600 dark:text-neutral-300 hover:text-indigo-600 transition-colors font-medium text-lg",
   mobileLinkIcon: "text-black",
   mobileLinkText: "text-gray-800 text-sm",
-  mobileButtonWrapper: "flex w-full flex-col gap-4 mt-4",
-  mobileButton: "w-full my-primary-btn",
+  mobileButton: "mt-4",
+  mobileButtonWrapper: "md:hidden px-4 py-2",
+  desktopButton: "hidden md:flex",
 };
 
-// --- Nav items using centralized APP_ROUTES ---
-const navItems = [
-  { name: "Home", routeKey: "home" as const, icon: <Home size={18} /> },
-  { name: "Pricing", routeKey: "pricing" as const, icon: <CircleDollarSign size={18} /> },
-  { name: "Blog", routeKey: "blog" as const, icon: <BookText size={18} /> },
+// Dashboard nav items using DASHBOARD_ROUTES
+const dashboardNavItems = [
+  { name: "Dashboard", routeKey: "dashboard" as const, icon: <LayoutDashboard size={18} /> },
+  { name: "Menu Items", routeKey: "MenuItem" as const, icon: <UtensilsCrossed size={18} /> },
+  { name: "Order Taker", routeKey: "Order_Taker" as const, icon: <ClipboardList size={18} /> },
+  { name: "Chef", routeKey: "Chef" as const, icon: <ChefHat size={18} /> },
+  { name: "Articles", routeKey: "Article" as const, icon: <FileText size={18} /> },
+  { name: "WhatsApp Bot", routeKey: "whatsapp_bot" as const, icon: <MessageSquare size={18} /> },
+  { name: "Profile", routeKey: "profile" as const, icon: <User size={18} /> },
+  { name: "Settings", routeKey: "settings" as const, icon: <Settings size={18} /> },
+  { name: "Help", routeKey: "help" as const, icon: <HelpCircle size={18} /> },
 ];
 
-export const NavbarCom = memo(() => {
+export const DashboardNavbar = memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { app: appNav } = useAppNavigation(); // centralized navigation
+  const { dashboard } = useAppNavigation();
+  const pathname = usePathname();
 
-  const handleSignUpClick = useCallback(() => {
+  // Check if current route is a dashboard route - more precise check
+  const isDashboardRoute = useMemo(
+    () => pathname.startsWith('/dashboard'),
+    [pathname]
+  );
+
+  // Memoize nav items mapping
+  const navItems = useMemo(
+    () => dashboardNavItems.map((item) => ({
+      name: item.name,
+      link: DASHBOARD_ROUTES[item.routeKey],
+      icon: item.icon,
+    })),
+    []
+  );
+
+  // Memoized callbacks
+  const handleNavClick = useCallback((routeKey: keyof typeof DASHBOARD_ROUTES) => {
+    dashboard.goTo(routeKey);
     setIsMobileMenuOpen(false);
-    appNav.goTo("home"); // type-safe navigation
-  }, [appNav]);
+  }, [dashboard]);
+
+  const handleGetStartedClick = useCallback(() => {
+    console.log('Get started clicked');
+    dashboard.goTo("dashboard");
+  }, [dashboard]);
+
+  const handleDashboardClick = useCallback(() => {
+    console.log('Dashboard clicked');
+    dashboard.goTo("dashboard");
+  }, [dashboard]);
+
+  const handleMobileMenuToggle = useCallback(() => {
+    setIsMobileMenuOpen(prev => !prev);
+  }, []);
+
+  const handleMobileMenuClose = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  const handleMobileDashboardClick = useCallback(() => {
+    console.log('Mobile dashboard clicked');
+    dashboard.goTo("dashboard");
+    setIsMobileMenuOpen(false);
+  }, [dashboard]);
+
+  // Memoized button components
+  const DesktopGetStartedButton = useMemo(
+    () => (
+      <ButtonCom
+        text="Get Started Today!"
+        type="default"
+        gradient={true}
+        icon={<LogIn size={18} />}
+        iconPosition="right"
+        onClick={handleGetStartedClick}
+        className={classes.desktopButton}
+      />
+    ),
+    [handleGetStartedClick]
+  );
+
+  const DesktopDashboardButton = useMemo(
+    () => (
+      <ButtonCom
+        text="Dashboard"
+        type="primary"
+        icon={<LayoutDashboard size={18} />}
+        onClick={handleDashboardClick}
+        className={classes.desktopButton}
+      />
+    ),
+    [handleDashboardClick]
+  );
 
   return (
     <div className={classes.container}>
       <Navbar>
-        <NavBody>
-          <NavbarLogo />
+        <NavBody className={classes.navBodyWithButton}>
+          <div className={classes.leftSection}>
+            <NavbarLogo />
 
-          <NavItems
-            items={navItems.map((item) => ({
-              name: item.name,
-              link: APP_ROUTES[item.routeKey],
-              icon: item.icon,
-            }))}
-          />
+            {/* Desktop navigation items - Never show on mobile/tablet */}
+            {isDashboardRoute && <NavItems items={navItems} />}
+          </div>
 
-          <div className={classes.desktopButtonContainer}>
-            <ButtonCom
-              icon={<ArrowRight size={16} />}
-              iconPosition="right"
-              text="Get Started"
-              type="default"
-              className="my-primary-btn"
-              onClick={handleSignUpClick}
-            />
+          {/* Right side button - Always visible on desktop */}
+          <div className={classes.rightSection}>
+            {!isDashboardRoute ? DesktopGetStartedButton : DesktopDashboardButton}
           </div>
         </NavBody>
 
-        {/* --- Mobile Navigation --- */}
+        {/* Mobile Navigation - Only for xs, sm, md screens */}
         <MobileNav>
           <MobileNavHeader>
             <NavbarLogo />
-            <MobileNavToggle
-              isOpen={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
+            {/* Only show toggle button if on a dashboard route */}
+            {isDashboardRoute && (
+              <MobileNavToggle
+                isOpen={isMobileMenuOpen}
+                onClick={handleMobileMenuToggle}
+              />
+            )}
           </MobileNavHeader>
 
-          <MobileNavMenu
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-          >
-            <div className={classes.mobileMenuContent}>
-              {navItems.map((item, idx) => (
-                <button
-                  key={`mobile-link-${idx}`}
-                  onClick={() => {
-                    appNav.goTo(item.routeKey); // type-safe
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={classes.mobileLink}
-                >
-                  <span className={classes.mobileLinkIcon}>{item.icon}</span>
-                  <span className={classes.mobileLinkText}>{item.name}</span>
-                </button>
-              ))}
-            </div>
+          {/* Mobile menu - Only show nav items on dashboard routes */}
+          {isDashboardRoute ? (
+            <MobileNavMenu
+              isOpen={isMobileMenuOpen}
+              onClose={handleMobileMenuClose}
+            >
+              <div className={classes.mobileMenuContent}>
+                {dashboardNavItems.map((item, idx) => (
+                  <button
+                    key={`mobile-link-${idx}`}
+                    onClick={() => handleNavClick(item.routeKey)}
+                    className={classes.mobileLink}
+                  >
+                    <span className={classes.mobileLinkIcon}>{item.icon}</span>
+                    <span className={classes.mobileLinkText}>{item.name}</span>
+                  </button>
+                ))}
 
-            {/* --- Mobile Action Button --- */}
+                {/* Mobile dashboard button at the bottom of menu */}
+                <div className={classes.mobileButton}>
+                  <ButtonCom
+                    text="Dashboard"
+                    type="primary"
+                    icon={<LayoutDashboard size={18} />}
+                    onClick={handleMobileDashboardClick}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </MobileNavMenu>
+          ) : (
+            /* Show "Get Started" button on non-dashboard routes for mobile */
             <div className={classes.mobileButtonWrapper}>
               <ButtonCom
-                icon={<ArrowRight size={16} />}
-                iconPosition="right"
-                text="Get Started"
+                text="Get Started Today!"
                 type="default"
-                className={classes.mobileButton}
-                onClick={handleSignUpClick}
+                gradient={true}
+                icon={<LogIn size={18} />}
+                iconPosition="right"
+                onClick={handleGetStartedClick}
+                className="w-full"
               />
             </div>
-          </MobileNavMenu>
+          )}
         </MobileNav>
       </Navbar>
     </div>
   );
 });
 
-NavbarCom.displayName = "NavbarCom";
+DashboardNavbar.displayName = "DashboardNavbar";

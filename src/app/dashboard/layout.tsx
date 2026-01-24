@@ -4,20 +4,16 @@ import React, { useState, useCallback } from "react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import { IconButton } from "@mui/material";
 import SideMenu from "@/components/admin-dashboard/SideMenu";
- import { CrossIcon, MenuIcon } from "lucide-react";
-import MobileFloatingMenu from "@/components/admin-dashboard/SideMenuMobile";
+import { DashboardNavbar } from "@/components/navbar-menu";
 
-const EXPANDED_WIDTH = 0;
-const COLLAPSED_WIDTH = -162;
+const EXPANDED_WIDTH = 240;
+const COLLAPSED_WIDTH = 52;
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), []);
-  const toggleMobileMenu = useCallback(() => setMobileMenuOpen(prev => !prev), []);
-  const closeMobileMenu = useCallback(() => setMobileMenuOpen(false), []);
 
   const mainWidth = `calc(100% - ${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px)`;
   const mainMargin = `${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px`;
@@ -26,51 +22,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AppRouterCacheProvider>
       <CssBaseline />
       <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-        {/* Desktop Sidebar & Main */}
-        <Box sx={{ display: "flex", flexGrow: 1 }}>
-          <Box sx={{ display: { lg: "block", xs: "none" } }}>
-            <SideMenu collapsed={!sidebarOpen} onToggle={toggleSidebar} />
-          </Box>
-
-          <Box
-            component="main"
-            sx={{
-              flexGrow: 1,
-              p: 3,
-              transition: "margin-left 0.3s ease, width 0.3s ease",
-              width: { lg: mainWidth, xs: "100%" },
-              marginLeft: { lg: mainMargin, xs: 0 },
-            }}
-          >
-            {children}
-          </Box>
+        {/* Desktop Sidebar - Hidden on mobile/tablet (xs, sm, md) */}
+        <Box sx={{ display: { xs: "none", md: "none", lg: "block" } }}>
+          <SideMenu collapsed={!sidebarOpen} onToggle={toggleSidebar} />
         </Box>
 
-        {/* Mobile Sidebar */} 
-{mobileMenuOpen && (
-  <Box sx={{ display: { xs: "flex", md: "flex", lg: "none" } }}>
-    <MobileFloatingMenu />
-  </Box>
-)}
+        {/* Mobile/Tablet Navbar - Shown on xs, sm, md, hidden on lg+ */}
+        <Box sx={{ display: { xs: "block", md: "block", lg: "none" } }}>
+          <DashboardNavbar />
+        </Box>
 
-
-        {/* Mobile Toggle Button */}
+        {/* Main Content Area */}
         <Box
+          component="main"
           sx={{
-            display: { xs: "flex", md: "flex", lg: "none" },
-            position: "fixed",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1500,
+            flexGrow: 1,
+            p: 3,
+            transition: "margin-left 0.3s ease, width 0.3s ease",
+            width: { lg: mainWidth, xs: "100%" },
+            marginLeft: { lg: mainMargin, xs: 0 },
+            marginTop: { xs: "64px", md: "64px", lg: 0 }, // Add top margin for mobile navbar
           }}
         >
-          <IconButton
-            onClick={toggleMobileMenu}
-            sx={{ bgcolor: "black", color: "white", "&:hover": { bgcolor: "black" } }}
-          >
-            {mobileMenuOpen ? <CrossIcon size={20} /> : <MenuIcon size={20} />}
-          </IconButton>
+          {children}
         </Box>
       </Box>
     </AppRouterCacheProvider>
