@@ -1,7 +1,3 @@
-/**
- * TypeScript types matching backend Prisma schema
- * Ensures type safety across the application
- */
 
 export enum Role {
   Admin = "Admin",
@@ -203,4 +199,15 @@ export interface Stats {
   total: number;
   active: number;
   inactive: number;
+}
+
+export interface AuthState {
+  user: AuthUser | null;
+  token: string | null;
+  isAuthenticated: boolean;
+}
+
+export interface AuthCredentials {
+  user: AuthUser;
+  token: string;
 }
