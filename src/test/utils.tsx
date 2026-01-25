@@ -15,16 +15,14 @@ type PartialRootState = Partial<RootState>;
 // Constant for loading spinner selector
 const LOADING_SPINNER_SELECTOR = '.MuiCircularProgress-root';
 
-// Combine all reducers
 const appReducers = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   menu: menuReducer,
   dashboard: dashboardReducer,
-  user: userReducer,
+  auth: userReducer, // fix here
 });
 
-// Factory function to create a Redux test store
-export function createTestStore(initialState?: PartialRootState): EnhancedStore<RootState> {
+export function createTestStore(initialState?: Partial<RootState>): EnhancedStore<RootState> {
   return configureStore({
     reducer: appReducers,
     preloadedState: initialState,

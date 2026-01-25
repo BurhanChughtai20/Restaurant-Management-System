@@ -36,6 +36,7 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['Auth'],
     }),
 
     forgotPassword: builder.mutation<void, ForgotPasswordRequest>({
@@ -53,6 +54,21 @@ export const authApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+
+    // New endpoint for token validation
+    validateToken: builder.query<{ valid: boolean }, void>({
+      query: () => '/auth/validate',
+      providesTags: ['Auth'],
+    }),
+
+    // New endpoint for logout (if backend supports it)
+    logoutApi: builder.mutation<void, void>({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 });
 
@@ -62,4 +78,6 @@ export const {
   useVerifyEmailMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useValidateTokenQuery,
+  useLogoutApiMutation,
 } = authApi;

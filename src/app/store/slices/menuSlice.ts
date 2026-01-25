@@ -1,8 +1,8 @@
-import { DASHBOARD_ROUTES } from "@/config/menuConfig";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { DashboardRouteKey } from "@/config/menuConfig";
 
 export interface MenuState {
-  activeRoute: keyof typeof DASHBOARD_ROUTES;
+  activeRoute: DashboardRouteKey;
 }
 
 const initialState: MenuState = {
@@ -13,10 +13,7 @@ export const menuSlice = createSlice({
   name: "menu",
   initialState,
   reducers: {
-    setActiveRoute: (
-      state,
-      action: PayloadAction<keyof typeof DASHBOARD_ROUTES>,
-    ) => {
+    setActiveRoute: (state, action: PayloadAction<DashboardRouteKey>) => {
       state.activeRoute = action.payload;
     },
   },

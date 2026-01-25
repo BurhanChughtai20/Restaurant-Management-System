@@ -2,17 +2,12 @@
 
 import React from "react";
 
-// --- Dynamic Tailwind Classes ---
-const classes = {
-  provider: "",
-};
+interface ProvidersProps {
+  children: React.ReactNode;
+}
 
-/**
- * Client-side providers wrapper
- * Memoized to prevent unnecessary re-renders
- */
-export const Providers = React.memo(({ children }: { children: React.ReactNode }) => {
-  return <div className={classes.provider}>{children}</div>;
+export const Providers = React.memo(({ children }: ProvidersProps) => {
+  return <>{children}</>;
 });
 
 Providers.displayName = "Providers";

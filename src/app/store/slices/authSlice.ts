@@ -16,24 +16,60 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      
+      // Store token securely
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', action.payload.token);
+        localStorage.setItem('authUser', JSON.stringify(action.payload.user));
+      }
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+      }
     },
     clearToken: (state) => {
       state.token = null;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+      }
     },
     updateUser: (state, action: PayloadAction<Partial<AuthUser>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
+        // Sync with localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('authUser', JSON.stringify(state.user));
+        }
+      }
+    },
+    restoreAuth: (state) => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('authToken');
+        const userStr = localStorage.getItem('authUser');
+        
+        if (token && userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            state.token = token;
+            state.user = user;
+            state.isAuthenticated = true;
+          } catch {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authUser');
+          }
+        }
       }
     },
   },
 });
 
-export const { setCredentials, logout, clearToken, updateUser } = authSlice.actions;
+export const { setCredentials, logout, clearToken, updateUser, restoreAuth } = authSlice.actions;
 
 export const selectAuth = (state: { auth: AuthState }) => state.auth;
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;

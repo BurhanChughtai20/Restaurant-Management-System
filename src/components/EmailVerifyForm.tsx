@@ -2,10 +2,13 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useAuthNavigation } from "@/auth";
-import { useVerifyEmailMutation } from "@/app/store/api";
+import { useVerifyEmailMutation } from "@/app/store/api/authApi";
+import { useAppDispatch } from "@/app/store/hooks";
 import { useAlert } from "./DynamicAlert";
+import ButtonCom from "./Button";
 
 export function EmailVerifyForm() {
+  const dispatch = useAppDispatch();
   const { goToDashboard } = useAuthNavigation();
   const { showAlert } = useAlert();
 
@@ -18,13 +21,7 @@ export function EmailVerifyForm() {
     return "";
   }, []);
 
-  const [verifyEmail, result] = useVerifyEmailMutation();
-  const { isLoading } = result;
-
-  const handleAlert = useCallback(
-    (message: string, type: "error" | "success") => showAlert(message, type),
-    [showAlert],
-  );
+  const [verifyEmail, { isLoading }] = useVerifyEmailMutation();
 
   const getErrorMessage = useCallback((err: unknown) => {
     if (err && typeof err === "object" && "data" in err) {
@@ -41,27 +38,46 @@ export function EmailVerifyForm() {
       e.preventDefault();
 
       if (!otp || otp.length < 4) {
-        return handleAlert("Please enter a valid OTP", "error");
+        showAlert("Please enter a valid OTP", "error");
+        return;
       }
 
       if (!email) {
-        return handleAlert("Email not found. Please signup again.", "error");
+        showAlert("Email not found. Please signup again.", "error");
+        return;
       }
 
       try {
         const response = await verifyEmail({ email, token: otp }).unwrap();
 
         if (response.token) {
+          // Dispatch token to Redux (you'll need to update this based on your API response structure)
+          // If your API returns user data along with token:
+          // dispatch(setCredentials({ user: response.user, token: response.token }));
+
+          // For now, just store the token
           localStorage.setItem("authToken", response.token);
         }
 
-        handleAlert("Email verified successfully!", "success");
+        showAlert("Email verified successfully!", "success");
+
+        // Clean up signup email
+        localStorage.removeItem("signupEmail");
+
         goToDashboard();
       } catch (err: unknown) {
-        handleAlert(getErrorMessage(err), "error");
+        showAlert(getErrorMessage(err), "error");
       }
     },
-    [otp, email, verifyEmail, handleAlert, getErrorMessage, goToDashboard],
+    [
+      otp,
+      email,
+      verifyEmail,
+      dispatch,
+      showAlert,
+      getErrorMessage,
+      goToDashboard,
+    ],
   );
 
   return (
@@ -72,15 +88,17 @@ export function EmailVerifyForm() {
         value={otp}
         onChange={(e) => setOtp(e.target.value)}
         className="border p-2 rounded"
+        maxLength={6}
       />
 
-      <button
-        type="submit"
+      <ButtonCom
+        text={isLoading ? "Verifying..." : "Verify Email"}
+        type="default"
+        gradient={true}
+        onClick={() => {}}
+        className="bg-blue-500 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-opacity w-full"
         disabled={isLoading}
-        className="bg-blue-500 text-white p-2 rounded disabled:opacity-50"
-      >
-        {isLoading ? "Verifying..." : "Verify Email"}
-      </button>
+      />
     </form>
   );
 }
