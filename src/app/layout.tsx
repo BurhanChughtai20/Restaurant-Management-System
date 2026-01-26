@@ -73,7 +73,7 @@ const structuredData = {
     name: "Muhammad Burhan Chughtai",
   },
 };
-
+ 
 export default function RootLayout({
   children,
 }: Readonly<{

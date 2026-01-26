@@ -1,6 +1,3 @@
-// ============================================
-// 1. SIGNUP FORM - OPTIMIZED
-// ============================================
 "use client";
 
 import React, { useState, useCallback } from "react";
@@ -14,53 +11,30 @@ import ButtonCom from "./Button";
 import { LogIn } from "lucide-react";
 
 type FormField = {
-  id: "name" | "email" | "password";
+  id: "name" | "email" | "password" | "role";
   label: string;
-  placeholder: string;
-  type: string;
+  placeholder?: string;
+  type?: string;
   halfWidth?: boolean;
+  options?: string[]; // for select fields
 };
 
+// Only one role option: Admin
 const FORM_FIELDS: readonly FormField[] = [
-  {
-    id: "name",
-    label: "First name",
-    placeholder: "Tyler",
-    type: "text",
-    halfWidth: true,
-  },
-  {
-    id: "email",
-    label: "Email Address",
-    placeholder: "projectmayhem@fc.com",
-    type: "email",
-  },
-  {
-    id: "password",
-    label: "Password",
-    placeholder: "••••••••",
-    type: "password",
-  },
+  { id: "name", label: "First name", placeholder: "Tyler", type: "text", halfWidth: true },
+  { id: "email", label: "Email Address", placeholder: "projectmayhem@fc.com", type: "email" },
+  { id: "password", label: "Password", placeholder: "••••••••", type: "password" },
+  { id: "role", label: "Role", options: ["Admin"] },
 ];
 
-const SOCIAL_PLATFORMS = ["GitHub", "Google", "Fans"] as const;
-
 const styles = {
-  container:
-    "mx-auto w-[95%] sm:w-[90%] md:max-w-md lg:max-w-lg xl:max-w-xl shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
+  container: "mx-auto w-[95%] sm:w-[90%] md:max-w-md lg:max-w-lg xl:max-w-xl shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
   title: "text-neutral-800 dark:text-neutral-200 text-center md:text-left",
-  subtitle:
-    "mt-2 max-w-sm text-neutral-600 dark:text-neutral-300 text-center md:text-left text-xs md:text-sm",
+  subtitle: "mt-2 max-w-sm text-neutral-600 dark:text-neutral-300 text-center md:text-left text-xs md:text-sm",
   form: "my-8",
   row: "flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-4",
   fullWidthField: "mb-4 md:mb-6",
-  submitBtn:
-    "group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-input dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity",
-  divider:
-    "my-8 h-px w-full bg-gradient-to-r from-transparent via-neutral-300 to-transparent dark:via-neutral-700",
-  socialGrid: "grid grid-cols-1 sm:grid-cols-3 gap-4",
-  socialBtn:
-    "group/btn shadow-input relative flex h-10 w-full items-center justify-center space-x-2 rounded-md bg-gray-50 px-4 text-black dark:bg-zinc-900 dark:text-white hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors",
+  submitBtn: "group/btn relative block h-10 w-full rounded-md bg-gradient-to-br from-black to-neutral-600 font-medium text-white shadow-input dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity",
   loginText: "mt-6 text-center",
   loginBtn: "text-black dark:text-white font-bold hover:underline",
 };
@@ -69,31 +43,40 @@ export function SignupFormDemo() {
   const { goToLogin, goToVerifyEmail } = useAuthNavigation();
   const { showAlert } = useAlert();
 
-  const [formData, setFormData] = useState<Omit<SignupRequest, "role">>({
+  // Set default role as "Admin" to match SignupRequest type
+  const [formData, setFormData] = useState<SignupRequest>({
     name: "",
     email: "",
     password: "",
+    role: Role.Admin, // TypeScript requires exact Role.Admin
   });
 
   const [signupAdmin, { isLoading }] = useSignupAdminMutation();
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { id, value } = e.target;
+
+      // For role, always assign Role.Admin to satisfy TS
+      if (id === "role") {
+        setFormData((prev) => ({ ...prev, role: Role.Admin }));
+      } else {
+        setFormData((prev) => ({ ...prev, [id]: value }));
+      }
+    },
+    []
+  );
 
   const validateForm = useCallback(() => {
     if (!formData.name.trim()) {
       showAlert("Name is required", "error");
       return false;
     }
-    const emailRegex = new RegExp("^\\S+@\\S+\\.\\S+$");
-
+    const emailRegex = /^\S+@\S+\.\S+$/;
     if (!formData.email.trim() || !emailRegex.test(formData.email)) {
       showAlert("Valid email is required", "error");
       return false;
     }
-
     if (formData.password.length < 6) {
       showAlert("Password must be at least 6 characters", "error");
       return false;
@@ -104,33 +87,26 @@ export function SignupFormDemo() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-
       if (!validateForm()) return;
 
-      const payload: SignupRequest = {
-        ...formData,
-        role: Role.Admin,
-      };
-
       try {
-        await signupAdmin(payload).unwrap();
+        await signupAdmin(formData).unwrap();
 
-        // Store email for verification step
+        // Store email and role for verification step
         localStorage.setItem("signupEmail", formData.email);
+        localStorage.setItem("signupRole", formData.role);
 
         showAlert("Signup successful! OTP sent to email.", "success");
         goToVerifyEmail();
       } catch (err: unknown) {
         const errorMessage =
           err && typeof err === "object" && "data" in err
-            ? (err as { data?: { message?: string } }).data?.message ||
-              "Signup failed"
+            ? (err as { data?: { message?: string } }).data?.message || "Signup failed"
             : "Signup failed. Please try again.";
-
         showAlert(errorMessage, "error");
       }
     },
-    [formData, signupAdmin, showAlert, goToVerifyEmail, validateForm],
+    [formData, signupAdmin, showAlert, goToVerifyEmail, validateForm]
   );
 
   const nameRowFields = FORM_FIELDS.filter((f) => f.halfWidth);
@@ -151,57 +127,59 @@ export function SignupFormDemo() {
             <FormInput
               key={field.id}
               {...field}
-              value={formData[field.id as keyof Omit<SignupRequest, "role">]}
+              value={formData[field.id as keyof typeof formData]}
               onChange={handleChange}
             />
           ))}
         </div>
 
-        {fullWidthFields.map((field) => (
-          <FormInput
-            key={field.id}
-            {...field}
-            value={formData[field.id as keyof Omit<SignupRequest, "role">]}
-            onChange={handleChange}
-            containerClassName={styles.fullWidthField}
-          />
-        ))}
+        {fullWidthFields.map((field) =>
+          field.options ? (
+            <div key={field.id} className={styles.fullWidthField}>
+              <label
+                htmlFor={field.id}
+                className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1"
+              >
+                {field.label}
+              </label>
+              <select
+                id={field.id}
+                value={formData.role} // always Admin
+                onChange={handleChange}
+                className="block w-full rounded-md border border-neutral-300 dark:border-neutral-700 p-2 dark:bg-black dark:text-white"
+              >
+                {field.options.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <FormInput
+              key={field.id}
+              {...field}
+              value={formData[field.id as keyof typeof formData]}
+              onChange={handleChange}
+              containerClassName={styles.fullWidthField}
+            />
+          )
+        )}
 
-        {/* Main Submit Button */}
         <ButtonCom
           text={isLoading ? "Signing up..." : "Sign up →"}
           type="default"
-          gradient={true}
+          htmlType="submit"
+          gradient
           icon={<LogIn size={18} />}
           iconPosition="right"
-          onClick={handleSubmit} // use your submit handler
           className="w-full"
           disabled={isLoading}
         />
-
-        {/* Divider */}
-        <div className={styles.divider} />
-
-        {/* Social Buttons */}
-        <div className={styles.socialGrid}>
-          {SOCIAL_PLATFORMS.map((platform) => (
-            <ButtonCom
-              key={platform}
-              text={platform}
-              type="default"
-              gradient={false}
-              onClick={() => console.log(`${platform} login clicked`)}
-              className="w-full"
-            />
-          ))}
-        </div>
       </form>
 
       <div className={styles.loginText}>
-        <DynamicContent
-          as="span"
-          className="text-neutral-600 dark:text-neutral-400"
-        >
+        <DynamicContent as="span" className="text-neutral-600 dark:text-neutral-400">
           Already have an account?{" "}
           <button onClick={goToLogin} className={styles.loginBtn}>
             Login

@@ -1,6 +1,6 @@
 // src/lib/useAppNavigation.ts
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigation } from "./useNavigation";
 import { AUTH_ROUTES, DASHBOARD_ROUTES, APP_ROUTES } from "@/config/routes";
 
@@ -46,18 +46,14 @@ export const createSafeNavigator = <T extends Record<string, string>>(
   onError?: (error: Error) => void
 ) => {
   return {
-    goTo: (key: RouteKey<T>) => {
+     goTo: (key: RouteKey<T>) => {
       try {
         const route = routes[key];
-        if (!route) {
-          throw new Error(`Invalid route key: ${String(key)}`);
-        }
+        if (!route) throw new Error(`Invalid route key: ${String(key)}`);
         return route;
       } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        onError?.(err);
-        console.error("[Navigation Error]:", err.message);
-        return routes[Object.keys(routes)[0] as RouteKey<T>]; // Fallback to first route
+        onError?.(error as Error);
+        return routes[Object.keys(routes)[0] as RouteKey<T>];
       }
     },
     isActive: (key: RouteKey<T>, currentPath: string) => {
@@ -66,6 +62,7 @@ export const createSafeNavigator = <T extends Record<string, string>>(
     getAllRoutes: () => Object.values(routes),
   };
 };
+
 export const useNavigationHistory = (maxHistory: number = 10) => {
   const [history, setHistory] = useMemo(() => {
     if (typeof window === "undefined") return [[], () => {}];
@@ -93,6 +90,7 @@ export const useNavigationHistory = (maxHistory: number = 10) => {
     },
   };
 };
+
 export const prefetchRoutes = (routes: string[]) => {
   if (typeof window === "undefined") return;
 
@@ -115,10 +113,8 @@ interface GtagWindow extends Window {
 export const trackNavigation = (from: string, to: string) => {
   if (typeof window === "undefined") return;
 
-  // Log navigation event
   console.log(`[Navigation] ${from} → ${to}`);
 
-  // You can integrate with analytics services here
   const gtagWindow = window as GtagWindow;
   if (gtagWindow.gtag) {
     gtagWindow.gtag("event", "page_view", {
@@ -126,4 +122,44 @@ export const trackNavigation = (from: string, to: string) => {
       page_referrer: from,
     });
   }
+};
+
+export const useAuthenticatedNavigation = () => {
+  const [isChecking, setIsChecking] = useState(false);
+  const { dashboard, auth } = useAppNavigation();
+
+  const checkAuthAndNavigate = useCallback(async (
+    targetRoute: keyof typeof DASHBOARD_ROUTES
+  ) => {
+    setIsChecking(true);
+    
+    try {
+      // Check for token (adjust based on your auth implementation)
+      const token = localStorage.getItem("auth_token") || 
+                    sessionStorage.getItem("auth_token") ||
+                    document.cookie.split('; ').find(row => row.startsWith('token='));
+
+      // Simulate async check if needed (e.g., token validation)
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (token) {
+        // Token exists, navigate to dashboard
+        dashboard.goTo(targetRoute);
+      } else {
+        // No token, navigate to login
+        auth.goTo("login");
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+      // On error, redirect to login for safety
+      auth.goTo("login");
+    } finally {
+      setIsChecking(false);
+    }
+  }, [dashboard, auth]);
+
+  return {
+    isChecking,
+    navigateWithAuth: checkAuthAndNavigate
+  };
 };

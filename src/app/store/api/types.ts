@@ -39,15 +39,22 @@ export interface SignupRequest {
   role: Role.Admin; // Only admin can signup
 }
 
+
 export interface VerifyEmailRequest {
   email: string;
-  token: string;
+  otp: string; 
+  role?: Role; 
 }
-
 export interface VerifyEmailResponse {
+  message: string;
   token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: Role;
+  };
 }
-
 export interface ForgotPasswordRequest {
   email: string;
 }

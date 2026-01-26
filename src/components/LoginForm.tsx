@@ -12,18 +12,8 @@ import { LoginRequest } from "@/app/store/api/types";
 import ButtonCom from "./Button";
 
 const LOGIN_FIELDS = [
-  {
-    id: "email",
-    label: "Email Address",
-    placeholder: "projectmayhem@fc.com",
-    type: "email",
-  },
-  {
-    id: "password",
-    label: "Password",
-    placeholder: "••••••••",
-    type: "password",
-  },
+  { id: "email", label: "Email Address", placeholder: "projectmayhem@fc.com", type: "email" },
+  { id: "password", label: "Password", placeholder: "••••••••", type: "password" },
 ] as const;
 
 const CLASSES = {
@@ -32,8 +22,7 @@ const CLASSES = {
   form: "my-8",
   inputSpacing: "mb-4",
   forgotWrapper: "flex justify-end mb-4",
-  forgotText:
-    "text-xs hover:text-black dark:hover:text-white transition-colors cursor-pointer",
+  forgotText: "text-xs hover:text-black dark:hover:text-white transition-colors cursor-pointer",
   submitBtn:
     "relative group/btn w-full text-white rounded-md h-10 font-medium bg-black dark:bg-zinc-800 shadow-input disabled:opacity-50 disabled:cursor-not-allowed transition-opacity",
   bottomTextWrapper: "text-center",
@@ -45,11 +34,7 @@ export function LoginForm() {
   const { goToSignup, goToForgotPassword, goToDashboard } = useAuthNavigation();
   const { showAlert } = useAlert();
 
-  const [formData, setFormData] = useState<LoginRequest>({
-    email: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState<LoginRequest>({ email: "", password: "" });
   const [login, { isLoading }] = useLoginMutation();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,47 +43,50 @@ export function LoginForm() {
   }, []);
 
   const validateForm = useCallback(() => {
-    if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+    const email = formData.email.trim();
+    const password = formData.password;
+
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
       showAlert("Valid email is required", "error");
       return false;
     }
-    if (formData.password.length < 6) {
+
+    if (password.length < 6) {
       showAlert("Password must be at least 6 characters", "error");
       return false;
     }
+
     return true;
   }, [formData, showAlert]);
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const getErrorMessage = (err: unknown) => {
+    if (err && typeof err === "object" && "data" in err) {
+      return (err as { data?: { message?: string } }).data?.message || "Login failed";
+    }
+    return "Login failed. Please check your credentials.";
+  };
 
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
       if (!validateForm()) return;
 
       try {
-        const response = await login(formData).unwrap();
+        const response = await login({
+          email: formData.email.trim(),
+          password: formData.password,
+        }).unwrap();
 
-        // Dispatch credentials to Redux store
-        dispatch(
-          setCredentials({
-            user: response.user,
-            token: response.token,
-          }),
-        );
+        // Save user data in Redux
+        dispatch(setCredentials({ user: response.user, token: response.token }));
 
         showAlert("Login successful!", "success");
         goToDashboard();
       } catch (err: unknown) {
-        const errorMessage =
-          err && typeof err === "object" && "data" in err
-            ? (err as { data?: { message?: string } }).data?.message ||
-              "Login failed"
-            : "Login failed. Please check your credentials.";
-
-        showAlert(errorMessage, "error");
+        showAlert(getErrorMessage(err), "error");
       }
     },
-    [formData, login, dispatch, showAlert, goToDashboard, validateForm],
+    [formData, login, dispatch, showAlert, goToDashboard, validateForm]
   );
 
   return (
@@ -120,21 +108,18 @@ export function LoginForm() {
         ))}
 
         <div className={CLASSES.forgotWrapper}>
-          <button
-            type="button"
-            onClick={goToForgotPassword}
-            className={CLASSES.forgotText}
-          >
+          <button type="button" onClick={goToForgotPassword} className={CLASSES.forgotText}>
             Forgot password?
           </button>
         </div>
+
         <ButtonCom
           text={isLoading ? "Logging in..." : "Login →"}
+          htmlType="submit"
           type="default"
-          gradient={true}
+          gradient
           icon={<BottomGradient />}
           iconPosition="right"
-          onClick={handleSubmit}
           className={CLASSES.submitBtn}
           disabled={isLoading}
         />
@@ -153,5 +138,5 @@ export function LoginForm() {
 }
 
 const BottomGradient = () => (
-  <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
+  <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-linear-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
 );

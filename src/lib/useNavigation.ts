@@ -10,7 +10,11 @@ export const useNavigation = <T extends RouteMap>(routes: T) => {
 
   const goTo = (route: keyof T) => {
     const path = routes[route] as string; 
-    if (!path) console.warn(`[Navigation Warning] Route "${String(route)}" does not exist.`);
+    console.log("Navigating to path:", path);
+    if (!path) {
+      console.error(`Route "${String(route)}" is undefined.`);
+      return;
+    }
     router.push(path);
   };
 

@@ -4,7 +4,7 @@ import { Button } from 'antd';
 // --- Dynamic Tailwind Classes ---
 const classes = {
   gradientButton:
-    'bg-gradient-to-b from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2',
+    ' from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2',
   defaultButton: 'flex items-center justify-center gap-2',
 };
 
@@ -14,13 +14,15 @@ export type ButtonComProps<TPayload = void> = {
   onClick?: (payload: TPayload) => void;
   payload?: TPayload;
   className?: string;
-  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text'; // antd style
+  htmlType?: 'button' | 'submit' | 'reset';                 // HTML behavior
   color?: string;
   disabled?: boolean;
   gradient?: boolean;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
 };
+
 
 const ButtonCom = <TPayload,>({
   text,
@@ -29,6 +31,7 @@ const ButtonCom = <TPayload,>({
   payload,
   className = '',
   type = 'primary',
+  htmlType = 'button',
   color,
   disabled = false,
   gradient = false,
@@ -42,6 +45,7 @@ const ButtonCom = <TPayload,>({
   return (
     <Button
       type={type}
+       htmlType={htmlType} 
       href={link}
       disabled={disabled}
       className={`${gradientClass} ${className}`}
