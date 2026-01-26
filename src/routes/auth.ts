@@ -22,15 +22,24 @@ import type {
 import { extractAuthPayload } from "../utils/auth.util.ts";
 
 async function authRoutes(fastify: FastifyInstance) {
+  function registerPost<T extends object>(
+    path: string,
+    handler: (body: T) => Promise<any>,
+  ) {
+    fastify.post<{ Body: T }>(path, async (req, reply) => {
+      try {
+        const body = req.body as T;
 
-  function registerPost<T>(path: string, handler: (body: T) => Promise<any>) {
-  fastify.post<{ Body: T }>(path, async (req, reply) => {
-    const body = req.body as T;
-    const result = await handler(body);
-    return reply.send(result);
-  });
-}
-
+        const result = await handler(body);
+        return reply.send(result);
+      } catch (error: any) {
+        const statusCode = error.statusCode || 400;
+        return reply.status(statusCode).send({
+          error: error.message || "Internal Server Error",
+        });
+      }
+    });
+  }
 
   registerPost<SignupBody>("/signup", signup);
   registerPost<LoginBody>("/login", login);
@@ -40,17 +49,22 @@ async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post("/logout", async (req, reply) => {
     const payload = extractAuthPayload(req, fastify);
-    if (!payload) return reply.status(401).send({ error: "Invalid or missing token" });
+    if (!payload)
+      return reply.status(401).send({ error: "Invalid or missing token" });
 
     return reply.send(await logout(payload.userId, payload.role as Role));
   });
 
-  fastify.delete<{ Body: DeleteAccountBody }>("/delete-account", async (req, reply) => {
-    const payload = extractAuthPayload(req, fastify);
-    if (!payload) return reply.status(401).send({ error: "Invalid or missing token" });
+  fastify.delete<{ Body: DeleteAccountBody }>(
+    "/delete-account",
+    async (req, reply) => {
+      const payload = extractAuthPayload(req, fastify);
+      if (!payload)
+        return reply.status(401).send({ error: "Invalid or missing token" });
 
-    return reply.send(await deleteAccount(payload.userId, req.body.role));
-  });
+      return reply.send(await deleteAccount(payload.userId, req.body.role));
+    },
+  );
 }
 
 export default authRoutes;

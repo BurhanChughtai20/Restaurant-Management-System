@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { DeleteMenuItemParams } from "../../../shared/index.ts";
+import type { DeleteMenuItemParams } from "../../../shared/index.ts";
 
 export async function deleteMenuItem({
   id,

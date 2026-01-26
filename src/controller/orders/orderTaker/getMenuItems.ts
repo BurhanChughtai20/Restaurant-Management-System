@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { OrderItem } from "../../../shared/index.ts";
+import type { OrderItem } from "../../../shared/index.ts";
 const menuCache = new Map<number, { data: any; timestamp: number }>();
 const cacheDuration = 5 * 60 * 1000;
 

@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import {
+import type {
   ChefInput,
   CompletedOrder,
 } from "../../../shared/interfaces/chef.interface.ts";

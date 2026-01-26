@@ -1,5 +1,5 @@
 import prisma from "../../libs/prisma.ts";
-import { AdminOrder, GetAllOrdersParams } from "../../shared/index.ts";
+import type { AdminOrder, GetAllOrdersParams } from "../../shared/index.ts";
 export async function getAllOrders({
   restaurantId,
   limit = 20,

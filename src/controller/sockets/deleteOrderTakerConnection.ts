@@ -1,5 +1,5 @@
 import prisma from "../../libs/prisma.ts";
-import { DeleteOrderTakerBody } from "../../shared/index.ts";
+import type { DeleteOrderTakerBody } from "../../shared/index.ts";
 
 export const deleteOrderTakerConnection = async ({
   orderTakerId,

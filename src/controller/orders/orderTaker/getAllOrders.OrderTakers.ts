@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetOrdersByOrderTakerInput, Order } from "../../../shared/index.ts";
+import type{ GetOrdersByOrderTakerInput, Order } from "../../../shared/index.ts";
 
 export async function getAllOrdersByOrderTaker(
   input: GetOrdersByOrderTakerInput

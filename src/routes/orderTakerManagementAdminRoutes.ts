@@ -9,7 +9,7 @@ import {
   searchWaiters,
   getOrderTakers,
 } from "../controller/index.ts";
-import { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
+import type { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
 
 
 async function orderTakerManagementRoutes(fastify: FastifyInstance) {

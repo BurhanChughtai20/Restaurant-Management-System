@@ -6,7 +6,7 @@ import {
   getMenuItemsForOrderTaker,
   createOrder,
   updateOrder,
-  get_All_Orders_OrderTakers,
+  getAllOrdersByOrderTaker,
   getOrderTakerReport,
 } from "../controller/index.ts";
 import type { AuthenticatedUserExtended, CreateOrderRequestBody } from "../shared/index.ts";
@@ -177,10 +177,14 @@ async function OrderTaker_Orders_Mobile_Routes(fastify: FastifyInstance) {
   );
 
   registerGet(
-    "/orders",
-    [Role.Order_Taker],
-    (restaurantId, user) => get_All_Orders_OrderTakers(restaurantId, user.id)
-  );
+  "/orders",
+  [Role.Order_Taker],
+  (restaurantId, user) =>
+    getAllOrdersByOrderTaker({
+      restaurantId,
+      orderTakerId: user.id,
+    })
+);
 
   registerGet(
     "/order-taker/reports",

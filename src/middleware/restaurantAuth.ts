@@ -1,4 +1,4 @@
-import { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import prisma from "../libs/prisma.ts";
 import { verifyToken } from "../utils/jwtToken.ts";
 

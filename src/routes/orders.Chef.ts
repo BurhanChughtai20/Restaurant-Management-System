@@ -10,7 +10,7 @@ import {
 } from "../controller/index.ts";
 import type { AuthenticatedUserExtended } from "../shared/index.ts";
 import { ApiError } from "../utils/ApiError.ts";
-import { MenuItemForChef } from "../shared/interfaces/chef.interface.ts";
+import type { MenuItemForChef } from "../shared/interfaces/chef.interface.ts";
 
 type RouteHandler<TResult> = (
   restaurantId: number,

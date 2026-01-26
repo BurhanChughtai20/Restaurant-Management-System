@@ -13,7 +13,7 @@ export async function verifyEmailOtp({
   otp: string;
   role: Role;
 }) {
-  const redisKey = `signup:${email}:${role}`;
+  const redisKey = `signup:${email}:${role.toString()}`;
   const userDataRaw = await redisClient.hGetAll(redisKey);
 
   if (!userDataRaw || Object.keys(userDataRaw).length === 0) {

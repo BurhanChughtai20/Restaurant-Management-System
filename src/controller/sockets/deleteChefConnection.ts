@@ -1,5 +1,5 @@
 import prisma from "../../libs/prisma.ts";
-import { DeleteChefInput } from "../../shared/interfaces/chef.interface.ts";
+import type { DeleteChefInput } from "../../shared/interfaces/chef.interface.ts";
 
 export const deleteChefConnection = async ({
   restaurantId,

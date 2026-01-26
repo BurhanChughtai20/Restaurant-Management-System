@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { UpdateMenuItemParams } from "../../../shared/index.ts";
+import type { UpdateMenuItemParams } from "../../../shared/index.ts";
 
 export async function updateMenuItem({
   id,

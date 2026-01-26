@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { MenuItemParams } from "../../../shared/index.ts";
+import type { MenuItemParams } from "../../../shared/index.ts";
 import { generateSKU } from "../../../utils/generateSKU.ts";
 
 export async function CreateMenuItem({

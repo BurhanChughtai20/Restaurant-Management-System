@@ -1,6 +1,6 @@
 import prisma from "../../../libs/prisma.ts";
 import { generateCacheKey, getCachedData, setCachedData } from "../../../libs/redisCache.ts";
-import { SearchMenuItemsParams } from "../../../shared/index.ts";
+import type { SearchMenuItemsParams } from "../../../shared/index.ts";
 
 export async function searchMenuItems({
   restaurantId,

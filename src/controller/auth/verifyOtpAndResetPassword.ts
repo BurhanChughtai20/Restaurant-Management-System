@@ -2,7 +2,7 @@ import { redisClient } from "../../libs/redis.ts";
 import prisma from "../../libs/prisma.ts";
 import { ApiError } from "../../utils/ApiError.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
-import { OtpData } from "../../shared/index.ts";
+import type { OtpData } from "../../shared/index.ts";
 async function findOtpInRedis(otp: string): Promise<{ key: string; data: OtpData }> {
   const key = `password-reset:${otp}`;
   const dataRaw = await redisClient.hGetAll(key);

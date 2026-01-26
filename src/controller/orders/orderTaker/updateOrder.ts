@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { OrderChangeMessage, OrderItem, UpdateOrderInput } from "../../../shared/index.ts";
+import type { OrderChangeMessage, OrderItem, UpdateOrderInput } from "../../../shared/index.ts";
 
 export async function updateOrder({
   restaurantId,

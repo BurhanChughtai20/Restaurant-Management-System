@@ -70,3 +70,8 @@ export interface CompletedOrder {
   createdAt: Date;
   items: CompletedOrderItem[];
 }
+
+export interface DeleteChefInput {
+  restaurantId: number;
+  chefId: number;
+}

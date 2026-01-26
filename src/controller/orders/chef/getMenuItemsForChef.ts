@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetRestaurantIdForChef, MenuItemForChef } from "../../../shared/interfaces/chef.interface.ts";
+import type { GetRestaurantIdForChef, MenuItemForChef } from "../../../shared/interfaces/chef.interface.ts";
 
 const twentySecondsAgo = new Date(Date.now() - 20 * 1000);
 export async function getMenuItemsForChef(

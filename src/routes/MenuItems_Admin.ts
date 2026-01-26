@@ -5,10 +5,13 @@ import {
   updateMenuItem,
   deleteMenuItem,
   searchMenuItems,
+} from "../shared/index.ts";
+import type {
   MenuItemBody,
   UpdateMenuItemBody,
 } from "../shared/index.ts";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
+
 
 async function MenuItemsRoutes(fastify: FastifyInstance) {
   function registerPost<T>(

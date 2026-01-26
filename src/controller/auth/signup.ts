@@ -2,12 +2,12 @@ import { redisClient } from "../../libs/redis.ts";
 import { sendOtpEmail } from "../../libs/mailer.ts";
 import { generateOtp } from "../../libs/generateOtp.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
-import { SignupBody } from "../../shared/index.ts";
+import type { SignupBody } from "../../shared/index.ts";
 
-const OTP_EXPIRATION_SECONDS = 30;
+const OTP_EXPIRATION_SECONDS = 300;
 
 export async function signup({ name, email, password, role }: SignupBody) {
-  const key = `signup:${email}:${role}`;
+  const key = `signup:${email}:${role.toString()}`;
 
   const exists = await redisClient.exists(key);
   if (exists) {
@@ -22,7 +22,7 @@ export async function signup({ name, email, password, role }: SignupBody) {
     name,
     email,
     password: hashedPassword,
-    role,
+    role: role.toString(),
     otp,
     otpExpiresAt: otpExpiresAt.toString(),
   });

@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetAllMenuItemsParams, PaginatedMenuItems } from "../../../shared/index.ts";
+import type { GetAllMenuItemsParams, PaginatedMenuItems } from "../../../shared/index.ts";
 
 export async function getAllMenuItems({
   restaurantId,

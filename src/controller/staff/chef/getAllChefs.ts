@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetAllChefsInput, PaginatedChefs } from "../../../shared/interfaces/chef.interface.ts";
+import type { GetAllChefsInput, PaginatedChefs } from "../../../shared/interfaces/chef.interface.ts";
 export async function getAllChefs({
   restaurantId,
   limit = 10,

@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetOrderTakersParams, PaginatedOrderTakers } from "../../../shared/index.ts"; 
+import type { GetOrderTakersParams, PaginatedOrderTakers } from "../../../shared/index.ts"; 
 
 export async function getOrderTakers({
   restaurantId,

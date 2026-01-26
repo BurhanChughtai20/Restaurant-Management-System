@@ -4,7 +4,7 @@ import {
   getCachedData,
   setCachedData,
 } from "../../../libs/redisCache.ts";
-import { SearchOrderTakerParams } from "../../../shared/index.ts";
+import type { SearchOrderTakerParams } from "../../../shared/index.ts";
 
 export async function searchWaiters({
   restaurantId,

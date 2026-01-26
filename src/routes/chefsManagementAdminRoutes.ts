@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
 import { generateQRToken } from "../utils/generateQRToken.ts";
 
-import {
+import type {
   DeleteChefBody,
   UpdateChefBody,
 } from "../shared/interfaces/chef.interface.ts";
@@ -24,7 +24,7 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
       req?: any,
       reply?: any,
     ) => Promise<any>,
-  ) {
+  ) { 
     fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
       const restaurantId = (req as any).restaurantId;
       const result = await handler(restaurantId, req.query, req, reply);
@@ -68,7 +68,7 @@ async function chefsManagementRoutes(fastify: FastifyInstance) {
         limit: Number(query?.limit) || 10,
         ...(query.cursorId ? { cursorId: Number(query?.cursorId) } : {}),
       }));
-
+      
   registerGet("/token-chef", async (_restaurantId, _query, req, reply) =>
     generateQRToken(req, reply),
   );

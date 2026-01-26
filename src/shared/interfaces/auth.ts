@@ -17,7 +17,7 @@ export interface LoginBody {
 export interface VerifyEmailBody {
   email: string;
   otp: string;
-  role: Role;
+  role: Role; // Prisma enum
 }
 
 export interface ForgotPasswordBody {

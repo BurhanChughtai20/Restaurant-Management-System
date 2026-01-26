@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import { GetWeeklyTopOrderTakersParams, TopOrderTaker } from "../../../shared/index.ts";
+import type { GetWeeklyTopOrderTakersParams, TopOrderTaker } from "../../../shared/index.ts";
 
 export async function getWeeklyTopOrderTakers({restaurantId}: GetWeeklyTopOrderTakersParams): Promise<TopOrderTaker[]> {
   const fromDate = new Date();
