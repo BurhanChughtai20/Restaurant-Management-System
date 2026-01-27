@@ -66,10 +66,21 @@ const authSlice = createSlice({
         }
       }
     },
+
+    deleteAccountSuccess: (state) => {
+    state.user = null;
+    state.token = null;
+    state.isAuthenticated = false;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+    }
+
   },
+},
 });
 
-export const { setCredentials, logout, clearToken, updateUser, restoreAuth } = authSlice.actions;
+export const { setCredentials, logout, clearToken, updateUser, restoreAuth, deleteAccountSuccess } = authSlice.actions;
 
 export const selectAuth = (state: { auth: AuthState }) => state.auth;
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;

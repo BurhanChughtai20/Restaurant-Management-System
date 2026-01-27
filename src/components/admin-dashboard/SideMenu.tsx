@@ -12,13 +12,13 @@ import {
   Menu,
   MenuItem as MuiMenuItem,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight, Command, MoreVertical } from "lucide-react";
+import { ChevronLeft, ChevronRight, Command, MoreVertical, Trash2 } from "lucide-react";
 import MenuContent from "./MenuContent";
 import { MenuItem } from "./types";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS, DashboardRouteKey } from "@/config/menuConfig";
 import { useAppNavigation } from "@/lib/useAppNavigation";
 import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
-import { selectUser, logout } from "@/app/store/slices/authSlice";
+import { selectUser, logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
 
 interface UserProfile {
   name: string;
@@ -35,7 +35,6 @@ interface SideMenuProps {
   secondaryMenu?: { items: MenuItem[] };
 }
 
-// --- Styled Components ---
 const EXPANDED_WIDTH = 240;
 const COLLAPSED_WIDTH = 52;
 
@@ -77,27 +76,34 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
 
-  // --- Footer Menu State ---
+  // Footer Menu State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  const handleLogout = () => {
+  // Logout handler
+  const handleLogout = useCallback(() => {
     dispatch(logout());
     handleMenuClose();
-  };
+  }, [dispatch]);
 
-  // --- Sidebar Toggle ---
+  // Delete Account handler
+  const handleDeleteAccount = useCallback(() => {
+    handleMenuClose();
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      // Call delete account API here if needed
+      dispatch(deleteAccountSuccess());
+    }
+  }, [dispatch]);
+
+  // Sidebar toggle
   const handleToggle = useCallback(() => {
     setOpen((prev) => !prev);
     onToggle?.();
   }, [onToggle]);
 
-  // --- Navigation Handler ---
+  // Navigation
   const handleNavigation = useCallback(
     (item: MenuItem) => {
       if (item.route) dashboard.goTo(item.route as DashboardRouteKey);
@@ -105,7 +111,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
     [dashboard]
   );
 
-  // --- User Initials ---
   const userInitial = useMemo(
     () => userProfile?.name?.charAt(0).toUpperCase() ?? user?.name?.charAt(0)?.toUpperCase() ?? "U",
     [userProfile?.name, user?.name]
@@ -114,24 +119,10 @@ const SideMenu: React.FC<SideMenuProps> = ({
   return (
     <StyledDrawer variant="permanent" open={open}>
       {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: open ? "space-between" : "center",
-          p: 2,
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: open ? "space-between" : "center", p: 2 }}>
         {open && (
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              sx={{
-                bgcolor: "black",
-                borderRadius: 1.5,
-                p: 0.6,
-                display: "flex",
-              }}
-            >
+            <Box sx={{ bgcolor: "black", borderRadius: 1.5, p: 0.6, display: "flex" }}>
               <Command size={20} color="white" />
             </Box>
             <Typography variant="h6" fontWeight={800} sx={{ color: "black" }}>
@@ -150,13 +141,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
       {/* Footer */}
       <Stack
         direction="row"
-        sx={{
-          p: 2,
-          borderTop: "1px solid #f5f5f5",
-          alignItems: "center",
-          gap: 1.5,
-          bgcolor: "#ffffff",
-        }}
+        sx={{ p: 2, borderTop: "1px solid #f5f5f5", alignItems: "center", gap: 1.5, bgcolor: "#ffffff" }}
       >
         <Avatar sx={{ width: 36, height: 36, bgcolor: "black", fontSize: "0.9rem" }}>{userInitial}</Avatar>
         {open && (
@@ -173,8 +158,12 @@ const SideMenu: React.FC<SideMenuProps> = ({
               <MoreVertical size={16} />
             </IconButton>
 
-            {/* Dropdown menu */}
+            {/* Dropdown Menu */}
             <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+              <MuiMenuItem onClick={handleDeleteAccount}>
+                <Trash2 size={16} style={{ marginRight: 8 }} />
+                Delete Account
+              </MuiMenuItem>
               <MuiMenuItem onClick={handleLogout}>Logout</MuiMenuItem>
             </Menu>
           </>

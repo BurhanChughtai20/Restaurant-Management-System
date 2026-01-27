@@ -20,13 +20,16 @@ import {
   MessageSquare,
   User,
   Settings,
-  HelpCircle,
+  Trash2,
   LogIn,
+  LucideIcon,
 } from "lucide-react";
 import { useAuthenticatedNavigation } from "@/lib/useAppNavigation";
 import { DASHBOARD_ROUTES } from "@/config/routes";
-import ButtonCom from "./Button"; 
+import ButtonCom from "./Button";
 import Loading from "@/app/loading";
+import { useAppDispatch } from "@/app/store/hooks";
+import { logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
 
 const classes = {
   container: "relative w-full",
@@ -34,98 +37,74 @@ const classes = {
   navBodyWithButton: "flex items-center gap-4",
   leftSection: "flex items-center gap-4",
   rightSection: "flex items-center gap-4 ml-auto",
-  mobileMenuContent: "flex flex-col gap-6 py-4",
-  mobileLink:
-    "flex items-center gap-3 text-neutral-600 dark:text-neutral-300 hover:text-indigo-600 transition-colors font-medium text-lg",
-  mobileLinkIcon: "text-black",
-  mobileLinkText: "text-gray-800 text-sm",
-  mobileButton: "mt-4",
-  mobileButtonWrapper: "px-4 py-2",
-  desktopButton: "flex",
+  mobileMenuContent: "flex flex-col gap-4 py-4",
   loadingOverlay: "fixed inset-0 bg-black/50 flex items-center justify-center z-50",
 };
 
-const dashboardNavItems = [
-  {
-    name: "Dashboard",
-    routeKey: "dashboard" as const,
-    icon: <LayoutDashboard size={18} />,
-  },
-  {
-    name: "Menu Items",
-    routeKey: "MenuItem" as const,
-    icon: <UtensilsCrossed size={18} />,
-  },
-  {
-    name: "Order Taker",
-    routeKey: "Order_Taker" as const,
-    icon: <ClipboardList size={18} />,
-  },
-  { name: "Chef", routeKey: "Chef" as const, icon: <ChefHat size={18} /> },
-  {
-    name: "Articles",
-    routeKey: "Article" as const,
-    icon: <FileText size={18} />,
-  },
-  {
-    name: "WhatsApp Bot",
-    routeKey: "whatsapp_bot" as const,
-    icon: <MessageSquare size={18} />,
-  },
-  { name: "Profile", routeKey: "profile" as const, icon: <User size={18} /> },
-  {
-    name: "Settings",
-    routeKey: "settings" as const,
-    icon: <Settings size={18} />,
-  },
-  { name: "Help", routeKey: "help" as const, icon: <HelpCircle size={18} /> },
-];
+type NavItemRouteKey = keyof typeof DASHBOARD_ROUTES | "delete_account";
+
+interface NavItem {
+  name: string;
+  routeKey: NavItemRouteKey;
+  icon: LucideIcon;
+}
 
 export const DashboardNavbar = memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isChecking, navigateWithAuth } = useAuthenticatedNavigation();
   const pathname = usePathname();
+  const dispatch = useAppDispatch();
 
-  const isDashboardRoute = useMemo(
-    () => pathname.startsWith("/dashboard"),
-    [pathname],
+  const isDashboardRoute = useMemo(() => pathname.startsWith("/dashboard"), [pathname]);
+
+  const dashboardNavItems: NavItem[] = useMemo(
+    () => [
+      { name: "Dashboard", routeKey: "dashboard", icon: LayoutDashboard },
+      { name: "Menu Items", routeKey: "MenuItem", icon: UtensilsCrossed },
+      { name: "Order Taker", routeKey: "Order_Taker", icon: ClipboardList },
+      { name: "Chef", routeKey: "Chef", icon: ChefHat },
+      { name: "Articles", routeKey: "Article", icon: FileText },
+      { name: "WhatsApp Bot", routeKey: "whatsapp_bot", icon: MessageSquare },
+      { name: "Profile", routeKey: "profile", icon: User },
+      { name: "Settings", routeKey: "settings", icon: Settings },
+      { name: "Delete Account", routeKey: "delete_account", icon: Trash2 },
+    ],
+    []
   );
 
   const handleNavClick = useCallback(
-    (routeKey: keyof typeof DASHBOARD_ROUTES) => {
+    (routeKey: NavItemRouteKey) => {
+      if (routeKey === "delete_account") {
+        if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+          dispatch(deleteAccountSuccess());
+        }
+        return;
+      }
       navigateWithAuth(routeKey);
       setIsMobileMenuOpen(false);
     },
-    [navigateWithAuth],
+    [navigateWithAuth, dispatch]
   );
 
-  const handleGetStartedClick = useCallback(() => {
-    console.log("Get started clicked");
-    navigateWithAuth("dashboard");
-  }, [navigateWithAuth]);
-
-  const handleMobileMenuToggle = useCallback(() => {
-    setIsMobileMenuOpen((prev) => !prev);
-  }, []);
-
-  const handleMobileMenuClose = useCallback(() => {
+  const handleLogoutClick = useCallback(() => {
+    dispatch(logout());
     setIsMobileMenuOpen(false);
-  }, []);
+  }, [dispatch]);
+
+  const handleGetStartedClick = useCallback(() => navigateWithAuth("dashboard"), [navigateWithAuth]);
+
+  const handleMobileMenuToggle = useCallback(() => setIsMobileMenuOpen((prev) => !prev), []);
+  const handleMobileMenuClose = useCallback(() => setIsMobileMenuOpen(false), []);
 
   return (
     <>
-      {/* Loading Overlay */}
       {isChecking && (
         <div className={classes.loadingOverlay}>
           <Loading />
         </div>
       )}
 
-      <div
-        className={
-          isDashboardRoute ? classes.containerDashboard : classes.container
-        }
-      >
+      <div className={isDashboardRoute ? classes.containerDashboard : classes.container}>
         <Navbar>
           {!isDashboardRoute && (
             <NavBody className={classes.navBodyWithButton}>
@@ -136,7 +115,7 @@ export const DashboardNavbar = memo(() => {
                 <ButtonCom
                   text="Get Started Today!"
                   type="default"
-                  gradient={true}
+                  gradient
                   icon={<LogIn size={18} />}
                   iconPosition="right"
                   onClick={handleGetStartedClick}
@@ -147,50 +126,45 @@ export const DashboardNavbar = memo(() => {
             </NavBody>
           )}
 
-          {/* Mobile Navigation */}
           <MobileNav>
             <MobileNavHeader>
               <NavbarLogo />
               {isDashboardRoute && (
-                <MobileNavToggle
-                  isOpen={isMobileMenuOpen}
-                  onClick={handleMobileMenuToggle}
-                />
+                <MobileNavToggle isOpen={isMobileMenuOpen} onClick={handleMobileMenuToggle} />
               )}
             </MobileNavHeader>
 
-            {isDashboardRoute ? (
-              <MobileNavMenu
-                isOpen={isMobileMenuOpen}
-                onClose={handleMobileMenuClose}
-              >
+            {isDashboardRoute && (
+              <MobileNavMenu isOpen={isMobileMenuOpen} onClose={handleMobileMenuClose}>
                 <div className={classes.mobileMenuContent}>
-                  {dashboardNavItems.map((item, idx) => (
-                    <button
-                      key={`mobile-link-${idx}`}
-                      onClick={() => handleNavClick(item.routeKey)}
-                      className={classes.mobileLink}
-                      disabled={isChecking}
-                    >
-                      <span className={classes.mobileLinkIcon}>{item.icon}</span>
-                      <span className={classes.mobileLinkText}>{item.name}</span>
-                    </button>
-                  ))}
+                  {dashboardNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <ButtonCom
+                        key={item.routeKey}
+                        text={item.name}
+                        type="default"
+                        gradient
+                        icon={<Icon size={18} />}
+                        iconPosition="left"
+                        onClick={() => handleNavClick(item.routeKey)}
+                        className="w-full text-left"
+                        disabled={isChecking}
+                      />
+                    );
+                  })}
+                  <ButtonCom
+                    text="Logout"
+                    type="default"
+                    gradient
+                    icon={<LogIn size={18} />}
+                    iconPosition="left"
+                    onClick={handleLogoutClick}
+                    className="w-full text-left"
+                    disabled={isChecking}
+                  />
                 </div>
               </MobileNavMenu>
-            ) : (
-              <div className={classes.mobileButtonWrapper}>
-                <ButtonCom
-                  text="Get Started Today!"
-                  type="default"
-                  gradient={true}
-                  icon={<LogIn size={18} />}
-                  iconPosition="right"
-                  onClick={handleGetStartedClick}
-                  className="w-full bg-white! text-black"
-                  disabled={isChecking}
-                />
-              </div>
             )}
           </MobileNav>
         </Navbar>
