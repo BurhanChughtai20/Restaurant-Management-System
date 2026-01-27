@@ -72,10 +72,10 @@ export const authApi = baseApi.injectEndpoints({
 
         deleteAccount: builder.mutation<void, void>({
       query: () => ({
-        url: '/delete-account', // your backend endpoint
+        url: '/auth/delete-account',
         method: 'DELETE',
       }),
-      invalidatesTags: ['Auth'], // invalidate auth cache
+      invalidatesTags: ['Auth'], 
     }),
   }),
 });

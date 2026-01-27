@@ -7,6 +7,7 @@ import { useAuthNavigation } from "@/auth";
 import { useResetPasswordMutation } from "@/app/store/api/authApi";
 import { useAlert } from "./DynamicAlert";
 import { useSearchParams } from "next/navigation";
+import ButtonCom from "./Button";
 
 const UI_TEXT = {
   title: "Reset your password",
@@ -16,35 +17,56 @@ const UI_TEXT = {
 };
 
 const RESET_FIELDS = [
-  { id: "password", label: "New Password", placeholder: "••••••••", type: "password" },
-  { id: "confirmPassword", label: "Confirm New Password", placeholder: "••••••••", type: "password" },
+  {
+    id: "password",
+    label: "New Password",
+    placeholder: "••••••••",
+    type: "password",
+  },
+  {
+    id: "confirmPassword",
+    label: "Confirm New Password",
+    placeholder: "••••••••",
+    type: "password",
+  },
 ] as const;
 
 const CLASSES = {
-  wrapper: "mx-auto w-[95%] md:max-w-md shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
+  wrapper:
+    "mx-auto w-[95%] md:max-w-md shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
   form: "my-8",
   inputSpacing: "mb-4",
-  submitBtn: "w-full text-white rounded-md h-10 font-medium bg-black dark:bg-zinc-800 shadow-input hover:-translate-y-0.5 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed",
-  backBtn: "flex items-center justify-center gap-2 hover:opacity-80 transition-opacity cursor-pointer",
+  submitBtn:
+    "w-full text-white rounded-md h-10 font-medium bg-black dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed",
+  backBtn:
+    "flex items-center justify-center gap-2 hover:opacity-80 transition-opacity cursor-pointer",
   backText: "text-xs text-black dark:text-white font-bold",
+};
+
+type FormState = {
+  password: string;
+  confirmPassword: string;
 };
 
 export function ResetPasswordForm() {
   const { goToLogin } = useAuthNavigation();
   const { showAlert } = useAlert();
   const searchParams = useSearchParams();
-  
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<FormState>({
     password: "",
     confirmPassword: "",
   });
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { id, value } = e.target;
+      setFormData((prev) => ({ ...prev, [id]: value }));
+    },
+    []
+  );
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -67,15 +89,27 @@ export function ResetPasswordForm() {
       }
 
       try {
-        await resetPassword({ token, password: formData.password }).unwrap();
+        await resetPassword({
+          token,
+          password: formData.password,
+        }).unwrap();
+
         showAlert("Password reset successful!", "success");
         goToLogin();
-      } catch (err: unknown) {
-        const errorMessage = err && typeof err === "object" && "data" in err
-          ? (err as { data?: { message?: string } }).data?.message || "Password reset failed"
-          : "Password reset failed. Please try again.";
-        
-        showAlert(errorMessage, "error");
+      } catch (error: unknown) {
+        let message = "Password reset failed. Please try again.";
+
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "data" in error &&
+          typeof (error as { data?: { message?: string } }).data?.message ===
+            "string"
+        ) {
+          message = (error as { data: { message: string } }).data.message;
+        }
+
+        showAlert(message, "error");
       }
     },
     [formData, resetPassword, searchParams, showAlert, goToLogin]
@@ -93,15 +127,21 @@ export function ResetPasswordForm() {
           <FormInput
             key={field.id}
             {...field}
-            value={formData[field.id as keyof typeof formData]}
+            value={formData[field.id]}
             onChange={handleChange}
+            disabled={isLoading}
             containerClassName={CLASSES.inputSpacing}
           />
         ))}
 
-        <button className={CLASSES.submitBtn} type="submit" disabled={isLoading}>
-          {isLoading ? "Updating..." : UI_TEXT.submitLabel}
-        </button>
+        <ButtonCom
+          text={isLoading ? "Updating..." : UI_TEXT.submitLabel}
+          type="default"
+          htmlType="submit"
+          gradient
+          className={CLASSES.submitBtn}
+          disabled={isLoading}
+        />
       </form>
 
       <button onClick={goToLogin} className={CLASSES.backBtn}>

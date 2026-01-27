@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import DynamicContent from "./Title";
 import FormInput from "./FormInput";
 import { useAuthNavigation } from "@/auth";
@@ -15,15 +15,6 @@ const UI_TEXT = {
   submitLabel: "Send Reset Link",
   backLabel: "Back to Login",
 };
-
-const FORGOT_FIELDS = [
-  {
-    id: "email",
-    label: "Recovery Email",
-    placeholder: "you@example.com",
-    type: "email",
-  },
-] as const;
 
 const CLASSES = {
   wrapper:
@@ -44,31 +35,29 @@ export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-      if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-        showAlert("Valid email is required", "error");
-        return;
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+      showAlert("Valid email is required", "error");
+      return;
+    }
+
+    try {
+      await forgotPassword({ email }).unwrap();
+      showAlert("Password reset link sent to your email!", "success");
+      setEmail("");
+    } catch (error: unknown) {
+      if (error instanceof Object && error.hasOwnProperty("data")) {
+        const message =
+          (error as { data?: { message?: string } }).data?.message ??
+          "Failed to send reset link. Please try again.";
+        showAlert(message, "error");
+      } else {
+        showAlert("An error occurred. Please try again.", "error");
       }
-
-      try {
-        await forgotPassword({ email }).unwrap();
-        showAlert("Password reset link sent to your email!", "success");
-        setEmail("");
-      } catch (err: unknown) {
-        const errorMessage =
-          err && typeof err === "object" && "data" in err
-            ? (err as { data?: { message?: string } }).data?.message ||
-              "Failed to send reset link"
-            : "Failed to send reset link. Please try again.";
-
-        showAlert(errorMessage, "error");
-      }
-    },
-    [email, forgotPassword, showAlert],
-  );
+    }
+  };
 
   return (
     <div className={CLASSES.wrapper}>
@@ -84,14 +73,16 @@ export function ForgotPasswordForm() {
           placeholder="you@example.com"
           type="email"
           value={email}
+          disabled={isLoading}
           onChange={(e) => setEmail(e.target.value)}
           containerClassName={CLASSES.inputSpacing}
         />
+
         <ButtonCom
           text={isLoading ? "Sending..." : UI_TEXT.submitLabel}
-          type="default"
-          gradient={true}
-          onClick={() => {}}
+          type="default" // visual variant
+          htmlType="submit" // HTML behavior
+          gradient
           className={CLASSES.submitBtn}
           disabled={isLoading}
         />

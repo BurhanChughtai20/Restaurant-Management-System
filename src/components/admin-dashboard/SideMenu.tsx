@@ -18,7 +18,8 @@ import { MenuItem } from "./types";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS, DashboardRouteKey } from "@/config/menuConfig";
 import { useAppNavigation } from "@/lib/useAppNavigation";
 import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
-import { selectUser, logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
+import { selectUser, logout } from "@/app/store/slices/authSlice";
+import { useDeleteAccountMutation } from "@/app/store/api";
 
 interface UserProfile {
   name: string;
@@ -75,6 +76,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const { dashboard } = useAppNavigation();
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
+const [deleteAccount] = useDeleteAccountMutation();
 
   // Footer Menu State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -88,14 +90,23 @@ const SideMenu: React.FC<SideMenuProps> = ({
     handleMenuClose();
   }, [dispatch]);
 
-  // Delete Account handler
-  const handleDeleteAccount = useCallback(() => {
-    handleMenuClose();
-    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      // Call delete account API here if needed
-      dispatch(deleteAccountSuccess());
-    }
-  }, [dispatch]);
+  const handleDeleteAccount = useCallback(async () => {
+  handleMenuClose();
+
+  if (!window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+    return;
+  }
+
+  try {
+    await deleteAccount().unwrap(); // 🔥 ACTUAL API CALL
+    dispatch(logout());             // clear auth state
+    window.location.href = "/login"; // or router.push("/login")
+  } catch (error) {
+    console.error("Delete account failed", error);
+    alert("Failed to delete account. Please try again.");
+  }
+}, [deleteAccount, dispatch]);
+
 
   // Sidebar toggle
   const handleToggle = useCallback(() => {
