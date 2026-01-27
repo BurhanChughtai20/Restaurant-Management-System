@@ -13,6 +13,7 @@ import { useAppNavigation } from "@/lib/useAppNavigation";
 import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
 import { selectUser, logout } from "@/app/store/slices/authSlice";
 import {  NavMenuItem, SideMenuProps, useDeleteAccountMutation } from "@/app/store/api";
+import { useRouter } from "next/navigation";
 
 const DRAWER_THEME = {
   EXPANDED: 240,
@@ -70,7 +71,9 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const { dashboard } = useAppNavigation();
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
-  const [deleteAccount] = useDeleteAccountMutation();
+  const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
+const router = useRouter();
+
 
   React.useEffect(() => {
     setUiState(prev => ({ ...prev, mounted: true }));
@@ -85,18 +88,18 @@ const SideMenu: React.FC<SideMenuProps> = ({
     handleMenuAction();
   }, [dispatch, handleMenuAction]);
 
-  const handleDeleteAccount = useCallback(async () => {
-    handleMenuAction();
-    if (!window.confirm(UI_STRINGS.CONFIRM_DELETE)) return;
-    try {
-      await deleteAccount().unwrap();
-      dispatch(logout());
-      window.location.href = "/login";
-    } catch (err) {
-      console.error("Critical: Account deletion failed", err);
-    }
-  }, [deleteAccount, dispatch, handleMenuAction]);
+const handleDeleteAccount = useCallback(async () => {
+  if (!window.confirm(UI_STRINGS.CONFIRM_DELETE)) return;
 
+  try {
+    await deleteAccount().unwrap(); // call API
+    dispatch(logout());              // clear Redux state
+    router.push("/");                // redirect to homepage
+  } catch (err) {
+    console.error("Account deletion failed:", err);
+    alert("Failed to delete account. Please try again.");
+  } 
+}, [deleteAccount, dispatch, router]);
   const handleToggle = useCallback(() => {
     setUiState(prev => ({ ...prev, open: !prev.open }));
     onToggle?.();
@@ -168,8 +171,9 @@ const handleNavigation = useCallback(
               anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
               transformOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MuiMenuItem onClick={handleDeleteAccount} sx={{ color: 'error.main' }}>
-                <Trash2 size={16} style={{ marginRight: 8 }} /> Delete Account
+              <MuiMenuItem onClick={handleDeleteAccount} sx={{ color: 'error.main' }} disabled={isLoading}>
+                <Trash2 size={16} style={{ marginRight: 8 }} /> 
+                {isLoading ? "Deleting..." : "Delete Account"}
               </MuiMenuItem>
               <MuiMenuItem onClick={handleLogout}>
                 <LogOut size={16} style={{ marginRight: 8 }} /> Logout
