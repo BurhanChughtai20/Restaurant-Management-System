@@ -1,4 +1,5 @@
-
+// src/app/store/api.ts
+import type { DashboardRouteKey } from "@/config/routes";
 export enum Role {
   Admin = "Admin",
   Order_Taker = "Order_Taker",
@@ -222,7 +223,7 @@ export interface AuthCredentials {
 export interface NavMenuItem {
   id: string | number;
   label: string;
-  route: string;
+  route: DashboardRouteKey | "delete_account";
   icon: React.ReactNode;
 }
 export interface MenuGroup {

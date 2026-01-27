@@ -7,29 +7,29 @@ import {
 } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
 import { logout } from '../slices/authSlice';
+import { getToken, hasToken } from '@/lib/tokenStore';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/v1';
 
-/**
- * Base query with Authorization header
- */
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.token;
+    let token = (getState() as RootState).auth.token;
+
+    if (!token && hasToken()) {
+      token = getToken();
+    }
 
     if (token) {
-      headers.set('authorization', `Bearer ${token}`);
+      headers.set("authorization", `Bearer ${token}`);
     }
 
     return headers;
   },
 });
 
-/**
- * Base query with global 401 handling
- */
+
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,

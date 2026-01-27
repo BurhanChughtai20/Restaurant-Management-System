@@ -19,6 +19,8 @@ export const DASHBOARD_ROUTES = {
   help: "/dashboard/help",
 } as const;
 
+export type DashboardRouteKey = keyof typeof DASHBOARD_ROUTES;
+
 export const APP_ROUTES = {
   home: "/",
   pricing: "/pricing",
