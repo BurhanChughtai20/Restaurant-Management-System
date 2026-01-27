@@ -1,8 +1,3 @@
-/**
- * Centralized API exports
- * Import all API hooks from this file for consistency
- */
-
 export * from './authApi';
 export * from './baseApi';
 export * from './types';

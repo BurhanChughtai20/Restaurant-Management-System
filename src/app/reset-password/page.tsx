@@ -4,8 +4,8 @@ import { generatePageMetadata } from '@/lib/metadata';
 
 const ResetPasswordForm = dynamic(() => import('@/components/ResetPasswordForm').then(mod => mod.ResetPasswordForm), {
   loading: () => (
-    <div className="min-h-[450px] flex items-center justify-center">
-       <div className="animate-pulse bg-neutral-200 dark:bg-neutral-800 w-full max-w-md h-[350px] rounded-2xl" />
+    <div className="min-h-112.5 flex items-center justify-center">
+       <div className="animate-pulse bg-neutral-200 dark:bg-neutral-800 w-full max-w-md h-87.5 rounded-2xl" />
     </div>
   ),
   ssr: true,

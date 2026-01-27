@@ -48,12 +48,13 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     resetPassword: builder.mutation<void, ResetPasswordRequest>({
-      query: (body) => ({
-        url: '/auth/reset-password',
-        method: 'POST',
-        body,
-      }),
-    }),
+  query: (body) => ({
+    url: '/auth/reset-password',
+    method: 'POST',
+    body,
+  }),
+}),
+
 
     // New endpoint for token validation
     validateToken: builder.query<{ valid: boolean }, void>({
@@ -61,7 +62,6 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ['Auth'],
     }),
 
-    // New endpoint for logout (if backend supports it)
     logoutApi: builder.mutation<void, void>({
       query: () => ({
         url: '/auth/logout',

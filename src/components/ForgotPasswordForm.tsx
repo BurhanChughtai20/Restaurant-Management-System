@@ -7,6 +7,7 @@ import { useAuthNavigation } from "@/auth";
 import { useForgotPasswordMutation } from "@/app/store/api/authApi";
 import { useAlert } from "./DynamicAlert";
 import ButtonCom from "./Button";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const UI_TEXT = {
   title: "Forgot Password?",
@@ -31,6 +32,7 @@ const CLASSES = {
 export function ForgotPasswordForm() {
   const { goToLogin } = useAuthNavigation();
   const { showAlert } = useAlert();
+  const router = useRouter(); // Initialize router
 
   const [email, setEmail] = useState("");
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
@@ -44,9 +46,13 @@ export function ForgotPasswordForm() {
     }
 
     try {
+      // 1. Execute the mutation
       await forgotPassword({ email }).unwrap();
+      
       showAlert("Password reset link sent to your email!", "success");
-      setEmail("");
+      
+      router.push("/reset-password"); 
+
     } catch (error: unknown) {
       if (error instanceof Object && error.hasOwnProperty("data")) {
         const message =
@@ -80,8 +86,8 @@ export function ForgotPasswordForm() {
 
         <ButtonCom
           text={isLoading ? "Sending..." : UI_TEXT.submitLabel}
-          type="default" // visual variant
-          htmlType="submit" // HTML behavior
+          type="default"
+          htmlType="submit"
           gradient
           className={CLASSES.submitBtn}
           disabled={isLoading}

@@ -1,5 +1,6 @@
 "use client";
 
+import { MenuGroup, NavMenuItem } from "@/app/store/api";
 import {
   List,
   ListItem,
@@ -9,15 +10,15 @@ import {
   Tooltip,
   Divider,
   Stack,
+  Box,
 } from "@mui/material";
 import { usePathname } from "next/navigation";
-import { MenuGroup, MenuItem } from "./types";
 
 interface MenuContentProps {
   main: MenuGroup;
   secondary?: MenuGroup;
   collapsed?: boolean;
-  onSelect?: (item: MenuItem) => void;
+  onSelect?: (item: NavMenuItem) => void; // Use NavMenuItem
 }
 
 const MenuSection = ({
@@ -26,24 +27,42 @@ const MenuSection = ({
   pathname,
   onSelect,
 }: {
-  items: MenuItem[];
+  items: NavMenuItem[];
   collapsed: boolean;
   pathname: string;
-  onSelect?: (item: MenuItem) => void;
+  onSelect?: (item: NavMenuItem) => void;
 }) => (
   <List dense>
     {items.map((item) => {
-      const active = pathname.endsWith(item.route);
+      // Logic: Exact match or sub-route match
+      const active = pathname === item.route || pathname.startsWith(`${item.route}/`);
       return (
         <ListItem key={item.route} disablePadding>
           <Tooltip title={collapsed ? item.label : ""} placement="right">
             <ListItemButton
               selected={active}
               onClick={() => onSelect?.(item)}
-              sx={{ justifyContent: collapsed ? "center" : "flex-start" }}
+              sx={{ 
+                justifyContent: collapsed ? "center" : "flex-start",
+                borderRadius: 1,
+                mb: 0.5,
+                mx: 1,
+                "&.Mui-selected": {
+                    bgcolor: "primary.light",
+                    color: "primary.main",
+                    "& .MuiListItemIcon-root": { color: "primary.main" }
+                }
+              }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              {!collapsed && <ListItemText primary={item.label} />}
+              <ListItemIcon sx={{ minWidth: collapsed ? 0 : 40, color: active ? 'inherit' : 'text.secondary' }}>
+                {item.icon}
+              </ListItemIcon>
+              {!collapsed && (
+                <ListItemText 
+                  primary={item.label} 
+                  primaryTypographyProps={{ fontWeight: active ? 700 : 500 }} 
+                />
+              )}
             </ListItemButton>
           </Tooltip>
         </ListItem>
@@ -62,23 +81,25 @@ export default function MenuContent({
 
   return (
     <Stack justifyContent="space-between" height="100%">
-      <MenuSection
-        items={main.items}
-        collapsed={collapsed}
-        pathname={pathname}
-        onSelect={onSelect}
-      />
+      <Box>
+        <MenuSection
+          items={main.items}
+          collapsed={collapsed}
+          pathname={pathname}
+          onSelect={onSelect}
+        />
+      </Box>
 
       {secondary && (
-        <>
-          <Divider />
+        <Box sx={{ mt: 'auto', pb: 2 }}>
+          <Divider sx={{ my: 1, mx: 2 }} />
           <MenuSection
             items={secondary.items}
             collapsed={collapsed}
             pathname={pathname}
             onSelect={onSelect}
           />
-        </>
+        </Box>
       )}
     </Stack>
   );

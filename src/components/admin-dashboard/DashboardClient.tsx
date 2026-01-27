@@ -13,10 +13,10 @@ const DashboardClient: React.FC = () => {
     return {
       totalRevenue,
       totalOrders: orders.length,
-      totalCustomers: 1200, // example static data
-      profit: 4500,          // example static data
-      visits: 5600,          // example static data
-      feedback: 230,         // example static data
+      totalCustomers: 1200,
+      profit: 500,
+      visits: 5600,
+      feedback: 230,
     };
   }, [orders]);
 
@@ -28,7 +28,6 @@ const DashboardClient: React.FC = () => {
     );
   }
 
-  // Prepare dynamic cards
   const cards = [
     {
       id: 1,
@@ -108,7 +107,6 @@ const DashboardClient: React.FC = () => {
         Dashboard Overview
       </Typography>
 
-      {/* Responsive Metric Cards */}
       <Box sx={{ mb: 4 }}>
         <DynamicGrid items={cards} spacing={3} />
       </Box>
@@ -120,7 +118,7 @@ const DashboardClient: React.FC = () => {
         </Typography>
         <DynamicTable
           data={orders.slice(0, 5) as unknown as Record<string, unknown>[]}
-          columns={[]} // optionally define your columns
+          columns={[]}
           rowKey="id"
         />
       </Paper>

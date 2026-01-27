@@ -8,6 +8,14 @@ import { useResetPasswordMutation } from "@/app/store/api/authApi";
 import { useAlert } from "./DynamicAlert";
 import { useSearchParams } from "next/navigation";
 import ButtonCom from "./Button";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+
+interface ApiError {
+  data: {
+    message: string;
+  };
+  status?: number;
+}
 
 const UI_TEXT = {
   title: "Reset your password",
@@ -18,18 +26,19 @@ const UI_TEXT = {
 
 const RESET_FIELDS = [
   {
+    id: "otp",
+    label: "OTP Code",
+    placeholder: "Enter OTP",
+    type: "text",
+  },
+  {
     id: "password",
     label: "New Password",
     placeholder: "••••••••",
     type: "password",
   },
-  {
-    id: "confirmPassword",
-    label: "Confirm New Password",
-    placeholder: "••••••••",
-    type: "password",
-  },
 ] as const;
+
 
 const CLASSES = {
   wrapper:
@@ -44,8 +53,8 @@ const CLASSES = {
 };
 
 type FormState = {
+  otp: string;
   password: string;
-  confirmPassword: string;
 };
 
 export function ResetPasswordForm() {
@@ -53,10 +62,10 @@ export function ResetPasswordForm() {
   const { showAlert } = useAlert();
   const searchParams = useSearchParams();
 
-  const [formData, setFormData] = useState<FormState>({
-    password: "",
-    confirmPassword: "",
-  });
+const [formData, setFormData] = useState<FormState>({
+  otp: "",
+  password: "",
+});
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
@@ -67,53 +76,25 @@ export function ResetPasswordForm() {
     },
     []
   );
+const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+  if (!formData.otp) return showAlert("OTP is required", "error");
+  if (formData.password.length < 6) return showAlert("Password too short", "error");
 
-      if (formData.password.length < 6) {
-        showAlert("Password must be at least 6 characters", "error");
-        return;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        showAlert("Passwords do not match", "error");
-        return;
-      }
-
-      const token = searchParams.get("token");
-      if (!token) {
-        showAlert("Invalid reset link", "error");
-        return;
-      }
-
-      try {
-        await resetPassword({
-          token,
-          password: formData.password,
-        }).unwrap();
-
-        showAlert("Password reset successful!", "success");
-        goToLogin();
-      } catch (error: unknown) {
-        let message = "Password reset failed. Please try again.";
-
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "data" in error &&
-          typeof (error as { data?: { message?: string } }).data?.message ===
-            "string"
-        ) {
-          message = (error as { data: { message: string } }).data.message;
-        }
-
-        showAlert(message, "error");
-      }
-    },
-    [formData, resetPassword, searchParams, showAlert, goToLogin]
-  );
+  try {
+    await resetPassword(formData).unwrap();
+    showAlert("Password reset successfully", "success");
+    goToLogin();
+  } catch (error: unknown) {
+    let message = "Password reset failed";
+    if (typeof error === "object" && error !== null && "data" in error) {
+      const errData = (error as ApiError).data;
+      if (errData?.message) message = errData.message;
+    }
+    showAlert(message, "error");
+  }
+}, [formData, resetPassword, showAlert, goToLogin]);
 
   return (
     <div className={CLASSES.wrapper}>

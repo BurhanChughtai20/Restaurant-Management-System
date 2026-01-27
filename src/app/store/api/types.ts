@@ -60,9 +60,10 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;
+  otp: string;
   password: string;
 }
+
 
 export interface MenuItem {
   id: number;
@@ -217,4 +218,26 @@ export interface AuthState {
 export interface AuthCredentials {
   user: AuthUser;
   token: string;
+}
+export interface NavMenuItem {
+  id: string | number;
+  label: string;
+  route: string;
+  icon: React.ReactNode;
+}
+export interface MenuGroup {
+  items: NavMenuItem[];
+}
+export interface UserProfile {
+  name?: string;
+  email?: string;
+  role?: string;
+  id?: number;
+}
+export interface SideMenuProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+  userProfile?: UserProfile;
+  mainMenu?: MenuGroup;
+  secondaryMenu?: MenuGroup;
 }
