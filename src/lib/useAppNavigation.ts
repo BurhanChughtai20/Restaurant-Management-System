@@ -5,6 +5,7 @@ import { useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { AUTH_ROUTES, DASHBOARD_ROUTES, APP_ROUTES } from "@/config/routes";
 import { selectToken } from "@/app/store/slices/authSlice";
+import { useRouter } from "next/navigation";
 
 // Type-safe RouteKey
 export type RouteKey<T extends Record<string, string>> = keyof T;
@@ -42,24 +43,23 @@ export const useAppNavigation = () => {
   }), []);
 };
 
-// Authenticated navigation
 export const useAuthenticatedNavigation = () => {
-  const { auth, dashboard } = useAppNavigation();
   const token = useSelector(selectToken);
+  const router = useRouter();
 
   const navigateWithAuth = useCallback(
-    (target: RouteKey<typeof DASHBOARD_ROUTES>) => {
+    (target: keyof typeof DASHBOARD_ROUTES) => {
       if (token) {
-        return dashboard.goTo(target);
+        router.push(DASHBOARD_ROUTES[target]);
+      } else {
+        router.push(AUTH_ROUTES.login);
       }
-      return auth.goTo("login");
     },
-    [dashboard, auth, token]
+    [router, token]
   );
 
   return { navigateWithAuth };
 };
-
 // Route validation (O(1) using Map)
 export const isValidRoute = <T extends Record<string, string>>(route: string, routes: T) => {
   const routeMap = new Map(Object.values(routes).map(r => [r, true]));
