@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   Navbar,
@@ -24,10 +24,10 @@ import {
   LogIn,
   LucideIcon,
 } from "lucide-react";
+
 import { useAuthenticatedNavigation } from "@/lib/useAppNavigation";
 import { DASHBOARD_ROUTES } from "@/config/routes";
 import ButtonCom from "./Button";
-import Loading from "@/app/loading";
 import { useAppDispatch } from "@/app/store/hooks";
 import { logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
 
@@ -51,11 +51,15 @@ interface NavItem {
 
 export const DashboardNavbar = memo(() => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isChecking, navigateWithAuth } = useAuthenticatedNavigation();
+
+  const { navigateWithAuth } = useAuthenticatedNavigation();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
 
-  const isDashboardRoute = useMemo(() => pathname.startsWith("/dashboard"), [pathname]);
+  const isDashboardRoute = useMemo(
+    () => pathname.startsWith("/dashboard"),
+    [pathname]
+  );
 
   const dashboardNavItems: NavItem[] = useMemo(
     () => [
@@ -75,11 +79,13 @@ export const DashboardNavbar = memo(() => {
   const handleNavClick = useCallback(
     (routeKey: NavItemRouteKey) => {
       if (routeKey === "delete_account") {
-        if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-          dispatch(deleteAccountSuccess());
-        }
+        const confirmed = window.confirm(
+          "Are you sure you want to delete your account? This action cannot be undone."
+        );
+        if (confirmed) dispatch(deleteAccountSuccess());
         return;
       }
+
       navigateWithAuth(routeKey);
       setIsMobileMenuOpen(false);
     },
@@ -91,26 +97,27 @@ export const DashboardNavbar = memo(() => {
     setIsMobileMenuOpen(false);
   }, [dispatch]);
 
-  const handleGetStartedClick = useCallback(() => navigateWithAuth("dashboard"), [navigateWithAuth]);
-
-  const handleMobileMenuToggle = useCallback(() => setIsMobileMenuOpen((prev) => !prev), []);
-  const handleMobileMenuClose = useCallback(() => setIsMobileMenuOpen(false), []);
+  const handleGetStartedClick = useCallback(
+    () => navigateWithAuth("dashboard"),
+    [navigateWithAuth]
+  );
 
   return (
     <>
-      {isChecking && (
-        <div className={classes.loadingOverlay}>
-          <Loading />
-        </div>
-      )}
-
-      <div className={isDashboardRoute ? classes.containerDashboard : classes.container}>
+      <div
+        className={
+          isDashboardRoute
+            ? classes.containerDashboard
+            : classes.container
+        }
+      >
         <Navbar>
           {!isDashboardRoute && (
             <NavBody className={classes.navBodyWithButton}>
               <div className={classes.leftSection}>
                 <NavbarLogo />
               </div>
+
               <div className={classes.rightSection}>
                 <ButtonCom
                   text="Get Started Today!"
@@ -120,7 +127,6 @@ export const DashboardNavbar = memo(() => {
                   iconPosition="right"
                   onClick={handleGetStartedClick}
                   className="w-full bg-white! text-black"
-                  disabled={isChecking}
                 />
               </div>
             </NavBody>
@@ -130,29 +136,32 @@ export const DashboardNavbar = memo(() => {
             <MobileNavHeader>
               <NavbarLogo />
               {isDashboardRoute && (
-                <MobileNavToggle isOpen={isMobileMenuOpen} onClick={handleMobileMenuToggle} />
+                <MobileNavToggle
+                  isOpen={isMobileMenuOpen}
+                  onClick={() => setIsMobileMenuOpen((p) => !p)}
+                />
               )}
             </MobileNavHeader>
 
             {isDashboardRoute && (
-              <MobileNavMenu isOpen={isMobileMenuOpen} onClose={handleMobileMenuClose}>
+              <MobileNavMenu
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+              >
                 <div className={classes.mobileMenuContent}>
-                  {dashboardNavItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <ButtonCom
-                        key={item.routeKey}
-                        text={item.name}
-                        type="default"
-                        gradient
-                        icon={<Icon size={18} />}
-                        iconPosition="left"
-                        onClick={() => handleNavClick(item.routeKey)}
-                        className="w-full text-left"
-                        disabled={isChecking}
-                      />
-                    );
-                  })}
+                  {dashboardNavItems.map(({ name, routeKey, icon: Icon }) => (
+                    <ButtonCom
+                      key={routeKey}
+                      text={name}
+                      type="default"
+                      gradient
+                      icon={<Icon size={18} />}
+                      iconPosition="left"
+                      onClick={() => handleNavClick(routeKey)}
+                      className="w-full text-left"
+                    />
+                  ))}
+
                   <ButtonCom
                     text="Logout"
                     type="default"
@@ -161,7 +170,6 @@ export const DashboardNavbar = memo(() => {
                     iconPosition="left"
                     onClick={handleLogoutClick}
                     className="w-full text-left"
-                    disabled={isChecking}
                   />
                 </div>
               </MobileNavMenu>
