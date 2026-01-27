@@ -65,6 +65,6 @@ async function authRoutes(fastify: FastifyInstance) {
       return reply.send(await deleteAccount(payload.userId, req.body.role));
     },
   );
-}
+};
 
 export default authRoutes;

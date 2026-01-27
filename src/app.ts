@@ -24,10 +24,14 @@ export async function buildApp() {
   await fastify.register(fastifyJwt, { secret: jwtSecret });
   await fastify.register(registerAuthenticate);
   await fastify.register(fastifyCors, {
-  origin: ["http://localhost:3000"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: [
+    "http://localhost:3000",
+    "https://restaurant-management-syste-git-9f0028-chughtaiburhans-projects.vercel.app",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 });
+
 
   await fastify.register(fastifyResponseValidation);
   fastify.setErrorHandler((error, req, reply) => {
