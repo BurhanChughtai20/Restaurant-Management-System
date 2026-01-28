@@ -1,5 +1,5 @@
+import { DashboardRouteKey } from "@/config/routes";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { DashboardRouteKey } from "@/config/menuConfig";
 
 export interface MenuState {
   activeRoute: DashboardRouteKey;

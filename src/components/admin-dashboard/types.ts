@@ -23,7 +23,7 @@ export interface NavMenuItem {
   id: string | number;
   label: string;
   icon: React.ReactNode;
-  route: string; // store the full path
+  route: string;
   onClick?: () => void;
 }
 

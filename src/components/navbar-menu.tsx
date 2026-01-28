@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { LogIn} from "lucide-react";
 import {
   Navbar,
   NavBody,
@@ -18,7 +18,7 @@ import { useAppDispatch } from "@/app/store/hooks";
 import { logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS } from "@/config/menuConfig";
 import { DASHBOARD_ROUTES, type DashboardRouteKey } from "@/config/routes";
-import type { NavMenuItem } from "@/app/store/api";
+import { NavMenuItem } from "./admin-dashboard/types";
 
 const CLASSES = {
   container: "relative w-full",
@@ -29,7 +29,7 @@ const CLASSES = {
   mobileMenuContent: "flex flex-col gap-4 py-4",
 } as const;
 
-export const DashboardNavbar = memo(() => {
+export const DashboardNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const dispatch = useAppDispatch();
@@ -37,7 +37,6 @@ export const DashboardNavbar = memo(() => {
 
   // Helper to check dashboard context
   const isDashboard = useMemo(() => pathname?.startsWith("/dashboard"), [pathname]);
-
   const containerClass = isDashboard ? CLASSES.containerDashboard : CLASSES.container;
 
   const dashboardNavItems: NavMenuItem[] = useMemo(
@@ -47,14 +46,27 @@ export const DashboardNavbar = memo(() => {
 
   const closeMenu = useCallback(() => setIsMobileMenuOpen(false), []);
 
+  // -----------------------------
+  // Navigation & Actions
+  // -----------------------------
   const handleNavClick = useCallback(
-    (route: DashboardRouteKey | "delete_account") => {
-      if (route === "delete_account") {
+    (item: NavMenuItem) => {
+      // Special case: delete account
+      if (item.route === "/dashboard/delete-account") {
         if (window.confirm("Are you sure you want to delete your account?")) {
           dispatch(deleteAccountSuccess());
         }
       } else {
-        navigateWithAuth(route); 
+        // Match the route key (DashboardRouteKey)
+        const routeKey = (Object.keys(DASHBOARD_ROUTES) as DashboardRouteKey[]).find(
+          (key) => DASHBOARD_ROUTES[key] === item.route
+        );
+
+        if (routeKey) {
+          navigateWithAuth(routeKey);
+        } else {
+          console.warn(`Unknown dashboard route: ${item.route}`);
+        }
       }
       closeMenu();
     },
@@ -70,6 +82,9 @@ export const DashboardNavbar = memo(() => {
     navigateWithAuth("dashboard");
   }, [navigateWithAuth]);
 
+  // -----------------------------
+  // Render
+  // -----------------------------
   return (
     <div className={containerClass}>
       <Navbar>
@@ -106,18 +121,19 @@ export const DashboardNavbar = memo(() => {
           {isDashboard && (
             <MobileNavMenu isOpen={isMobileMenuOpen} onClose={closeMenu}>
               <div className={CLASSES.mobileMenuContent}>
-                {dashboardNavItems.map(({ id, label, icon, route }) => (
+                {dashboardNavItems.map((item) => (
                   <ButtonCom
-                    key={id}
-                    text={label}
+                    key={item.id}
+                    text={item.label}
                     type="default"
                     gradient
-                    icon={icon}
+                    icon={item.icon}
                     iconPosition="left"
-                    onClick={() => handleNavClick(route)}
+                    onClick={() => handleNavClick(item)}
                     className="w-full text-left"
                   />
                 ))}
+
                 <ButtonCom
                   text="Logout"
                   type="default"
@@ -134,6 +150,4 @@ export const DashboardNavbar = memo(() => {
       </Navbar>
     </div>
   );
-});
-
-DashboardNavbar.displayName = "DashboardNavbar";
+};
