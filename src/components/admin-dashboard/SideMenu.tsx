@@ -21,18 +21,14 @@ import {
 } from "lucide-react";
 import MenuContent from "./MenuContent";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS } from "@/config/menuConfig";
-import { useAppNavigation } from "@/lib/useAppNavigation";
 import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
-import { selectUser, logout, deleteAccountSuccess } from "@/app/store/slices/authSlice";
-import {
-  NavMenuItem,
-  SideMenuProps,
-  useDeleteAccountMutation,
-} from "@/app/store/api";
+import { selectUser, logout, deleteAccountSuccess, selectToken } from "@/app/store/slices/authSlice";
 import { useRouter } from "next/navigation";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 import { removeToken } from "@/lib/tokenStore";
+import { NavMenuItem, SideMenuProps } from "./types";
+import { useDeleteAccountMutation } from "@/app/store/api";
 
 const DRAWER_THEME = {
   EXPANDED: 240,
@@ -87,8 +83,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [uiState, setUiState] = useState({ mounted: false, open: !collapsed });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const { dashboard } = useAppNavigation();
   const user = useAppSelector(selectUser);
+  const token = useAppSelector(selectToken);
   const dispatch = useAppDispatch();
   const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
   const router = useRouter();
@@ -142,12 +138,20 @@ const handleDeleteAccount = useCallback(async () => {
     onToggle?.();
   }, [onToggle]);
 
-  const handleNavigation = useCallback(
-    (item: NavMenuItem) => {
-      if (item.route) dashboard.goToPath(item.route);
-    },
-    [dashboard],
-  );
+const handleNavigation = useCallback(
+  (item: NavMenuItem) => {
+    if (!item.route) return;
+
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    router.push(item.route);
+  },
+  [router, token] // dependency is token, not user
+);
+
 
   const userData = useMemo(() => {
     if (!uiState.mounted)

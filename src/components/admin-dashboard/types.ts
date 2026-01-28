@@ -9,7 +9,9 @@ export interface UserProfile {
   name: string;
   email: string;
   avatarUrl?: string;
+  role?: string;
 }
+
 
 /* ───────────────── ROUTES ───────────────── */
 
@@ -17,27 +19,33 @@ export type RouteKey = string;
 
 /* ───────────────── MENU ───────────────── */
 
-export interface MenuItem {
+export interface NavMenuItem {
+  id: string | number;
   label: string;
-  icon: ReactNode;
-  route: string;
+  icon: React.ReactNode;
+  route: string; // store the full path
   onClick?: () => void;
 }
 
-
 export interface MenuGroup {
-  items: MenuItem[];
+  items: NavMenuItem[];
 }
 
-export interface SideMenuConfig {
+export interface SideMenuProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
   userProfile?: UserProfile;
-  mainMenu: MenuGroup;
+  mainMenu?: MenuGroup;
   secondaryMenu?: MenuGroup;
-  cardAlertConfig?: CardAlertConfig;
-  onItemSelect?: (item: MenuItem) => void;
-  onOptionsClick?: () => void;
 }
 
+export interface MenuContentProps {
+  main: MenuGroup;                  // required main menu
+  secondary?: MenuGroup;            // optional secondary menu
+  collapsed?: boolean;              // is the sidebar collapsed
+  onSelect?: (item: NavMenuItem) => void; // callback when a menu item is clicked
+  activeRoute?: string;             // optional: current path for active styling
+}
 
 /* ───────────────── GRID ───────────────── */
 
@@ -62,7 +70,7 @@ export interface DataGridConfig {
 
 /* ───────────────── TREE ───────────────── */
 
-export type TreeItemColor = "blue" | "green"; 
+export type TreeItemColor = "" | "green"; 
 
 export type TreeItem = TreeViewBaseItem<{
   id: string;
@@ -99,7 +107,7 @@ export interface MainGridConfig {
 export interface LayoutConfig {
   title: string;
   mainGrid: MainGridConfig;
-  sideMenu: SideMenuConfig;
+  sideMenu: SideMenuProps;
 }
 
 export interface CardAlertConfig {
@@ -128,7 +136,7 @@ export interface StatsCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   trend?: {
     value: number;
     isPositive?: boolean;

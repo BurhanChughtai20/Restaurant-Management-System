@@ -1,5 +1,4 @@
 // src/app/store/api.ts
-import type { DashboardRouteKey } from "@/config/routes";
 export enum Role {
   Admin = "Admin",
   Order_Taker = "Order_Taker",
@@ -220,25 +219,4 @@ export interface AuthCredentials {
   user: AuthUser;
   token: string;
 }
-export interface NavMenuItem {
-  id: string | number;
-  label: string;
-  route: DashboardRouteKey | "delete_account";
-  icon: React.ReactNode;
-}
-export interface MenuGroup {
-  items: NavMenuItem[];
-}
-export interface UserProfile {
-  name?: string;
-  email?: string;
-  role?: string;
-  id?: number;
-}
-export interface SideMenuProps {
-  collapsed?: boolean;
-  onToggle?: () => void;
-  userProfile?: UserProfile;
-  mainMenu?: MenuGroup;
-  secondaryMenu?: MenuGroup;
-}
+ 
