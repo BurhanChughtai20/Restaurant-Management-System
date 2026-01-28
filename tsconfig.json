@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "incremental": true,
     "types": ["next/types", "node", "@mui/material", "jest", "@testing-library/jest-dom"],
     "plugins": [

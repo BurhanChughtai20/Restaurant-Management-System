@@ -22,8 +22,13 @@ import {
 import MenuContent from "./MenuContent";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS } from "@/config/menuConfig";
 import { useAppSelector, useAppDispatch } from "@/app/store/hooks";
-import { selectUser, logout, deleteAccountSuccess, selectToken } from "@/app/store/slices/authSlice";
-import { useRouter } from "next/navigation";
+import {
+  selectUser,
+  logout,
+  deleteAccountSuccess,
+  selectToken,
+} from "@/app/store/slices/authSlice";
+import { usePathname, useRouter } from "next/navigation";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 import { removeToken } from "@/lib/tokenStore";
@@ -82,7 +87,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
   const [uiState, setUiState] = useState({ mounted: false, open: !collapsed });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
+  const pathname = usePathname();
   const user = useAppSelector(selectUser);
   const token = useAppSelector(selectToken);
   const dispatch = useAppDispatch();
@@ -105,53 +110,61 @@ const SideMenu: React.FC<SideMenuProps> = ({
     handleMenuAction();
   }, [dispatch, handleMenuAction]);
 
-const handleDeleteAccount = useCallback(async () => {
-  if (!window.confirm(UI_STRINGS.CONFIRM_DELETE)) return;
+  const handleDeleteAccount = useCallback(async () => {
+    if (!window.confirm(UI_STRINGS.CONFIRM_DELETE)) return;
 
-  try {
-    await deleteAccount().unwrap();
-    dispatch(deleteAccountSuccess());
-    removeToken();
-    router.replace("/login");
-  } catch (err) {
-    const statusMessages: Record<number, string> = {
-  401: "Unauthorized. Please login again.",
-  403: "Forbidden. You cannot delete this account.",
-  404: "Account not found.",
-  500: "Server error. Try again later.",
-};
+    try {
+      await deleteAccount().unwrap();
+      dispatch(deleteAccountSuccess());
+      removeToken();
+      router.replace("/login");
+    } catch (err) {
+      const statusMessages: Record<number, string> = {
+        401: "Unauthorized. Please login again.",
+        403: "Forbidden. You cannot delete this account.",
+        404: "Account not found.",
+        500: "Server error. Try again later.",
+      };
 
-    const fetchError = err as FetchBaseQueryError | SerializedError;
-    const status = 'status' in fetchError ? fetchError.status : undefined;
-    const message = typeof status === "number" && statusMessages[status]
-  ? statusMessages[status]
-  : "Failed to delete account. Please try again.";
+      const fetchError = err as FetchBaseQueryError | SerializedError;
+      const status = "status" in fetchError ? fetchError.status : undefined;
+      const message =
+        typeof status === "number" && statusMessages[status]
+          ? statusMessages[status]
+          : "Failed to delete account. Please try again.";
 
-    alert(message);
-    console.error("Delete account error:", err);
-  }
-}, [deleteAccount, dispatch, router]);
-
+      alert(message);
+      console.error("Delete account error:", err);
+    }
+  }, [deleteAccount, dispatch, router]);
 
   const handleToggle = useCallback(() => {
     setUiState((prev) => ({ ...prev, open: !prev.open }));
     onToggle?.();
   }, [onToggle]);
 
-const handleNavigation = useCallback(
-  (item: NavMenuItem) => {
-    if (!item.route) return;
+  const handleNavigation = useCallback(
+    (item: NavMenuItem) => {
+      if (!item.route) return;
 
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
 
-    router.push(item.route);
-  },
-  [router, token] // dependency is token, not user
-);
+      // If this is the delete account item
+      if (item.route === "/dashboard/delete-account") {
+        if (window.confirm(UI_STRINGS.CONFIRM_DELETE)) {
+          dispatch(deleteAccountSuccess());
+        }
+        return;
+      }
 
+      // Push current route
+      router.push(item.route);
+    },
+    [router, token, dispatch],
+  );
 
   const userData = useMemo(() => {
     if (!uiState.mounted)
@@ -218,6 +231,7 @@ const handleNavigation = useCallback(
           secondary={secondaryMenu}
           collapsed={!uiState.open}
           onSelect={handleNavigation}
+          currentPath={pathname} // Now matches the interface
         />
       </Box>
 

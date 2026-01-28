@@ -18,33 +18,36 @@ export interface UserProfile {
 export type RouteKey = string;
 
 /* ───────────────── MENU ───────────────── */
-
 export interface NavMenuItem {
   id: string | number;
   label: string;
   icon: React.ReactNode;
   route: string;
-  onClick?: () => void;
 }
 
 export interface MenuGroup {
   items: NavMenuItem[];
 }
 
+export interface MenuContentProps {
+  main: MenuGroup;
+  secondary?: MenuGroup;
+  collapsed?: boolean;
+  onSelect?: (item: NavMenuItem) => void;
+  // Use a consistent name here
+  currentPath?: string; 
+}
+
 export interface SideMenuProps {
   collapsed?: boolean;
   onToggle?: () => void;
-  userProfile?: UserProfile;
+  userProfile?: {
+    name: string;
+    role: string;
+    email: string;
+  };
   mainMenu?: MenuGroup;
   secondaryMenu?: MenuGroup;
-}
-
-export interface MenuContentProps {
-  main: MenuGroup;                  // required main menu
-  secondary?: MenuGroup;            // optional secondary menu
-  collapsed?: boolean;              // is the sidebar collapsed
-  onSelect?: (item: NavMenuItem) => void; // callback when a menu item is clicked
-  activeRoute?: string;             // optional: current path for active styling
 }
 
 /* ───────────────── GRID ───────────────── */
