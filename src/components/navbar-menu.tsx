@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { LogIn} from "lucide-react";
+import { LogIn } from "lucide-react";
 import {
   Navbar,
   NavBody,
@@ -29,48 +29,75 @@ const CLASSES = {
   mobileMenuContent: "flex flex-col gap-4 py-4",
 } as const;
 
+// O(1) reverse route lookup: route string -> DashboardRouteKey
+const createRouteKeyMap = (): Map<string, DashboardRouteKey> => {
+  const map = new Map<string, DashboardRouteKey>();
+  (Object.entries(DASHBOARD_ROUTES) as [DashboardRouteKey, string][]).forEach(
+    ([key, route]) => {
+      map.set(route, key);
+    }
+  );
+  return map;
+};
+
+const ROUTE_KEY_MAP = createRouteKeyMap();
+
+// Special routes that require confirmation
+const SPECIAL_ROUTES = {
+  deleteAccount: "/dashboard/delete-account",
+} as const;
+
 export const DashboardNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { navigateWithAuth } = useAuthenticatedNavigation();
 
-  // Helper to check dashboard context
   const isDashboard = useMemo(() => pathname?.startsWith("/dashboard"), [pathname]);
   const containerClass = isDashboard ? CLASSES.containerDashboard : CLASSES.container;
 
-  const dashboardNavItems: NavMenuItem[] = useMemo(
+  const dashboardNavItems = useMemo(
     () => [...MAIN_MENU_ITEMS, ...SECONDARY_MENU_ITEMS],
     []
   );
 
   const closeMenu = useCallback(() => setIsMobileMenuOpen(false), []);
 
-  // -----------------------------
-  // Navigation & Actions
-  // -----------------------------
-  const handleNavClick = useCallback(
-    (item: NavMenuItem) => {
-      // Special case: delete account
-      if (item.route === "/dashboard/delete-account") {
+  const getRouteKey = useCallback((route: string): DashboardRouteKey | null => {
+    return ROUTE_KEY_MAP.get(route) ?? null;
+  }, []);
+
+  const handleSpecialRoute = useCallback(
+    (route: string) => {
+      if (route === SPECIAL_ROUTES.deleteAccount) {
         if (window.confirm("Are you sure you want to delete your account?")) {
           dispatch(deleteAccountSuccess());
         }
-      } else {
-        // Match the route key (DashboardRouteKey)
-        const routeKey = (Object.keys(DASHBOARD_ROUTES) as DashboardRouteKey[]).find(
-          (key) => DASHBOARD_ROUTES[key] === item.route
-        );
+        return true;
+      }
+      return false;
+    },
+    [dispatch]
+  );
 
-        if (routeKey) {
-          navigateWithAuth(routeKey);
-        } else {
-          console.warn(`Unknown dashboard route: ${item.route}`);
-        }
+  const handleNavClick = useCallback(
+    (item: NavMenuItem) => {
+      if (handleSpecialRoute(item.route)) {
+        closeMenu();
+        return;
+      }
+
+      // O(1) route key lookup
+      const routeKey = getRouteKey(item.route);
+
+      if (routeKey) {
+        navigateWithAuth(routeKey);
+      } else {
+        console.warn(`Unknown dashboard route: ${item.route}`);
       }
       closeMenu();
     },
-    [dispatch, navigateWithAuth, closeMenu]
+    [getRouteKey, handleSpecialRoute, navigateWithAuth, closeMenu]
   );
 
   const handleLogoutClick = useCallback(() => {
