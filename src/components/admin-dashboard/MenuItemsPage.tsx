@@ -158,10 +158,10 @@ const MenuItemsPage: React.FC = () => {
     [deleteMenuItem, handleOpenDialog],
   );
 
-  // Pagination: load next page
   const loadNextPage = useCallback(() => {
-    if (data?.nextCursor) setCursor(data.nextCursor);
-  }, [data]);
+  if (data?.nextCursor) setCursor(data.nextCursor);
+}, [data]);
+
 
   // Stats
   const stats = useMemo(() => {

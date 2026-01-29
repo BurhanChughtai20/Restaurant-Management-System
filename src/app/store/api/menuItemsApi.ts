@@ -14,7 +14,6 @@ import {
 
 export const menuApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // GET: Admin Menu Items (with pagination cursor)
     getAdminMenuItems: builder.query<
       AdminMenuItemsResponse,
       AdminMenuItemsRequest
@@ -26,7 +25,6 @@ export const menuApi = baseApi.injectEndpoints({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          // data.data is array of menu items
           dispatch(menuItemActions.setMenuItems(data.data));
           console.log("API data:", data);
         } catch (error) {
@@ -45,14 +43,55 @@ export const menuApi = baseApi.injectEndpoints({
             ]
           : [{ type: "MenuItems", id: "LIST" }],
     }),
-
-    // POST: Create Menu Item
     createMenuItem: builder.mutation<MenuItem, MenuItemBody>({
       query: (body) => ({
         url: "/menu-items/admin/create-menu-item",
         method: "POST",
         body,
       }),
+      async onQueryStarted(newItem, { dispatch, queryFulfilled }) {
+        // Temporary frontend ID for optimistic update
+        const tempId = Date.now();
+
+        const patchResult = dispatch(
+          menuApi.util.updateQueryData(
+            "getAdminMenuItems",
+            { cursor: undefined },
+            (draft) => {
+              draft.data.unshift({
+                id: tempId,
+                restaurantId: 0, 
+                name: newItem.name,
+                price: newItem.price,
+                description: newItem.description ?? null,
+                sku: "", 
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              });
+            },
+          ),
+        );
+
+        try {
+          const { data: returnedItem } = await queryFulfilled;
+
+          dispatch(
+            menuApi.util.updateQueryData(
+              "getAdminMenuItems",
+              { cursor: undefined },
+              (draft) => {
+                draft.data = [
+                  returnedItem,
+                  ...draft.data.filter((item) => item.id !== tempId),
+                ];
+              },
+            ),
+          );
+        } catch {
+          patchResult.undo(); // rollback on failure
+        }
+      },
       invalidatesTags: [{ type: "MenuItems", id: "LIST" }],
     }),
 

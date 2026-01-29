@@ -42,7 +42,6 @@ const authSlice = createSlice({
     updateUser: (state, action: PayloadAction<Partial<AuthUser>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
-        // Sync with localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('authUser', JSON.stringify(state.user));
         }

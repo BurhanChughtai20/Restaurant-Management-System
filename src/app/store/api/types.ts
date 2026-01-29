@@ -1,3 +1,4 @@
+// ----------------- Enums -----------------
 export enum Role {
   Admin = "Admin",
   Order_Taker = "Order_Taker",
@@ -35,7 +36,7 @@ export interface SignupRequest {
   name: string;
   email: string;
   password: string;
-  role: Role.Admin; // Only admin can signup
+  role: Role.Admin; // Only Admin can signup
 }
 
 export interface VerifyEmailRequest {
@@ -59,7 +60,19 @@ export interface ResetPasswordRequest {
   password: string;
 }
 
-// ----------------- MenuItem -----------------
+// Auth Redux State
+export interface AuthState {
+  user: AuthUser | null;
+  token: string | null;
+  isAuthenticated: boolean;
+}
+
+export interface AuthCredentials {
+  user: AuthUser;
+  token: string;
+}
+
+// ----------------- Menu Items -----------------
 export interface MenuItem {
   id: number;
   restaurantId: number;
@@ -150,7 +163,7 @@ export interface PaginateParams {
   cursorId?: number;
 }
 
-// ----------------- OrderTaker / Chef -----------------
+// ----------------- Order Taker / Chef -----------------
 export interface WaiterConnection {
   id: number;
   orderTakerId: number;
@@ -286,16 +299,4 @@ export interface Stats {
   total: number;
   active: number;
   inactive: number;
-}
-
-// ----------------- Auth state -----------------
-export interface AuthState {
-  user: AuthUser | null;
-  token: string | null;
-  isAuthenticated: boolean;
-}
-
-export interface AuthCredentials {
-  user: AuthUser;
-  token: string;
 }

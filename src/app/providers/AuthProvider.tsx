@@ -25,7 +25,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [, startTransition] = useTransition();
 
-  // Memoized route checks: O(1) Set lookup with type safety
   const routeCheckResults = useMemo(() => {
     if (!pathname) return { isAuthPath: false, isDashboardPath: false };
     
@@ -36,11 +35,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [pathname]);
 
   useEffect(() => {
-    dispatch(restoreAuth());
-    startTransition(() => {
-      setIsHydrated(true);
-    });
-  }, [dispatch]);
+  dispatch(restoreAuth());
+  startTransition(() => setIsHydrated(true));
+}, [dispatch]);
 
   useEffect(() => {
     if (!isHydrated || !pathname) return;

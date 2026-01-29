@@ -2,7 +2,6 @@ import { createSelector } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { menuItemsAdapterInstance, MenuItemsState } from "../slices/menuItemSlice";
 
-// Properly typed slice selector
 const selectMenuItemsState = (state: RootState) => state.menuItems as MenuItemsState;
 
 const { selectAll, selectById, selectTotal } = menuItemsAdapterInstance.getSelectors(selectMenuItemsState);
