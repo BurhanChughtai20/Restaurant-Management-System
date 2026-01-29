@@ -11,8 +11,14 @@ import {
   Chip,
 } from "@mui/material";
 import { Plus, Edit, Trash2, Save, X } from "lucide-react";
-import { DynamicTable, DynamicCard, Column, TableAction } from "@/components/shared";
+import {
+  DynamicTable,
+  DynamicCard,
+  Column,
+  TableAction,
+} from "@/components/shared";
 import ButtonCom from "../Button";
+
 import {
   MenuItem,
   useCreateMenuItemMutation,
@@ -24,29 +30,37 @@ import {
 const INITIAL_FORM_STATE = { name: "", price: 0, description: "" };
 
 const MenuItemsPage: React.FC = () => {
-  // --- Data Fetching ---
-  const { data, isLoading: isFetching } = useGetAdminMenuItemsQuery();
-  const [createMenuItem, { isLoading: isCreating }] = useCreateMenuItemMutation();
-  const [updateMenuItem, { isLoading: isUpdating }] = useUpdateMenuItemMutation();
+  // Pagination state
+  const [cursor, setCursor] = useState<number | undefined>(undefined);
+
+  const { data, isLoading } = useGetAdminMenuItemsQuery({ cursor });
+
+  const items = useMemo(() => {
+    if (!data?.data) return [];
+    const merged: MenuItem[] = [];
+    const seen = new Set<number>();
+    for (const item of data.data) {
+      if (!seen.has(item.id)) {
+        merged.push(item);
+        seen.add(item.id);
+      }
+    }
+    return merged;
+  }, [data]);
+  console.log("Items to render:", items);
+
+  // Mutations
+  const [createMenuItem, { isLoading: isCreating }] =
+    useCreateMenuItemMutation();
+  const [updateMenuItem, { isLoading: isUpdating }] =
+    useUpdateMenuItemMutation();
   const [deleteMenuItem] = useDeleteMenuItemMutation();
 
-  // --- Local State ---
+  // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
 
-  // --- Memoized Menu Items ---
-  const menuItems = useMemo(() => data?.data ?? [], [data]);
-
-  // --- Stats Computation ---
-  const stats = useMemo(() => {
-    const total = menuItems.length;
-    const active = menuItems.filter((i) => i.isActive).length;
-    const avgPrice = total ? menuItems.reduce((sum, i) => sum + i.price, 0) / total : 0;
-    return { total, active, inactive: total - active, avgPrice };
-  }, [menuItems]);
-
-  // --- Dialog Handlers ---
   const handleOpenDialog = useCallback((item?: MenuItem) => {
     if (item) {
       setEditingItem(item);
@@ -69,19 +83,35 @@ const MenuItemsPage: React.FC = () => {
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name || formData.price < 0) return;
+
+    const body = editingItem
+      ? { ...formData }
+      : {
+          ...formData,
+          sku: `${formData.name.toUpperCase().replace(/\s/g, "-")}-${Date.now()}`,
+        };
+
     try {
       if (editingItem) {
-        await updateMenuItem({ id: editingItem.id, ...formData }).unwrap();
+        await updateMenuItem({ id: editingItem.id, ...body }).unwrap();
       } else {
-        await createMenuItem(formData).unwrap();
+        await createMenuItem(body).unwrap();
       }
+
       handleCloseDialog();
+      setCursor(undefined); // reset pagination
     } catch (err) {
       console.error("API Error:", err);
     }
-  }, [editingItem, formData, createMenuItem, updateMenuItem, handleCloseDialog]);
+  }, [
+    editingItem,
+    formData,
+    createMenuItem,
+    updateMenuItem,
+    handleCloseDialog,
+  ]);
 
-  // --- Table Columns ---
+  // Table columns
   const columns: Column<MenuItem>[] = useMemo(
     () => [
       { id: "sku", label: "SKU", minWidth: 120 },
@@ -95,16 +125,26 @@ const MenuItemsPage: React.FC = () => {
       {
         id: "isActive",
         label: "Status",
-        format: (v) => <Chip label={v ? "Active" : "Inactive"} color={v ? "success" : "default"} size="small" />,
+        format: (v) => (
+          <Chip
+            label={v ? "Active" : "Inactive"}
+            color={v ? "success" : "default"}
+            size="small"
+          />
+        ),
       },
     ],
-    []
+    [],
   );
 
-  // --- Table Actions ---
+  // Table actions
   const actions: TableAction<MenuItem>[] = useMemo(
     () => [
-      { icon: <Edit size={18} />, label: "Edit", onClick: (row) => row && handleOpenDialog(row) },
+      {
+        icon: <Edit size={18} />,
+        label: "Edit",
+        onClick: (row) => handleOpenDialog(row),
+      },
       {
         icon: <Trash2 size={18} />,
         label: "Delete",
@@ -115,8 +155,42 @@ const MenuItemsPage: React.FC = () => {
         },
       },
     ],
-    [deleteMenuItem, handleOpenDialog]
+    [deleteMenuItem, handleOpenDialog],
   );
+
+  // Pagination: load next page
+  const loadNextPage = useCallback(() => {
+    if (data?.nextCursor) setCursor(data.nextCursor);
+  }, [data]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const total = items.length;
+    const active = items.filter((i) => i.isActive).length;
+    const avgPrice = total
+      ? items.reduce((sum, i) => sum + i.price, 0) / total
+      : 0;
+    return [
+      {
+        label: "Total Items",
+        val: total,
+        sub: "All items",
+        progress: { value: total, max: 100 },
+      },
+      {
+        label: "Active",
+        val: active,
+        sub: "Live on menu",
+        progress: { value: active, max: total || 1 },
+      },
+      {
+        label: "Average Price",
+        val: `$${avgPrice.toFixed(2)}`,
+        sub: "Per unit",
+        progress: { value: avgPrice, max: 100 },
+      },
+    ];
+  }, [items]);
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: "#f4f6f8", minHeight: "100vh" }}>
@@ -134,39 +208,95 @@ const MenuItemsPage: React.FC = () => {
         <Typography variant="h4" sx={{ fontWeight: 800, color: "#111827" }}>
           Menu Inventory
         </Typography>
-        <ButtonCom text="Add New Item" type="default" gradient icon={<Plus size={18} />} onClick={() => handleOpenDialog()} />
+        <ButtonCom
+          text="Add New Item"
+          type="default"
+          gradient
+          icon={<Plus size={18} />}
+          onClick={() => handleOpenDialog()}
+        />
       </Box>
 
       {/* Stats */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 4 }}>
-        {[
-          { label: "Total Items", val: stats.total, sub: "All items" },
-          { label: "Active", val: stats.active, sub: "Live on menu" },
-          { label: "Average Price", val: `$${stats.avgPrice.toFixed(2)}`, sub: "Per unit" },
-        ].map((stat, idx) => (
-          <Box key={idx} sx={{ flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 24px)", md: "1 1 calc(33.33% - 24px)" } }}>
-            <DynamicCard title={stat.label} value={stat.val} subtitle={stat.sub} />
+        {stats.map((stat, idx) => (
+          <Box
+            key={idx}
+            sx={{
+              flex: {
+                xs: "1 1 100%",
+                sm: "1 1 calc(50% - 24px)",
+                md: "1 1 calc(33.33% - 24px)",
+              },
+            }}
+          >
+            <DynamicCard
+              title={stat.label}
+              value={stat.val}
+              subtitle={stat.sub}
+              progress={stat.progress}
+            />
           </Box>
         ))}
       </Box>
 
       {/* Table */}
-      <Box sx={{ boxShadow: "0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px rgb(0 0 0 / 0.1)", borderRadius: 2, bgcolor: "white", overflow: "hidden" }}>
-        <DynamicTable<MenuItem> columns={columns} data={menuItems} actions={actions} loading={isFetching} rowKey="id" />
+      <Box
+        sx={{
+          boxShadow: "0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px rgb(0 0 0 / 0.1)",
+          borderRadius: 2,
+          bgcolor: "white",
+          overflow: "hidden",
+        }}
+      >
+        <DynamicTable<MenuItem>
+          columns={columns}
+          data={items}
+          actions={actions}
+          loading={isLoading}
+          rowKey="id"
+        />
+        {data?.nextCursor && (
+          <Box sx={{ p: 2, display: "flex", justifyContent: "center" }}>
+            <ButtonCom
+              text="Load More"
+              type="default"
+              gradient
+              onClick={loadNextPage}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* Dialog Form */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 700 }}>{editingItem ? "Edit Menu Item" : "Create Menu Item"}</DialogTitle>
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          {editingItem ? "Edit Menu Item" : "Create Menu Item"}
+        </DialogTitle>
         <DialogContent dividers sx={{ pt: 2 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-            <TextField label="Item Name" fullWidth variant="outlined" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} />
+            <TextField
+              label="Item Name"
+              fullWidth
+              variant="outlined"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, name: e.target.value }))
+              }
+            />
             <TextField
               label="Price ($)"
               type="number"
               fullWidth
               value={formData.price}
-              onChange={(e) => setFormData((p) => ({ ...p, price: Number(e.target.value) }))}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, price: Number(e.target.value) }))
+              }
             />
             <TextField
               label="Description"
@@ -174,14 +304,29 @@ const MenuItemsPage: React.FC = () => {
               rows={3}
               fullWidth
               value={formData.description}
-              onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, description: e.target.value }))
+              }
             />
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 2.5, gap: 1 }}>
-          <ButtonCom text="Cancel" type="text" onClick={handleCloseDialog} icon={<X size={16} />} />
           <ButtonCom
-            text={editingItem ? (isUpdating ? "Updating..." : "Update Item") : isCreating ? "Saving..." : "Save Item"}
+            text="Cancel"
+            type="text"
+            onClick={handleCloseDialog}
+            icon={<X size={16} />}
+          />
+          <ButtonCom
+            text={
+              editingItem
+                ? isUpdating
+                  ? "Updating..."
+                  : "Update Item"
+                : isCreating
+                  ? "Saving..."
+                  : "Save Item"
+            }
             type="default"
             gradient
             onClick={handleSubmit}

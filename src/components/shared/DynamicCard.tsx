@@ -110,22 +110,20 @@ const DynamicCard: React.FC<StatsCardProps> = ({
 
           {/* Progress */}
           {progress && (
-            <CardItem translateZ={40} className={classes.progressWrapper}>
-              <div className={classes.progressHeader}>
-                <span>{progress.label ?? "Progress"}</span>
-                <span>
-                  {progress.value}/{progress.max}
-                </span>
-              </div>
+  <CardItem translateZ={40} className={classes.progressWrapper}>
+    <div className={classes.progressHeader}>
+      <span>{progress.label ?? "Progress"}</span>
+      <span>{progress.value}/{progress.max}</span>
+    </div>
+    <div className={classes.progressTrack}>
+      <div
+        className={classes.progressBar}
+        style={{ width: `${(progress.value / progress.max) * 100}%` }}
+      />
+    </div>
+  </CardItem>
+)}
 
-              <div className={classes.progressTrack}>
-                <div
-                  className={classes.progressBar}
-                  style={{ width: `${(progress.value / progress.max) * 100}%` }}
-                />
-              </div>
-            </CardItem>
-          )}
 
           {/* Loading */}
           {loading && (

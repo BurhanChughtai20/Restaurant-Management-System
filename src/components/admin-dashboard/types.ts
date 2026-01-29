@@ -50,7 +50,16 @@ export interface SideMenuProps {
   secondaryMenu?: MenuGroup;
 }
 
-/* ───────────────── GRID ───────────────── */
+
+export interface MenuItemsState {
+  loading: boolean;
+  error: string | null;
+  searchQuery: string;
+  filterIsActive: boolean | null;
+  currentPage: number;
+  itemsPerPage: number;
+}
+/* ───────────────── GRID ───────────────── */  
 
 export type TrendDirection = "up" | "down" | "neutral";
 

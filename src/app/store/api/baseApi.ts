@@ -4,13 +4,13 @@ import {
   BaseQueryFn,
   FetchArgs,
   FetchBaseQueryError,
-} from '@reduxjs/toolkit/query/react';
-import type { RootState } from '../store';
-import { logout } from '../slices/authSlice';
-import { getToken, hasToken } from '@/lib/tokenStore';
+} from "@reduxjs/toolkit/query/react";
+import type { RootState } from "../store";
+import { logout } from "../slices/authSlice";
+import { getToken, hasToken } from "@/lib/tokenStore";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/v1';
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/v1";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
@@ -29,13 +29,20 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
-
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
   unknown,
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
+
+  if (result.error) {
+  console.warn("RTK Query Error:", {
+    status: result.error.status,
+    data: result.error.data,
+  });
+}
+
 
   if (result.error?.status === 401) {
     api.dispatch(logout());
@@ -45,17 +52,17 @@ const baseQueryWithReauth: BaseQueryFn<
 };
 
 export const baseApi = createApi({
-  reducerPath: 'api',
+  reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   tagTypes: [
-    'Auth',
-    'MenuItems',
-    'OrderTakers',
-    'Chefs',
-    'Orders',
-    'Articles',
-    'WhatsAppOrders',
-    'Stats',
+    "Auth",
+    "MenuItems",
+    "OrderTakers",
+    "Chefs",
+    "Orders",
+    "Articles",
+    "WhatsAppOrders",
+    "Stats",
   ],
   endpoints: () => ({}),
 });

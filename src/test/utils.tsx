@@ -4,10 +4,10 @@ import { configureStore, combineReducers, EnhancedStore } from '@reduxjs/toolkit
 import { Provider } from 'react-redux';
 
 import { baseApi } from '@/app/store/api/baseApi';
-import menuReducer from '@/app/store/slices/menuSlice';
 import dashboardReducer from '@/app/store/slices/dashboardSlice';
 import userReducer from '@/app/store/slices/authSlice';
 import type { RootState } from '@/app/store/store';
+import { menuItemReducer } from '@/app/store/slices/menuItemSlice';
 
 // Type for partial Redux state
 type PartialRootState = Partial<RootState>;
@@ -17,9 +17,9 @@ const LOADING_SPINNER_SELECTOR = '.MuiCircularProgress-root';
 
 const appReducers = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
-  menu: menuReducer,
   dashboard: dashboardReducer,
-  auth: userReducer, // fix here
+  auth: userReducer,
+  menuItems: menuItemReducer,
 });
 
 export function createTestStore(initialState?: Partial<RootState>): EnhancedStore<RootState> {

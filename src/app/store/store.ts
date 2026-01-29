@@ -1,9 +1,9 @@
 // store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import { baseApi } from "./api/baseApi";
-import menuReducer from "./slices/menuSlice";
 import dashboardReducer from "./slices/dashboardSlice";
 import authReducer from "./slices/authSlice";
+import { menuItemReducer } from "./slices/menuItemSlice";
 
 const PERSIST_ACTION_PREFIX = "persist/";
 const PERSIST_ACTION = `${PERSIST_ACTION_PREFIX}PERSIST`;
@@ -14,9 +14,9 @@ const IMMUTABILITY_WARNING_THRESHOLD = 128;
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
-    menu: menuReducer,
     dashboard: dashboardReducer,
     auth: authReducer,
+    menuItems: menuItemReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -1,4 +1,3 @@
-// src/app/store/api.ts
 export enum Role {
   Admin = "Admin",
   Order_Taker = "Order_Taker",
@@ -13,7 +12,7 @@ export enum OrderStatus {
   COMPLETED = "COMPLETED",
 }
 
-// Auth types
+// ----------------- Auth -----------------
 export interface AuthUser {
   id: number;
   name: string;
@@ -39,22 +38,18 @@ export interface SignupRequest {
   role: Role.Admin; // Only admin can signup
 }
 
-
 export interface VerifyEmailRequest {
   email: string;
-  otp: string; 
-  role?: Role; 
+  otp: string;
+  role?: Role;
 }
+
 export interface VerifyEmailResponse {
   message: string;
   token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: Role;
-  };
+  user: AuthUser;
 }
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -64,15 +59,106 @@ export interface ResetPasswordRequest {
   password: string;
 }
 
-
+// ----------------- MenuItem -----------------
 export interface MenuItem {
   id: number;
   restaurantId: number;
   name: string;
   sku: string;
   price: number;
-  description?: string;
+  description?: string | null;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminMenuItemsResponse {
+  data: MenuItem[];
+  nextCursor: number | null;
+}
+
+export interface AdminMenuItemsRequest {
+  cursor?: number;
+}
+
+export interface MenuItemBody {
+  name: string;
+  price: number;
+  description?: string;
+  sku?: string;
+}
+
+export interface UpdateMenuItemBody {
+  name?: string;
+  price?: number;
+  description?: string;
+  sku?: string;
+  isActive?: boolean;
+}
+
+export interface MenuItemParams {
+  name: string;
+  price: number;
+  description?: string;
+  restaurantId: number;
+  sku: string;
+}
+
+export interface UpdateMenuItemParams {
+  id: number;
+  restaurantId: number;
+  name?: string;
+  price?: number;
+  description?: string;
+  sku?: string;
+  isActive?: boolean;
+}
+
+export interface DeleteMenuItemParams {
+  id: number;
+  restaurantId: number;
+}
+
+export interface DeleteMenuItemResponse {
+  message: string;
+  deletedItemId: number;
+}
+
+export interface GetAllMenuItemsParams {
+  restaurantId: number;
+  limit?: number;
+  cursorId?: number;
+}
+
+export interface PaginatedMenuItems {
+  data: MenuItem[];
+  nextCursor: number | null;
+}
+
+export interface SearchMenuItemsParams {
+  restaurantId: number;
+  search?: string;
+  page: number;
+  limit: number;
+  isActive?: boolean;
+}
+
+export interface PaginateParams {
+  restaurantId: number;
+  page: number;
+  limit: number;
+  cursorId?: number;
+}
+
+// ----------------- OrderTaker / Chef -----------------
+export interface WaiterConnection {
+  id: number;
+  orderTakerId: number;
+  socketId?: string;
+  sessionToken: string;
+  isActive: boolean;
+  fromTime?: string;
+  toTime?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -88,9 +174,9 @@ export interface OrderTaker {
   waiterConnection?: WaiterConnection;
 }
 
-export interface WaiterConnection {
+export interface ChefConnection {
   id: number;
-  orderTakerId: number;
+  chefId: number;
   socketId?: string;
   sessionToken: string;
   isActive: boolean;
@@ -111,18 +197,7 @@ export interface Chef {
   chefConnection?: ChefConnection;
 }
 
-export interface ChefConnection {
-  id: number;
-  chefId: number;
-  socketId?: string;
-  sessionToken: string;
-  isActive: boolean;
-  fromTime?: string;
-  toTime?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+// ----------------- Orders -----------------
 export interface OrderItem {
   id: number;
   orderId: number;
@@ -148,6 +223,7 @@ export interface Order {
   chef?: Chef;
 }
 
+// ----------------- Articles -----------------
 export interface Article {
   id: number;
   restaurantId: number;
@@ -158,6 +234,18 @@ export interface Article {
   createdAt: string;
   updatedAt: string;
   publisherId: number;
+}
+
+// ----------------- WhatsApp Orders -----------------
+export interface WhatsAppOrderItem {
+  id: number;
+  whatsappOrderId: number;
+  menuItemId: number;
+  name: string;
+  description?: string;
+  quantity: number;
+  price: number;
+  total: number;
 }
 
 export interface WhatsAppOrder {
@@ -173,17 +261,7 @@ export interface WhatsAppOrder {
   items: WhatsAppOrderItem[];
 }
 
-export interface WhatsAppOrderItem {
-  id: number;
-  whatsappOrderId: number;
-  menuItemId: number;
-  name: string;
-  description?: string;
-  quantity: number;
-  price: number;
-  total: number;
-}
-
+// ----------------- Paginated Response -----------------
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
@@ -196,6 +274,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
+// ----------------- Filters / Stats -----------------
 export interface SearchParams {
   search?: string;
   page?: number;
@@ -209,6 +288,7 @@ export interface Stats {
   inactive: number;
 }
 
+// ----------------- Auth state -----------------
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;
@@ -219,4 +299,3 @@ export interface AuthCredentials {
   user: AuthUser;
   token: string;
 }
- 
