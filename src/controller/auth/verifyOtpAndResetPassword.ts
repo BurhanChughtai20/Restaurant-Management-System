@@ -1,9 +1,11 @@
+// verifyOtpUtils.ts
 import { redisClient } from "../../libs/redis.ts";
-import prisma from "../../libs/prisma.ts";
 import { ApiError } from "../../utils/ApiError.ts";
+import type { OtpData, ResetPasswordBody, ResetPasswordResponse } from "../../shared/index.ts";
 import { hashPassword } from "../../libs/hashPassword.ts";
-import type { OtpData } from "../../shared/index.ts";
-async function findOtpInRedis(otp: string): Promise<{ key: string; data: OtpData }> {
+import prisma from "../../libs/prisma.ts";
+
+export async function findOtpInRedis(otp: string): Promise<{ key: string; data: OtpData }> {
   const key = `password-reset:${otp}`;
   const dataRaw = await redisClient.hGetAll(key);
 
@@ -11,53 +13,29 @@ async function findOtpInRedis(otp: string): Promise<{ key: string; data: OtpData
     throw new ApiError(400, "Invalid or expired OTP");
   }
 
-  // Hash-map style validation
-  const requiredFields: (keyof OtpData)[] = ["otp", "userId", "expiresAt"];
-  for (const field of requiredFields) {
-    if (!dataRaw[field]) {
-      throw new ApiError(400, `Invalid OTP data: missing ${field}`);
-    }
-  }
-
   const data: OtpData = {
     otp: dataRaw.otp!,
     userId: dataRaw.userId!,
-    expiresAt: dataRaw.expiresAt!,
+    expiresAt: dataRaw.expiresAt ?? null, // optional
+    used: dataRaw.used ?? "false",
   };
 
   return { key, data };
 }
 
-function validateOtpData(otpData: OtpData) {
-  const validators: Record<string, () => void> = {
-    userId: () => {
-      if (!otpData.userId) throw new ApiError(400, "Invalid OTP data: missing userId");
-    },
-    used: () => {
-      if (otpData.used === "true") throw new ApiError(400, "OTP already used");
-    },
-    expiresAt: () => {
-      if (!otpData.expiresAt || parseInt(otpData.expiresAt, 10) < Date.now())
-        throw new ApiError(400, "OTP expired");
-    },
-  };
+export function validateOtpData(otpData: OtpData) {
+  if (otpData.used === "true") throw new ApiError(400, "OTP already used");
 
-  for (const key in validators) {
-    validators[key]?.();
-
+  if (otpData.expiresAt && parseInt(otpData.expiresAt, 10) < Date.now()) {
+    throw new ApiError(400, "OTP expired");
   }
 }
-
 export async function verifyOtpAndResetPassword({
   otp,
   password,
-}: {
-  otp: string;
-  password: string;
-}) {
-  if (!password || typeof password !== "string") {
-    throw new ApiError(400, "Password is required");
-  }
+}: ResetPasswordBody): Promise<ResetPasswordResponse> {
+  if (!otp) throw new ApiError(400, "OTP is required");
+  if (!password) throw new ApiError(400, "Password is required");
 
   const { key: matchedKey, data: otpData } = await findOtpInRedis(otp);
 
@@ -70,7 +48,8 @@ export async function verifyOtpAndResetPassword({
     data: { password: hashedPassword },
   });
 
-  await redisClient.del(matchedKey);
+  // Mark OTP as used
+  await redisClient.hSet(matchedKey, "used", "true");
 
   return { message: "Password reset successful" };
 }

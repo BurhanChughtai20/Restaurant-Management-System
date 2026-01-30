@@ -6,7 +6,6 @@ interface UpdateOrderTakerParams {
   fromTime?: string;
   toTime?: string;
 }
-
 export const updateOrderTakerConnection = async ({
   restaurantId,
   orderTakerId,
@@ -17,24 +16,15 @@ export const updateOrderTakerConnection = async ({
     where: {
       id: orderTakerId,
       restaurantId,
-      userRoles: {
-        some: { role: "Order_Taker" },
-      },
+      userRoles: { some: { role: "Order_Taker" } },
     },
     select: { id: true },
   });
 
-  if (!orderTaker) {
-    throw new Error("Unauthorized - Order Taker not in your restaurant");
-  }
+  if (!orderTaker) throw new Error("Unauthorized - Order Taker not in your restaurant");
 
-  const updatedConnection = await prisma.waiterConnection.update({
+  return prisma.waiterConnection.update({
     where: { orderTakerId },
-    data: {
-      ...(fromTime && { fromTime }),
-      ...(toTime && { toTime }),
-    },
+    data: { ...(fromTime && { fromTime }), ...(toTime && { toTime }) },
   });
-
-  return updatedConnection;
 };

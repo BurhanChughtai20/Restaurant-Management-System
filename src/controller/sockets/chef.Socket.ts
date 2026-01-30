@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../../libs/prisma.ts";
-import { emitOrderUpdate, handleQRConnect, joinOrderRoom } from "../../libs/socketHandlers.ts";
+import { handleQRConnect, emitOrderUpdate, joinOrderRoom } from "../../libs/socketHandlers.ts";
 import { updateOrder } from "../orders/orderTaker/updateOrder.ts";
- 
+
 export const chefSocket = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("Client connected (chef):", socket.id);
@@ -15,22 +15,40 @@ export const chefSocket = (io: Server) => {
 
       const roomName = joinOrderRoom(socket, orderId);
 
-      await prisma.order.update({
+      const updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: { chefId, status: "PICKED" },
       });
 
-      io.to(roomName).emit("order_picked", { orderId, chefId, order });
-      io.to("admins").emit("admin_order_picked", { orderId, chefId, order });
+      io.to(roomName).emit("order_picked", { orderId, chefId, order: updatedOrder });
+      io.to("admins").emit("admin_order_picked", { orderId, chefId, order: updatedOrder });
     });
 
-    socket.on("order_updated", async ({ orderId, items, orderTakerId }) => {
+    socket.on("order_updated", async ({ orderId, items, orderTakerId, chefId }) => {
       try {
-        const updatedData = await updateOrder({ orderId, items });
-        const roomName = `order_${orderId}`;
-        emitOrderUpdate(io, roomName, orderId, updatedData.order, updatedData.changes, orderTakerId);
-      } catch (err:any) {
+        // Lookup chef's restaurantId for isolation
+        const chef = await prisma.users.findUnique({
+          where: { id: chefId },
+          select: { restaurantId: true },
+        });
+        if (!chef) return socket.emit("error", "Chef not found");
+
+        const updatedData = await updateOrder({
+          orderId,
+          items,
+          restaurantId: chef.restaurantId, // ✅ required by UpdateOrderInput
+        });
+
+        const roomName = joinOrderRoom(socket, orderId);
+
+        // Transform returned data
+        const order = updatedData.orderItems;
+        const changes = updatedData.changeLogs;
+
+        emitOrderUpdate(io, roomName, orderId, order, changes, orderTakerId);
+      } catch (err: any) {
         console.error("Error updating order for chef:", err);
+        socket.emit("error", "Failed to update order");
       }
     });
   });

@@ -1,27 +1,21 @@
 import prisma from "../../libs/prisma.ts";
-import type { DeleteOrderTakerBody } from "../../shared/index.ts";
-
 export const deleteOrderTakerConnection = async ({
-  orderTakerId,
   restaurantId,
-}: DeleteOrderTakerBody & { restaurantId: number }) => {
-
-  const authorized = await prisma.users.findFirst({
+  orderTakerId,
+}: { restaurantId: number; orderTakerId: number }) => {
+  const orderTaker = await prisma.users.findFirst({
     where: {
       id: orderTakerId,
       restaurantId,
       userRoles: { some: { role: "Order_Taker" } },
     },
-    select: { id: true }, 
+    select: { id: true },
   });
 
-  if (!authorized) {
-    throw new Error("Unauthorized - Order Taker not in your restaurant");
-  }
+  if (!orderTaker) throw new Error("Unauthorized - Order Taker not in your restaurant");
+
   try {
-    await prisma.waiterConnection.delete({
-      where: { orderTakerId },
-    });
+    await prisma.waiterConnection.delete({ where: { orderTakerId } });
   } catch {
     throw new Error("Order Taker connection not found");
   }

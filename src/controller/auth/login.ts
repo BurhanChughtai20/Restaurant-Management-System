@@ -23,15 +23,7 @@ export async function login({
 }) {
   const user: UserWithRolesAndRestaurant | null = await prisma.users.findUnique({
     where: { email },
-    include: {
-      userRoles: {
-        where: { 
-          role, 
-          isActive: true 
-        },
-      },
-      restaurant: true,
-    },
+     include: { userRoles: { where: { role, isActive: true } }, restaurant: true },
   });
 
   if (!user) throw new ApiError(401, "Invalid email or password");

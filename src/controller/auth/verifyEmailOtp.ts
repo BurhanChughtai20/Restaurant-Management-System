@@ -1,7 +1,6 @@
 import { Role } from "@prisma/client";
 import { redisClient } from "../../libs/redis.ts";
 import prisma from "../../libs/prisma.ts";
-import { ApiError } from "../../utils/ApiError.ts";
 import { generateToken } from "../../utils/jwtToken.ts";
 
 export async function verifyEmailOtp({
@@ -13,83 +12,91 @@ export async function verifyEmailOtp({
   otp: string;
   role: Role;
 }) {
+  // 1️⃣ Fetch user data from Redis
   const redisKey = `signup:${email}:${role.toString()}`;
-  const userDataRaw = await redisClient.hGetAll(redisKey);
+  const userData = await redisClient.hGetAll(redisKey);
 
-  if (!userDataRaw || Object.keys(userDataRaw).length === 0) {
+  if (!userData || Object.keys(userData).length === 0) {
     throw new Error("OTP expired or user not found");
   }
 
-  const requiredFields: (keyof typeof userDataRaw)[] = [
-    "name",
-    "email",
-    "password",
-    "role",
-    "otp",
-    "otpExpiresAt",
-  ];
+  const { name, password, otp: storedOtp, otpExpiresAt, desiredRestaurantName } = userData;
 
-  for (const field of requiredFields) {
-    if (!userDataRaw[field]) throw new Error(`Required field missing: ${field}`);
+  // 2️⃣ Validate required fields
+  if (!name || !email || !password || !storedOtp || !otpExpiresAt) {
+    throw new Error("Signup data incomplete");
   }
 
-  const name = userDataRaw.name!;
-  const password = userDataRaw.password!;
-  const storedOtp = userDataRaw.otp!;
-  const otpExpiresAt = userDataRaw.otpExpiresAt!;
-
   if (storedOtp !== otp) throw new Error("Invalid OTP");
+  if (parseInt(otpExpiresAt, 10) < Date.now()) throw new Error("OTP expired");
 
-  const otpExpireTime = parseInt(otpExpiresAt, 10);
-  if (isNaN(otpExpireTime) || otpExpireTime < Date.now()) throw new Error("OTP expired");
-
-  const existingUser = await prisma.users.findFirst({ where: { email } });
-  if (existingUser) throw new ApiError(409, "User already exists");
-
-  const result = await prisma.$transaction(async (tx) => {
-    let restaurantId: number | undefined;
-
-    if (role === "Admin") {
-      const restaurant = await tx.restaurant.create({
-        data: {
-          name: `${name}'s Restaurant`,
-          slug: `${email.split("@")[0]}-${Date.now()}`,
-        },
-      });
-      restaurantId = restaurant.id;
-    }
-
-    const user = await tx.users.create({
-      data: {
-        name,
-        email,
-        password,
-        isEmailVerified: true,
-        ...(restaurantId ? { restaurantId } : {}),
+  // 3️⃣ Determine restaurantId with fast lookup
+  const restaurantId = await (async (): Promise<number> => {
+    const roleActions: Record<Role, () => Promise<number>> = {
+      Admin: async () => {
+        const restaurant = await prisma.restaurant.create({
+          data: {
+            name: `${name}'s Restaurant`,
+            slug: `${email.split("@")[0]}-${Date.now()}`,
+          },
+        });
+        return restaurant.id;
       },
-    });
+      Order_Taker: async () => {
+        if (!desiredRestaurantName) throw new Error("Restaurant name required for Order_Taker");
+        const restaurant = await prisma.restaurant.findFirst({
+          where: { name: desiredRestaurantName },
+        });
+        if (!restaurant) throw new Error("Restaurant not found");
+        return restaurant.id;
+      },
+      Chef: async () => {
+        if (!desiredRestaurantName) throw new Error("Restaurant name required for Chef");
+        const restaurant = await prisma.restaurant.findFirst({
+          where: { name: desiredRestaurantName },
+        });
+        if (!restaurant) throw new Error("Restaurant not found");
+        return restaurant.id;
+      },
+      Shop_Owner: async () => {
+        throw new Error("Shop_Owner signup not supported here");
+      },
+    };
 
-    const token = generateToken(user.id, role, "12h");
+    return roleActions[role]();
+  })();
 
-    const userRole = await tx.userRole.create({
-      data: { userId: user.id, role, token, isActive: true },
-    });
-
-    return { user, userRole, token };
+  // 4️⃣ Create user
+  const user = await prisma.users.create({
+    data: {
+      name,
+      email,
+      password,
+      isEmailVerified: true,
+      restaurantId,
+    },
   });
 
+  // 5️⃣ Generate token & assign role
+  const token = generateToken(user.id, role, "12h");
+
+  const userRole = await prisma.userRole.create({
+    data: { userId: user.id, role, token, isActive: true },
+  });
+
+  // 6️⃣ Cleanup Redis
   await redisClient.del(redisKey);
 
   return {
     message: "Email verified successfully",
-    token: result.token,
+    token,
     user: {
-      id: result.user.id,
-      name: result.user.name,
-      email: result.user.email,
-      role: result.userRole.role,
-      restaurantId: result.user.restaurantId,
-      isEmailVerified: result.user.isEmailVerified,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: userRole.role,
+      restaurantId: user.restaurantId,
+      isEmailVerified: user.isEmailVerified,
     },
   };
 }

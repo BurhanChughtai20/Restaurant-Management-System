@@ -10,12 +10,12 @@ export interface OrderItem {
   description?: string | null;
   quantity: number;
   price: number;
-  total?: number; // optional
+  total?: number; 
 }
 
 export interface AdminOrderItem {
   id: number;
-  orderId: number;           // Add this!
+  orderId: number;
   menuItemId: number;
   name: string;
   description: string | null;

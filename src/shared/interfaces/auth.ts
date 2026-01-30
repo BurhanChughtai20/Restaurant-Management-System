@@ -6,6 +6,7 @@ export interface SignupBody {
   email: string;
   password: string;
   role: Role;
+  desiredRestaurantName?: string;
 }
 
 export interface LoginBody {
@@ -29,6 +30,10 @@ export interface ResetPasswordBody {
   password: string;
 }
 
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 export interface DeleteAccountBody {
   role: Role;
 }
@@ -50,7 +55,7 @@ export interface UserData {
 export interface OtpData {
   otp: string;
   userId: string;
-  expiresAt: string;
+  expiresAt?: string | null;
   used?: string;
 }
 

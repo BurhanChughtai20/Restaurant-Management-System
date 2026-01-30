@@ -4,25 +4,33 @@ export interface MenuItem {
   description?: string | null;
   price: number;
   sku: string;
+  restaurantId: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
 }
 
 export interface MenuItemBody {
   name: string;
   price: number;
   description?: string;
- }
+  sku: string;
+}
 
 export interface UpdateMenuItemBody {
   name?: string;
   price?: number;
   description?: string;
+  sku?: string;
   isActive?: boolean;
 }
+
 export interface MenuItemParams {
   name: string;
   price: number;
   description?: string;
   restaurantId: number;
+  sku: string;
 }
 
 export interface UpdateMenuItemParams {
@@ -31,12 +39,13 @@ export interface UpdateMenuItemParams {
   name?: string;
   price?: number;
   description?: string;
+  sku?: string;
   isActive?: boolean;
 }
 
 export interface DeleteMenuItemParams {
   id: number;
-  restaurantId: number;  
+  restaurantId: number;
 }
 
 export interface SearchMenuItemsParams {
@@ -46,11 +55,12 @@ export interface SearchMenuItemsParams {
   limit: number;
   isActive?: boolean;
 }
+
 export interface PaginateParams {
   restaurantId: number;
   page: number;
   limit: number;
-  cursorId: number;
+  cursorId?: number;
 }
 
 export interface GetAllMenuItemsParams {
@@ -59,16 +69,7 @@ export interface GetAllMenuItemsParams {
   cursorId?: number;
 }
 
-export interface MenuItem {
-  id: number;
-  name: string;
-  description?: string | null;
-  price: number;
-  restaurantId: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
+// Paginated response
 export interface PaginatedMenuItems {
   data: MenuItem[];
   nextCursor: number | null;

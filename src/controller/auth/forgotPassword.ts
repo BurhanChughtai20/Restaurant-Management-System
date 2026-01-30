@@ -1,3 +1,4 @@
+// forgotPassword.ts
 import { redisClient } from "../../libs/redis.ts";
 import prisma from "../../libs/prisma.ts";
 import { ApiError } from "../../utils/ApiError.ts";
@@ -9,19 +10,19 @@ export async function forgotPassword({ email }: { email: string }) {
   if (!user) throw new ApiError(404, "User not found");
 
   const otp = generateOtp();
-  const expiresAt = Date.now() + 2 * 60 * 1000;
 
-  const redisKey = `password-reset:${user.id}`;
+  const redisKey = `password-reset:${otp}`;
 
-  await redisClient.hSet(redisKey, otp, JSON.stringify({
+  // Store OTP data as hash
+  await redisClient.hSet(redisKey, {
     otp,
-    userId: user.id,
-    createdAt: Date.now(),
-    expiresAt,
-    used: false
-  }));
+    userId: user.id.toString(),
+    createdAt: Date.now().toString(),
+    expiresAt: (Date.now() + 15 * 60 * 1000).toString(),
+    used: "false"
+  });
 
-  await redisClient.expire(redisKey, 15 * 60);
+  await redisClient.expire(redisKey, 15 * 60); 
 
   await sendOtpEmail(email, otp);
 

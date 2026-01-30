@@ -6,7 +6,6 @@ interface UpdateChefConnectionParams {
   fromTime?: string;
   toTime?: string;
 }
-
 export const updateChefConnection = async ({
   restaurantId,
   chefId,
@@ -17,24 +16,15 @@ export const updateChefConnection = async ({
     where: {
       id: chefId,
       restaurantId,
-      userRoles: {
-        some: { role: "Chef" },
-      },
-      select: { id: true },
+      userRoles: { some: { role: "Chef" } },
     },
+    select: { id: true },
   });
 
-  if (!chef) {
-    throw new Error("Unauthorized - Chef not in your restaurant");
-  }
+  if (!chef) throw new Error("Unauthorized - Chef not in your restaurant");
 
-  const updatedConnection = await prisma.chefConnection.update({
+  return prisma.chefConnection.update({
     where: { chefId },
-    data: {
-      ...(fromTime && { fromTime }),
-      ...(toTime && { toTime }),
-    },
+    data: { ...(fromTime && { fromTime }), ...(toTime && { toTime }) },
   });
-
-  return updatedConnection;
 };
