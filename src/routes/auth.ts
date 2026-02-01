@@ -20,6 +20,7 @@ import type {
 } from "../shared/index.ts";
 
 import { extractAuthPayload } from "../utils/auth.util.ts";
+import { prisma } from "../libs/prisma.ts";
 
 async function authRoutes(fastify: FastifyInstance) {
   function registerPost<T extends object>(
@@ -49,22 +50,38 @@ async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post("/logout", async (req, reply) => {
     const payload = extractAuthPayload(req, fastify);
-    if (!payload)
+    if (!payload) {
       return reply.status(401).send({ error: "Invalid or missing token" });
-
-    return reply.send(await logout(payload.userId, payload.role as Role));
+    }
+    const user = await prisma.users.findUnique({
+      where: { id: payload.userId },
+    });
+    if (!user) {
+      return reply
+        .status(404)
+        .send({ error: "User not found or already deleted" });
+    }
+    const result = await logout(payload.userId, payload.role as Role);
+    return reply.send({ message: "Logout successful", details: result });
   });
 
   fastify.delete<{ Body: DeleteAccountBody }>(
     "/delete-account",
     async (req, reply) => {
-      const payload = extractAuthPayload(req, fastify);
-      if (!payload)
-        return reply.status(401).send({ error: "Invalid or missing token" });
+      try {
+        const payload = extractAuthPayload(req, fastify);
+        if (!payload)
+          return reply.status(401).send({ error: "Invalid or missing token" });
 
-      return reply.send(await deleteAccount(payload.userId, req.body.role));
+        const result = await deleteAccount(payload.userId, req.body.role);
+        return reply.send(result);
+      } catch (err: any) {
+        return reply
+          .status(err.statusCode || 400)
+          .send({ error: err.message || "Internal Server Error" });
+      }
     },
   );
-};
+}
 
 export default authRoutes;

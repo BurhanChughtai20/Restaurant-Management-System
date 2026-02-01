@@ -2,24 +2,29 @@ import { prisma } from "../../libs/prisma.ts";
 import type { Role } from "@prisma/client";
 
 export async function deleteAccount(userId: number, role: Role) {
-  const userRole = await prisma.userRole.findFirst({
-    where: {
-      userId,
-      role,
-      isActive: true,
-    },
+  // 1️⃣ Fetch all active roles for this user
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId, isActive: true },
   });
 
-  if (!userRole) {
+  if (!userRoles || userRoles.length === 0) {
+    throw new Error("User does not have any active roles");
+  }
+
+  const matchedRole = userRoles.find(
+    (r) => r.role.toLowerCase() === role.toLowerCase()
+  );
+
+  if (!matchedRole) {
     throw new Error("Role mismatch or role not found for this user");
   }
 
-  await prisma.otp.deleteMany({ where: { userId } });
-  await prisma.passwordReset.deleteMany({ where: { userId } });
+  await prisma.$transaction([
+    prisma.otp.deleteMany({ where: { userId } }),
+    prisma.passwordReset.deleteMany({ where: { userId } }),
+    prisma.userRole.deleteMany({ where: { userId } }),
+    prisma.users.delete({ where: { id: userId } }),
+  ]);
 
-  await prisma.userRole.deleteMany({ where: { userId } });
-
-  await prisma.users.delete({ where: { id: userId } });
-
-  return { message: "Account deleted permanently" };
+  return { message: `User account with role ${matchedRole.role} deleted permanently` };
 };
