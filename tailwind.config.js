@@ -1,14 +1,13 @@
-// tailwind.config.js
-import { heroui } from "@heroui/theme";
-
 /** @type {import('tailwindcss').Config} */
-export default {
+const tailwindConfig = {
   content: [
-    "./node_modules/@heroui/theme/dist/components/(card|ripple).js"
-],
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {},
   },
   darkMode: "class",
-  plugins: [heroui()],
+  plugins: [],
 };
+
+export default tailwindConfig;

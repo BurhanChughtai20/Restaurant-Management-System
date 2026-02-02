@@ -1,128 +1,51 @@
 "use client";
-import React, { useMemo } from "react";
-import { Box, Typography, Paper, CircularProgress } from "@mui/material";
-import { DollarSign, ShoppingCart, Users, TrendingUp, Eye, MessageCircle } from "lucide-react";
-import { DynamicGrid, DynamicCard, DynamicTable } from "@/components/shared";
-import { useGetAllOrdersQuery } from "@/app/store/api";
 
-const DashboardClient: React.FC = () => {
-  const { data: orders = [], isLoading } = useGetAllOrdersQuery();
+import React from "react";
+import { CardsStats } from "./chartComponent";
+import DynamicContent from "../Title";
 
-  const metrics = useMemo(() => {
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    return {
-      totalRevenue,
-      totalOrders: orders.length,
-      totalCustomers: 1200,
-      profit: 500,
-      visits: 5600,
-      feedback: 230,
-    };
-  }, [orders]);
+/**
+ * DRY Principle: Define a common interface for your chart data 
+ * so it stays consistent across different routes.
+ */
+const DUMMY_CHART_DATA = [
+  { month: "Jan", revenue: 12000, subscription: 150 },
+  { month: "Feb", revenue: 15000, subscription: 230 },
+  { month: "Mar", revenue: 9000, subscription: 180 },
+  { month: "Apr", revenue: 21000, subscription: 400 },
+  { month: "May", revenue: 18000, subscription: 350 },
+  { month: "Jun", revenue: 24000, subscription: 520 },
+];
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+const DashboardClient = () => {
+  // --- Future RTK Query integration placeholder ---
+  // const { data: apiResponse, isLoading, isError } = useGetDashboardStatsQuery();
+  
+  // For now, we simulate a successful API load
+  const isLoading = false;
+  const isError = false;
+  const apiResponse = { chartData: DUMMY_CHART_DATA };
 
-  const cards = [
-    {
-      id: 1,
-      content: (
-        <DynamicCard
-          title="Revenue"
-          value={`$${metrics.totalRevenue.toFixed(2)}`}
-          subtitle="This Month"
-          icon={<DollarSign />}
-          trend={{ value: 12, isPositive: true }}
-        />
-      ),
-    },
-    {
-      id: 2,
-      content: (
-        <DynamicCard
-          title="Orders"
-          value={metrics.totalOrders}
-          subtitle="Pending"
-          icon={<ShoppingCart />}
-          trend={{ value: -5 }}
-        />
-      ),
-    },
-    {
-      id: 3,
-      content: (
-        <DynamicCard
-          title="Customers"
-          value={metrics.totalCustomers}
-          subtitle="New"
-          icon={<Users />}
-        />
-      ),
-    },
-    {
-      id: 4,
-      content: (
-        <DynamicCard
-          title="Profit"
-          value={`$${metrics.profit.toLocaleString()}`}
-          subtitle="This Month"
-          icon={<TrendingUp />}
-          trend={{ value: 8, isPositive: true }}
-        />
-      ),
-    },
-    {
-      id: 5,
-      content: (
-        <DynamicCard
-          title="Visits"
-          value={metrics.visits}
-          subtitle="This Week"
-          icon={<Eye />}
-          trend={{ value: 3 }}
-        />
-      ),
-    },
-    {
-      id: 6,
-      content: (
-        <DynamicCard
-          title="Feedback"
-          value={metrics.feedback}
-          subtitle="Pending"
-          icon={<MessageCircle />}
-        />
-      ),
-    },
-  ];
+  if (isLoading) return <div className="p-6 text-muted-foreground">Loading Analytics...</div>;
+  if (isError || !apiResponse) return <div className="p-6 text-destructive">Failed to load data.</div>;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" fontWeight={700} sx={{ wordBreak: "break-word", mb: 3 }}>
-        Dashboard Overview
-      </Typography>
+    <div className="p-6 space-y-6">
+      <div className="flex flex-col gap-2">
+        <DynamicContent as="h2" className="text-3xl font-bold tracking-tight">Dashboard Overview</DynamicContent>
+        <DynamicContent as="p" className="text-muted-foreground">
+          Real-time performance metrics across all channels.
+        </DynamicContent>
+      </div>
 
-      <Box sx={{ mb: 4 }}>
-        <DynamicGrid items={cards} spacing={3} />
-      </Box>
-
-      {/* Recent Orders Table */}
-      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Recent Orders
-        </Typography>
-        <DynamicTable
-          data={orders.slice(0, 5) as unknown as Record<string, unknown>[]}
-          columns={[]}
-          rowKey="id"
-        />
-      </Paper>
-    </Box>
+      <hr className="border-border/40" />
+      
+      {/* Type-Safety: CardsStats receives the dummy data. 
+        When you switch to RTK-Q, you just swap apiResponse.chartData here.
+      */}
+      <CardsStats data={apiResponse.chartData} />
+      
+    </div>
   );
 };
 

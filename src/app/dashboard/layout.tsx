@@ -1,49 +1,25 @@
-"use client";
+"use client"
 
-import React, { useState, useCallback } from "react";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import CssBaseline from "@mui/material/CssBaseline";
-import Box from "@mui/material/Box";
-import SideMenu from "@/components/admin-dashboard/SideMenu";
-// REMOVED: import { DashboardNavbar } from "@/components/navbar-menu";
+import * as React from "react"
+import {
+  SidebarProvider,
+  SidebarInset,
+} from "@/components/ui/sidebar"
+import { SideMenu } from "@/components/admin-dashboard/SideMenu"
 
-const EXPANDED_WIDTH = 240;
-const COLLAPSED_WIDTH = 52;
-
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-
-  const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), []);
-
-  const mainWidth = `calc(100% - ${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px)`;
-  const mainMargin = `${sidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH}px`;
-
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <AppRouterCacheProvider>
-      <CssBaseline />
-      <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-        {/* Desktop Sidebar - Hidden on mobile/tablet (xs, sm, md) */}
-        <Box sx={{ display: { xs: "none", md: "none", lg: "block" } }}>
-          <SideMenu collapsed={!sidebarOpen} onToggle={toggleSidebar} />
-        </Box>
-
-        {/* REMOVED: Mobile/Tablet Navbar - Already rendered in RootLayout */}
-
-        {/* Main Content Area */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            transition: "margin-left 0.3s ease, width 0.3s ease",
-            width: { lg: mainWidth, xs: "100%" },
-            marginLeft: { lg: mainMargin, xs: 0 },
-            marginTop: { xs: "64px", md: "64px", lg: 0 }, // Top margin for navbar from RootLayout
-          }}
-        >
+    <SidebarProvider defaultOpen>
+      <SideMenu />
+      <SidebarInset>
+        <main className="flex-1 p-6">
           {children}
-        </Box>
-      </Box>
-    </AppRouterCacheProvider>
-  );
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  )
 }

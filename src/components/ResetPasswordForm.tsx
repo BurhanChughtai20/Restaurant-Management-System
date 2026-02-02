@@ -1,20 +1,17 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import DynamicContent from "./Title";
-import FormInput from "./FormInput";
-import { useAuthNavigation } from "@/auth";
 import { useResetPasswordMutation } from "@/app/store/api/authApi";
+import { useAuthNavigation } from "@/auth";
 import { useAlert } from "./DynamicAlert";
-import { useSearchParams } from "next/navigation";
-import ButtonCom from "./Button";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { DynamicCardForm } from "./FormInput";
+import { Key } from "lucide-react";
+import { ButtonWithIcon } from "./Button";
+import { FormField } from "@/app/store/api";
 
-interface ApiError {
-  data: {
-    message: string;
-  };
-  status?: number;
+interface FormState {
+  otp: string;
+  password: string;
 }
 
 const UI_TEXT = {
@@ -24,112 +21,93 @@ const UI_TEXT = {
   backLabel: "Back to Login",
 };
 
-const RESET_FIELDS = [
-  {
-    id: "otp",
-    label: "OTP Code",
-    placeholder: "Enter OTP",
-    type: "text",
-  },
-  {
-    id: "password",
-    label: "New Password",
-    placeholder: "••••••••",
-    type: "password",
-  },
-] as const;
-
-
-const CLASSES = {
-  wrapper:
-    "mx-auto w-[95%] md:max-w-md shadow-input rounded-2xl bg-white p-6 md:p-8 dark:bg-black border border-neutral-100 dark:border-neutral-800",
-  form: "my-8",
-  inputSpacing: "mb-4",
-  submitBtn:
-    "w-full text-white rounded-md h-10 font-medium bg-black dark:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed",
-  backBtn:
-    "flex items-center justify-center gap-2 hover:opacity-80 transition-opacity cursor-pointer",
-  backText: "text-xs text-black dark:text-white font-bold",
-};
-
-type FormState = {
-  otp: string;
-  password: string;
-};
-
 export function ResetPasswordForm() {
   const { goToLogin } = useAuthNavigation();
   const { showAlert } = useAlert();
-  const searchParams = useSearchParams();
 
-const [formData, setFormData] = useState<FormState>({
-  otp: "",
-  password: "",
-});
+  const [formData, setFormData] = useState<FormState>({
+    otp: "",
+    password: "",
+  });
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { id, value } = e.target;
       setFormData((prev) => ({ ...prev, [id]: value }));
     },
     []
   );
-const handleSubmit = useCallback(async (e: React.FormEvent) => {
-  e.preventDefault();
 
-  if (!formData.otp) return showAlert("OTP is required", "error");
-  if (formData.password.length < 6) return showAlert("Password too short", "error");
+  const handleSubmit = useCallback(async () => {
+    if (!formData.otp.trim()) return showAlert("OTP is required", "error");
+    if (formData.password.length < 6)
+      return showAlert("Password too short", "error");
 
-  try {
-    await resetPassword(formData).unwrap();
-    showAlert("Password reset successfully", "success");
-    goToLogin();
-  } catch (error: unknown) {
-    let message = "Password reset failed";
-    if (typeof error === "object" && error !== null && "data" in error) {
-      const errData = (error as ApiError).data;
-      if (errData?.message) message = errData.message;
+    try {
+      await resetPassword(formData).unwrap();
+      showAlert("Password reset successfully", "success");
+      goToLogin();
+    } catch (error: unknown) {
+      let message = "Password reset failed";
+      if (typeof error === "object" && error !== null && "data" in error) {
+        const errData = (error as { data?: { message?: string } }).data;
+        if (errData?.message) message = errData.message;
+      }
+      showAlert(message, "error");
     }
-    showAlert(message, "error");
-  }
-}, [formData, resetPassword, showAlert, goToLogin]);
+  }, [formData, resetPassword, showAlert, goToLogin]);
+
+  const formFields: FormField[] = [
+    {
+      id: "otp",
+      label: "OTP Code",
+      placeholder: "Enter OTP",
+      type: "text",
+      required: true,
+      value: formData.otp,
+      onChange: handleChange,
+    },
+    {
+      id: "password",
+      label: "New Password",
+      placeholder: "••••••••",
+      type: "password",
+      required: true,
+      value: formData.password,
+      onChange: handleChange,
+    },
+  ];
 
   return (
-    <div className={CLASSES.wrapper}>
-      <DynamicContent as="h3">{UI_TEXT.title}</DynamicContent>
-      <DynamicContent as="p" className="mt-2 text-xs">
-        {UI_TEXT.description}
-      </DynamicContent>
-
-      <form className={CLASSES.form} onSubmit={handleSubmit}>
-        {RESET_FIELDS.map((field) => (
-          <FormInput
-            key={field.id}
-            {...field}
-            value={formData[field.id]}
-            onChange={handleChange}
-            disabled={isLoading}
-            containerClassName={CLASSES.inputSpacing}
-          />
-        ))}
-
-        <ButtonCom
-          text={isLoading ? "Updating..." : UI_TEXT.submitLabel}
-          type="default"
-          htmlType="submit"
-          gradient
-          className={CLASSES.submitBtn}
-          disabled={isLoading}
+    <DynamicCardForm
+      title={UI_TEXT.title}
+      description={<p className="text-sm text-neutral-600 dark:text-neutral-300">{UI_TEXT.description}</p>}
+      fields={formFields}
+      actionButton={{
+        text: isLoading ? "Updating..." : UI_TEXT.submitLabel,
+        variant: "default",
+        size: "default",
+      }}
+      extraHeaderAction={
+        <ButtonWithIcon
+          text="Reset with Key"
+          size="sm"
+          variant="outline"
+          icon={<Key size={16} />}
+          onClick={handleSubmit}
         />
-      </form>
-
-      <button onClick={goToLogin} className={CLASSES.backBtn}>
-        <DynamicContent as="span" className={CLASSES.backText}>
-          &larr; {UI_TEXT.backLabel}
-        </DynamicContent>
-      </button>
-    </div>
+      }
+      footerButtons={[
+        {
+          text: UI_TEXT.backLabel,
+          variant: "link",
+          size: "sm",
+          type: "button",
+          onClick: goToLogin,
+        },
+      ]}
+    />
   );
 }

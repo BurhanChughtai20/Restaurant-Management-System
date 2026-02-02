@@ -21,10 +21,6 @@ const HeroSectionOne = dynamic(() => import('@/components/HeroSection').then(mod
   ssr: true,
 });
 
-const TrendingBlogs = dynamic(() => import('@/components/TrendingBlogs'), {
-  loading: () => <div className="min-h-100" />,
-  ssr: true,
-});
 
 const classes = {
   main: "",
@@ -63,7 +59,6 @@ const Page = memo(() => {
         variants={fadeUpVariants}
         className={classes.section}
       >
-        <TrendingBlogs />
       </motion.section>
     </main>
   );

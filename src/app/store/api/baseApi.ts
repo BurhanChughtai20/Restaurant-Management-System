@@ -1,3 +1,4 @@
+import { getToken } from "@/lib/tokenStore";
 import {
   createApi,
   fetchBaseQuery,
@@ -6,27 +7,34 @@ import {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../store";
-import { logout } from "../slices/authSlice";
-import { getToken, hasToken } from "@/lib/tokenStore";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/v1";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
-  prepareHeaders: (headers, { getState }) => {
-    let token = (getState() as RootState).auth.token;
+  prepareHeaders: (headers, { getState, endpoint }) => {
+    // Skip token for login
+    if (endpoint === "login") return headers;
 
-    if (!token && hasToken()) {
+    let token: string | null = null;
+
+    if (typeof window !== "undefined") {
       token = getToken();
     }
 
+    if (!token) {
+      const reduxToken = (getState() as RootState).auth.token;
+      if (reduxToken) token = reduxToken;
+    }
+
     if (token) {
-      headers.set("authorization", `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
 
     return headers;
   },
+  credentials: "include",
 });
 
 const baseQueryWithReauth: BaseQueryFn<
@@ -36,27 +44,21 @@ const baseQueryWithReauth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
 
-  if (result.error) {
-  console.warn("RTK Query Error:", {
-    status: result.error.status,
-    data: result.error.data,
-  });
-}
-
-
-  if (result.error?.status === 401) {
-    api.dispatch(logout());
+  if (result.error && result.error.status === 401 && !result.error.data) {
+    console.warn("Unauthorized! Redirecting...");
   }
 
   return result;
 };
 
-export const baseApi = createApi({
+export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   tagTypes: [
     "Auth",
-    "MenuItems",
+    "Dashboard",
+    "MenuItem",
+    "Users",
     "OrderTakers",
     "Chefs",
     "Orders",
@@ -66,3 +68,5 @@ export const baseApi = createApi({
   ],
   endpoints: () => ({}),
 });
+
+export default api;

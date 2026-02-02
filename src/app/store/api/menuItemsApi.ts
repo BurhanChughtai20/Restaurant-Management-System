@@ -1,140 +1,71 @@
-// src/app/store/menuApi.ts
-import { baseApi } from "./baseApi";
-import { menuItemActions } from "../slices/menuItemSlice";
+import { api } from "./baseApi";
 import {
   MenuItem,
   MenuItemBody,
   UpdateMenuItemBody,
-  SearchMenuItemsParams,
+  GetAllMenuItemsParams,
   PaginatedMenuItems,
-  DeleteMenuItemResponse,
-  AdminMenuItemsResponse,
-  AdminMenuItemsRequest,
 } from "./types";
 
-export const menuApi = baseApi.injectEndpoints({
+const generateMenuItemTags = (
+  result: PaginatedMenuItems | undefined,
+  restaurantId?: number,
+) => {
+  const baseTags = [
+    { type: "MenuItem" as const, id: "LIST" },
+    ...(restaurantId ? [{ type: "MenuItem" as const, id: `LIST-${restaurantId}` }] : []),
+  ];
+
+  if (!result?.data) return baseTags;
+
+  return [
+    ...baseTags,
+    ...result.data.map((item) => ({
+      type: "MenuItem" as const,
+      id: item.id,
+    })),
+  ];
+};
+
+export const menuApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAdminMenuItems: builder.query<
-      AdminMenuItemsResponse,
-      AdminMenuItemsRequest
-    >({
-      query: ({ cursor } = {}) => ({
+    getAdminMenuItems: builder.query<PaginatedMenuItems, Partial<GetAllMenuItemsParams>>({
+      query: ({ restaurantId, cursorId, limit = 10 }) => ({
         url: "/menu-items/admin/menu-items",
-        params: cursor !== null ? { cursor } : {},
+        params: { restaurantId, cursorId, limit },
       }),
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
-          dispatch(menuItemActions.setMenuItems(data.data));
-          console.log("API data:", data);
-        } catch (error) {
-          console.error("Failed to fetch menu items:", error);
-          dispatch(menuItemActions.setError("Could not load menu items"));
-        }
-      },
-      providesTags: (result) =>
-        result
-          ? [
-              { type: "MenuItems", id: "LIST" },
-              ...result.data.map((item) => ({
-                type: "MenuItems" as const,
-                id: item.id,
-              })),
-            ]
-          : [{ type: "MenuItems", id: "LIST" }],
+      providesTags: (result, _error, arg) => generateMenuItemTags(result, arg.restaurantId),
+      // Consistent serialization is key for the selector to find the data
+      serializeQueryArgs: ({ endpointName, queryArgs }) =>
+        `${endpointName}-${queryArgs.restaurantId ?? "unknown"}`,
+      // Merge results if you want infinite scroll, otherwise remove merge
+      forceRefetch: ({ currentArg, previousArg }) => currentArg !== previousArg,
+      keepUnusedDataFor: 60,
     }),
+
     createMenuItem: builder.mutation<MenuItem, MenuItemBody>({
       query: (body) => ({
         url: "/menu-items/admin/create-menu-item",
         method: "POST",
         body,
       }),
-      async onQueryStarted(newItem, { dispatch, queryFulfilled }) {
-        // Temporary frontend ID for optimistic update
-        const tempId = Date.now();
-
-        const patchResult = dispatch(
-          menuApi.util.updateQueryData(
-            "getAdminMenuItems",
-            { cursor: undefined },
-            (draft) => {
-              draft.data.unshift({
-                id: tempId,
-                restaurantId: 0, 
-                name: newItem.name,
-                price: newItem.price,
-                description: newItem.description ?? null,
-                sku: "", 
-                isActive: true,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              });
-            },
-          ),
-        );
-
-        try {
-          const { data: returnedItem } = await queryFulfilled;
-
-          dispatch(
-            menuApi.util.updateQueryData(
-              "getAdminMenuItems",
-              { cursor: undefined },
-              (draft) => {
-                draft.data = [
-                  returnedItem,
-                  ...draft.data.filter((item) => item.id !== tempId),
-                ];
-              },
-            ),
-          );
-        } catch {
-          patchResult.undo(); // rollback on failure
-        }
-      },
-      invalidatesTags: [{ type: "MenuItems", id: "LIST" }],
+      // This forces the LIST to refresh so the new item shows up
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "MenuItem", id: "LIST" },
+        { type: "MenuItem", id: `LIST-${arg.restaurantId}` },
+      ],
     }),
 
-    // PUT: Update Menu Item
-    updateMenuItem: builder.mutation<
-      { success: boolean; data: MenuItem },
-      UpdateMenuItemBody & { id: number }
-    >({
+    updateMenuItem: builder.mutation<MenuItem, UpdateMenuItemBody & { id: number; restaurantId: number }>({
       query: ({ id, ...body }) => ({
         url: `/menu-items/admin/update-menu-item/${id}`,
         method: "PUT",
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "MenuItems", id: arg.id },
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "MenuItem", id: arg.id },
+        { type: "MenuItem", id: `LIST-${arg.restaurantId}` },
       ],
-    }),
-
-    // DELETE: Menu Item
-    deleteMenuItem: builder.mutation<DeleteMenuItemResponse, number>({
-      query: (id) => ({
-        url: `/menu-items/admin/delete-menu-item/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: [{ type: "MenuItems", id: "LIST" }],
-    }),
-
-    // SEARCH Menu Items
-    searchMenuItems: builder.query<PaginatedMenuItems, SearchMenuItemsParams>({
-      query: (params) => ({
-        url: "/menu-items/admin/search",
-        params,
-      }),
-      providesTags: (result) =>
-        result
-          ? [
-              { type: "MenuItems", id: "SEARCH" },
-              ...result.data.map((item) => ({
-                type: "MenuItems" as const,
-                id: item.id,
-              })),
-            ]
-          : [{ type: "MenuItems", id: "SEARCH" }],
     }),
   }),
 });
@@ -143,6 +74,4 @@ export const {
   useGetAdminMenuItemsQuery,
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
-  useDeleteMenuItemMutation,
-  useSearchMenuItemsQuery,
 } = menuApi;

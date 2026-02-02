@@ -1,70 +1,26 @@
-import React from 'react';
-import { Button } from 'antd';
+"use client"
 
-// --- Dynamic Tailwind Classes ---
-const classes = {
-  gradientButton:
-    ' from-black via-gray-900 to-black text-white border-none flex items-center justify-center gap-2',
-  defaultButton: 'flex items-center justify-center gap-2',
-};
+import { Button, type ButtonProps } from "@/components/ui/button"
+import { ReactNode } from "react"
 
-export type ButtonComProps<TPayload = void> = {
-  text: string;
-  link?: string;
-  onClick?: (payload: TPayload) => void;
-  payload?: TPayload;
-  className?: string;
-  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text'; // antd style
-  htmlType?: 'button' | 'submit' | 'reset';                 // HTML behavior
-  color?: string;
-  disabled?: boolean;
-  gradient?: boolean;
-  icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
-};
-
-
-const ButtonCom = <TPayload,>({
-  text,
-  link,
-  onClick,
-  payload,
-  className = '',
-  type = 'primary',
-  htmlType = 'button',
-  color,
-  disabled = false,
-  gradient = false,
+interface ButtonWithIconProps extends ButtonProps {
+  icon: ReactNode
+  text: string
+}
+export const ButtonWithIcon: React.FC<ButtonWithIconProps> = ({
   icon,
-  iconPosition = 'left',
-}: ButtonComProps<TPayload>) => {
-  const gradientClass = gradient
-    ? classes.gradientButton
-    : classes.defaultButton;
-
+  text,
+  size = "default",
+  variant = "default",
+  className,
+  ...props
+}) => {
   return (
-    <Button
-      type={type}
-       htmlType={htmlType} 
-      href={link}
-      disabled={disabled}
-      className={`${gradientClass} ${className}`}
-      style={
-        !gradient && color
-          ? { backgroundColor: color, borderColor: color, color: '#fff' }
-          : undefined
-      }
-      onClick={() => {
-        if (onClick) {
-          onClick(payload as TPayload);
-        }
-      }}
-    >
-      {icon && iconPosition === 'left' && icon}
-      <span>{text}</span>
-      {icon && iconPosition === 'right' && icon}
+    <Button size={size} variant={variant} className={className} {...props}>
+      <span className="inline-flex items-center gap-2">
+        {icon}
+        {text}
+      </span>
     </Button>
-  );
-};
-
-export default ButtonCom;
+  )
+}

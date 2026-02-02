@@ -1,3 +1,7 @@
+// ============= COMPLETE TYPE DEFINITIONS =============
+
+import { ReactNode } from "react";
+
 // ----------------- Enums -----------------
 export enum Role {
   Admin = "Admin",
@@ -36,7 +40,7 @@ export interface SignupRequest {
   name: string;
   email: string;
   password: string;
-  role: Role.Admin; // Only Admin can signup
+  role: Role.Admin;
 }
 
 export interface VerifyEmailRequest {
@@ -60,7 +64,6 @@ export interface ResetPasswordRequest {
   password: string;
 }
 
-// Auth Redux State
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;
@@ -72,10 +75,69 @@ export interface AuthCredentials {
   token: string;
 }
 
+export interface FormField {
+  id: string;
+  label: React.ReactNode;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  disabled?: boolean;
+
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+  actionLink?: {
+    href: string;
+    text: React.ReactNode;
+  };
+
+  options?: {
+    value: string;
+    label: string;
+  }[];
+}
+
+type ButtonVariant =
+  | "default"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "destructive"
+  | "link";
+
+
+export interface DynamicCardFormProps {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+
+  actionButton?: {
+    text: React.ReactNode;
+    variant?: ButtonVariant;
+    size?: "default" | "sm" | "lg" | "icon";
+    onClick?: () => void;
+    className?: string;
+    fullWidth?: boolean;
+  };
+
+  fields: FormField[];
+
+  footerButtons?: {
+    text: React.ReactNode;
+    variant?: ButtonVariant;
+    size?: "default" | "sm" | "lg" | "icon";
+    type?: "button" | "submit" | "reset";
+    onClick?: () => void;
+  }[];
+
+  extraHeaderAction?: React.ReactNode;
+}
+
+
+
 // ----------------- Menu Items -----------------
 export interface MenuItem {
   id: number;
-  restaurantId: number;
+  restaurantId?: number;
   name: string;
   sku: string;
   price: number;
@@ -85,19 +147,22 @@ export interface MenuItem {
   updatedAt: string;
 }
 
-export interface AdminMenuItemsResponse {
+export interface PaginatedMenuItems {
   data: MenuItem[];
   nextCursor: number | null;
 }
 
-export interface AdminMenuItemsRequest {
-  cursor?: number;
+export interface GetAllMenuItemsParams {
+  restaurantId: number;
+  limit?: number;
+  cursorId?: number;
 }
 
 export interface MenuItemBody {
   name: string;
   price: number;
   description?: string;
+  restaurantId?: number;
   sku?: string;
 }
 
@@ -135,17 +200,7 @@ export interface DeleteMenuItemParams {
 export interface DeleteMenuItemResponse {
   message: string;
   deletedItemId: number;
-}
-
-export interface GetAllMenuItemsParams {
-  restaurantId: number;
-  limit?: number;
-  cursorId?: number;
-}
-
-export interface PaginatedMenuItems {
-  data: MenuItem[];
-  nextCursor: number | null;
+  restaurantId?: number;
 }
 
 export interface SearchMenuItemsParams {
@@ -156,11 +211,71 @@ export interface SearchMenuItemsParams {
   isActive?: boolean;
 }
 
+export interface MenuItemState {
+  items: MenuItem[];
+  loading: boolean;
+  error?: string;
+}
+
 export interface PaginateParams {
   restaurantId: number;
   page: number;
   limit: number;
   cursorId?: number;
+}
+
+export interface MenuItemsStatsData {
+  total: number;
+  active: number;
+  inactive: number;
+  avgPrice: number;
+  totalRevenue?: number;
+}
+
+// ----------------- Component Props Types -----------------
+
+/**
+ * Column definition for data tables
+ * FIXED: format function now accepts both value and row
+ */
+export interface Column<T> {
+  id: keyof T | string;
+  label: string;
+  minWidth?: number;
+  align?: "left" | "right" | "center";
+  format?: (value: T[keyof T], row: T) => ReactNode;
+}
+
+/**
+ * Button component props
+ * FIXED: Removed 'label' prop - use children instead
+ */
+export interface ButtonComProps<T = unknown> {
+  icon?: ReactNode;
+  onClick: () => void;
+  variant?: "primary" | "secondary" | "danger" | "success";
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
+  children?: ReactNode;
+  data?: T;
+}
+
+/**
+ * Stats card component props
+ * FIXED: Changed to use 'title' and 'value' instead of 'label' and 'val'
+ */
+export interface StatsCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  progress?: {
+    value: number;
+    max: number;
+  };
+  icon?: ReactNode;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
 }
 
 // ----------------- Order Taker / Chef -----------------

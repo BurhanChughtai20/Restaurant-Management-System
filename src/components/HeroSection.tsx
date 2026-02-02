@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import BannerImg from "../../public/banner.svg";
 import DynamicContent from "./Title";
-import IconImg from "@/assets/icon.svg";
 import { UtensilsCrossed } from "lucide-react";
 
 // --- Dynamic Tailwind Classes ---

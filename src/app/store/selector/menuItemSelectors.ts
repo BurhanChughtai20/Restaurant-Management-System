@@ -1,62 +1,59 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { RootState } from "../store";
-import { menuItemsAdapterInstance, MenuItemsState } from "../slices/menuItemSlice";
+import { MenuItem, PaginatedMenuItems } from "../api/types";
 
-const selectMenuItemsState = (state: RootState) => state.menuItems as MenuItemsState;
+// Safety check for RTK Query cache structure
+const isPaginatedMenuItems = (data: unknown): data is PaginatedMenuItems => {
+  return (
+    !!data &&
+    typeof data === 'object' &&
+    'data' in data &&
+    Array.isArray((data).data)
+  );
+};
 
-const { selectAll, selectById, selectTotal } = menuItemsAdapterInstance.getSelectors(selectMenuItemsState);
+const selectMenuQueries = (state: any) => state.api?.queries;
 
-export const selectAllMenuItems = selectAll;
-export const selectMenuItemById = selectById;
-export const selectMenuItemsTotal = selectTotal;
+export const selectAllCachedMenuItems = createSelector(
+  [selectMenuQueries],
+  (queries): MenuItem[] => {
+    if (!queries) return [];
 
-export const selectMenuItemsLoading = (state: RootState) => selectMenuItemsState(state).loading;
-export const selectMenuItemsError = (state: RootState) => selectMenuItemsState(state).error;
+    const allItems: MenuItem[] = [];
+    
+    // Filter only queries related to getAdminMenuItems
+    Object.keys(queries).forEach((key) => {
+      if (key.startsWith('getAdminMenuItems')) {
+        const query = queries[key];
+        if (query?.status === 'fulfilled' && isPaginatedMenuItems(query.data)) {
+          allItems.push(...query.data.data);
+        }
+      }
+    });
 
-export const selectSearchQuery = (state: RootState) => selectMenuItemsState(state).searchQuery;
-export const selectFilterIsActive = (state: RootState) => selectMenuItemsState(state).filterIsActive;
-export const selectCurrentPage = (state: RootState) => selectMenuItemsState(state).currentPage;
-export const selectItemsPerPage = (state: RootState) => selectMenuItemsState(state).itemsPerPage;
-
-export const selectActiveItemsCount = createSelector(selectAllMenuItems, items => items.filter(i => i.isActive).length);
-export const selectInactiveItemsCount = createSelector(selectAllMenuItems, items => items.filter(i => !i.isActive).length);
-export const selectAveragePrice = createSelector(selectAllMenuItems, items =>
-  items.length ? items.reduce((sum, i) => sum + i.price, 0) / items.length : 0
-);
-export const selectMenuItemsStats = createSelector(
-  [selectMenuItemsTotal, selectActiveItemsCount, selectInactiveItemsCount, selectAveragePrice],
-  (total, active, inactive, avgPrice) => ({ total, active, inactive, avgPrice: Number(avgPrice.toFixed(2)) })
-);
-
-// Filtered & paginated
-export const selectFilteredMenuItems = createSelector(
-  [selectAllMenuItems, selectSearchQuery, selectFilterIsActive],
-  (items, query, filter) => {
-    let result = items;
-    if (filter !== null) result = result.filter(i => i.isActive === filter);
-    if (query.trim()) {
-      const q = query.toLowerCase();
-      result = result.filter(
-        i =>
-          i.name.toLowerCase().includes(q) ||
-          i.sku.toLowerCase().includes(q) ||
-          i.description?.toLowerCase().includes(q)
-      );
-    }
-    return result;
+    // Unique items by ID
+    const uniqueMap = new Map<number, MenuItem>();
+    allItems.forEach(item => uniqueMap.set(item.id, item));
+    
+    return Array.from(uniqueMap.values());
   }
 );
 
-export const selectPaginatedMenuItems = createSelector(
-  [selectFilteredMenuItems, selectCurrentPage, selectItemsPerPage],
-  (items, page, perPage) => items.slice((page - 1) * perPage, page * perPage)
-);
+export const selectMenuItemsStats = createSelector(
+  [selectAllCachedMenuItems],
+  (items) => {
+    const stats = items.reduce(
+      (acc, item) => {
+        acc.total++;
+        item.isActive ? acc.active++ : acc.inactive++;
+        acc.priceSum += item.price;
+        return acc;
+      },
+      { total: 0, active: 0, inactive: 0, priceSum: 0 }
+    );
 
-export const selectPaginationInfo = createSelector(
-  [selectFilteredMenuItems, selectCurrentPage, selectItemsPerPage],
-  (items, page, perPage) => {
-    const totalItems = items.length;
-    const totalPages = Math.ceil(totalItems / perPage);
-    return { currentPage: page, totalPages, totalItems, itemsPerPage: perPage, hasNextPage: page < totalPages, hasPreviousPage: page > 1 };
+    return {
+      ...stats,
+      avgPrice: stats.total > 0 ? parseFloat((stats.priceSum / stats.total).toFixed(2)) : 0,
+    };
   }
 );

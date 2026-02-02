@@ -4,8 +4,8 @@ import { generatePageMetadata } from '@/lib/metadata';
 
 const LoginForm = dynamic(() => import('@/components/LoginForm').then(mod => mod.LoginForm), {
   loading: () => (
-    <div className="min-h-[500px] flex items-center justify-center">
-       <div className="animate-pulse bg-neutral-200 dark:bg-neutral-800 w-full max-w-md h-[400px] rounded-2xl" />
+    <div className="min-h-125 flex items-center justify-center">
+       <div className="animate-pulse bg-neutral-200 dark:bg-neutral-800 w-full max-w-md h-100 rounded-2xl" />
     </div>
   ),
   ssr: true,

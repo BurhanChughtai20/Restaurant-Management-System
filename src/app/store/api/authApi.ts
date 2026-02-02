@@ -1,5 +1,5 @@
-// store/api/authApi.ts
-import { baseApi } from './baseApi';
+// store/api/authApi.ts 
+import api from './baseApi';
 import {
   LoginRequest,
   LoginResponse,
@@ -10,7 +10,7 @@ import {
   VerifyEmailResponse,
 } from './types';
 
-export const authApi = baseApi.injectEndpoints({
+export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     signupAdmin: builder.mutation<void, SignupRequest>({
       query: (body) => ({

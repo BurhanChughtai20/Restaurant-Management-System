@@ -1,137 +1,91 @@
-"use client";
+"use client"
+import { useState, useRef } from "react"
+import { motion, AnimatePresence, Variants, useInView } from "framer-motion"
+import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react"
 
-import React, { useState, useRef } from "react";
-import { Card, CardBody, CardHeader } from "@heroui/react";
-import { motion, Variants, AnimatePresence, useInView } from "framer-motion";
-import DynamicContent from "./Title";
-import Image from "next/image";
-import Avatar from "@/assets/icon.svg";
-import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import DynamicContent from "./Title"
 
-// --- Dynamic Tailwind Classes ---
-const classes = {
-  mobileContainer: "md:hidden flex flex-col items-center w-full",
-  mobileCardWrapper: "w-full flex justify-center",
-  mobileCard: "w-[90%] p-5",
-  mobileCardHeader: "flex gap-4 items-center",
-  mobileName: "font-semibold",
-  mobileRestaurant: "text-sm text-default-400",
-  mobileCardBody: "text-center",
-  mobileControls: "flex gap-6 mt-6",
-  mobileButton: "p-2 rounded-full border",
-  desktopContainer: "hidden md:block relative w-full",
-  desktopGrid: "grid grid-cols-3 gap-6",
-  desktopCard: "p-5",
-  desktopCardHeader: "flex gap-4 items-center",
-  desktopName: "font-semibold",
-  desktopRestaurant: "text-sm text-default-400",
-  desktopControls: "flex justify-center gap-6 mt-8",
-  desktopButton: "p-2 rounded-full cursor-pointer border disabled:opacity-40",
-};
+const DESKTOP_VISIBLE_COUNT = 3
 
-const DESKTOP_VISIBLE_COUNT = 3;
+const testimonials = [
+  {
+    name: "Ali Khan",
+    restaurantName: "Spice Heaven",
+    testimonial: "This system transformed our operations completely.",
+  },
+  {
+    name: "Sara Ahmed",
+    restaurantName: "The Gourmet Spot",
+    testimonial: "Amazing platform! I highly recommend it.",
+  },
+  {
+    name: "Imran Qureshi",
+    restaurantName: "Burger Republic",
+    testimonial: "Orders are faster and operations are smoother.",
+  },
+  {
+    name: "Fatima Noor",
+    restaurantName: "Cafe Aroma",
+    testimonial: "Revenue increased within just a few months.",
+  },
+]
 
-function Testimonials() {
-  const testimonials = [
-    {
-      name: "Ali Khan",
-      restaurantName: "Spice Heaven",
-      city: "Karachi, Pakistan",
-      imageUrl: Avatar,
-      testimonial: "This system transformed our operations completely.",
-      rating: 5,
-    },
-    {
-      name: "Sara Ahmed",
-      restaurantName: "The Gourmet Spot",
-      city: "Lahore, Pakistan",
-      imageUrl: Avatar,
-      testimonial: "Amazing platform! I highly recommend it.",
-      rating: 5,
-    },
-    {
-      name: "Imran Qureshi",
-      restaurantName: "Burger Republic",
-      city: "Islamabad, Pakistan",
-      imageUrl: Avatar,
-      testimonial: "Orders are faster and operations are smoother.",
-      rating: 5,
-    },
-    {
-      name: "Fatima Noor",
-      restaurantName: "Cafe Aroma",
-      city: "Karachi, Pakistan",
-      imageUrl: Avatar,
-      testimonial: "Revenue increased within just a few months.",
-      rating: 5,
-    },
-  ];
+const slideVariants: Variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 80 : -80,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -80 : 80,
+    opacity: 0,
+    transition: { duration: 0.25 },
+  }),
+}
 
-  /* ========================= */
-  /* 📱 MOBILE STATE */
-  /* ========================= */
-  const [mobileIndex, setMobileIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
+export default function Testimonials() {
+  /* ---------------- MOBILE ---------------- */
+  const [mobileIndex, setMobileIndex] = useState(0)
+  const [direction, setDirection] = useState(1)
 
-  const mobileNext = () => {
-    setDirection(1);
-    setMobileIndex((prev) =>
-      prev === testimonials.length - 1 ? 0 : prev + 1
-    );
-  };
+  const nextMobile = () => {
+    setDirection(1)
+    setMobileIndex((i) => (i + 1) % testimonials.length)
+  }
 
-  const mobilePrev = () => {
-    setDirection(-1);
-    setMobileIndex((prev) =>
-      prev === 0 ? testimonials.length - 1 : prev - 1
-    );
-  };
+  const prevMobile = () => {
+    setDirection(-1)
+    setMobileIndex((i) =>
+      i === 0 ? testimonials.length - 1 : i - 1
+    )
+  }
 
-  /* ========================= */
-  /* 💻 DESKTOP STATE */
-  /* ========================= */
-  const [desktopIndex, setDesktopIndex] = useState(0);
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(sectionRef, { margin: "-100px" });
+  /* ---------------- DESKTOP ---------------- */
+  const [desktopIndex, setDesktopIndex] = useState(0)
+  const ref = useRef<HTMLDivElement | null>(null)
+  const isInView = useInView(ref, { margin: "-120px" })
 
-  const desktopNext = () => {
+  const nextDesktop = () => {
     if (desktopIndex + DESKTOP_VISIBLE_COUNT < testimonials.length) {
-      setDesktopIndex((prev) => prev + DESKTOP_VISIBLE_COUNT);
+      setDesktopIndex((i) => i + DESKTOP_VISIBLE_COUNT)
     }
-  };
+  }
 
-  const desktopPrev = () => {
+  const prevDesktop = () => {
     if (desktopIndex - DESKTOP_VISIBLE_COUNT >= 0) {
-      setDesktopIndex((prev) => prev - DESKTOP_VISIBLE_COUNT);
+      setDesktopIndex((i) => i - DESKTOP_VISIBLE_COUNT)
     }
-  };
-
-  /* ========================= */
-  /* 🎞 MOTION VARIANTS */
-  /* ========================= */
-  const slideVariants: Variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-    },
-    exit: (direction: number) => ({
-      x: direction > 0 ? -100 : 100,
-      opacity: 0,
-      transition: { duration: 0.3 },
-    }),
-  };
+  }
 
   return (
     <>
-      {/* ===================== */}
-      {/* 📱 MOBILE SLIDER */}
-      {/* ===================== */}
-      <div className={classes.mobileContainer}>
+      {/* ================= MOBILE CAROUSEL ================= */}
+      <div className="md:hidden flex flex-col items-center w-full">
         <AnimatePresence custom={direction} mode="wait">
           <motion.div
             key={mobileIndex}
@@ -140,94 +94,96 @@ function Testimonials() {
             initial="enter"
             animate="center"
             exit="exit"
-            className={classes.mobileCardWrapper}
+            className="w-full flex justify-center"
           >
-            <Card className={classes.mobileCard}>
-              <CardHeader>
-                <div className={classes.mobileCardHeader}>
-                   <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
-                  <div>
-                    <h4 className={classes.mobileName}>
-                      {testimonials[mobileIndex].name}
-                    </h4>
-                    <p className={classes.mobileRestaurant}>
-                      {testimonials[mobileIndex].restaurantName}
-                    </p>
-                  </div>
+            <Card className="w-[90%]">
+              <CardHeader className="flex flex-row items-center gap-4">
+                <UtensilsCrossed className="h-6 w-6" />
+                <div>
+                  <p className="font-semibold">
+                    {testimonials[mobileIndex].name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {testimonials[mobileIndex].restaurantName}
+                  </p>
                 </div>
               </CardHeader>
 
-              <CardBody className={classes.mobileCardBody}>
+              <CardContent className="text-center">
                 <DynamicContent as="p">
                   {testimonials[mobileIndex].testimonial}
                 </DynamicContent>
-              </CardBody>
+              </CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
 
-        <div className={classes.mobileControls}>
-          <button onClick={mobilePrev} className={classes.mobileButton}>
+        <div className="mt-6 flex gap-6">
+          <button
+            onClick={prevMobile}
+            className="rounded-full border p-2 hover:bg-muted transition"
+          >
             <ChevronLeft />
           </button>
-          <button onClick={mobileNext} className={classes.mobileButton}>
+          <button
+            onClick={nextMobile}
+            className="rounded-full border p-2 hover:bg-muted transition"
+          >
             <ChevronRight />
           </button>
         </div>
       </div>
- 
-      <div ref={sectionRef} className={classes.desktopContainer}>
+
+      {/* ================= DESKTOP GRID ================= */}
+      <div ref={ref} className="hidden md:block w-full">
         <AnimatePresence mode="wait">
           <motion.div
             key={desktopIndex}
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.4 }}
-            className={classes.desktopGrid}
+            transition={{ duration: 0.35 }}
+            className="grid grid-cols-3 gap-6"
           >
             {testimonials
               .slice(desktopIndex, desktopIndex + DESKTOP_VISIBLE_COUNT)
-              .map((owner, index) => (
-                <Card key={index} className={classes.desktopCard}>
-                  <CardHeader>
-                    <div className={classes.desktopCardHeader}>
-                       <UtensilsCrossed className="w-6 h-6 text-black" strokeWidth={2.5} />
-                      <div>
-                        <h4 className={classes.desktopName}>{owner.name}</h4>
-                        <p className={classes.desktopRestaurant}>
-                          {owner.restaurantName}
-                        </p>
-                      </div>
+              .map((item, i) => (
+                <Card key={i}>
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <UtensilsCrossed className="h-6 w-6" />
+                    <div>
+                      <p className="font-semibold">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.restaurantName}
+                      </p>
                     </div>
                   </CardHeader>
 
-                  <CardBody>
+                  <CardContent>
                     <DynamicContent as="p">
-                      {owner.testimonial}
+                      {item.testimonial}
                     </DynamicContent>
-                  </CardBody>
+                  </CardContent>
                 </Card>
               ))}
           </motion.div>
         </AnimatePresence>
 
         {isInView && testimonials.length > DESKTOP_VISIBLE_COUNT && (
-          <div className={classes.desktopControls}>
+          <div className="mt-8 flex justify-center gap-6">
             <button
-              onClick={desktopPrev}
+              onClick={prevDesktop}
               disabled={desktopIndex === 0}
-              className={classes.desktopButton}
+              className="rounded-full border p-2 disabled:opacity-40 hover:bg-muted transition"
             >
               <ChevronLeft />
             </button>
-
             <button
-              onClick={desktopNext}
+              onClick={nextDesktop}
               disabled={
                 desktopIndex + DESKTOP_VISIBLE_COUNT >= testimonials.length
               }
-              className={classes.desktopButton}
+              className="rounded-full border p-2 disabled:opacity-40 hover:bg-muted transition"
             >
               <ChevronRight />
             </button>
@@ -235,7 +191,5 @@ function Testimonials() {
         )}
       </div>
     </>
-  );
+  )
 }
-
-export default Testimonials;

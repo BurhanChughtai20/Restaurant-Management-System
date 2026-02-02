@@ -1,6 +1,6 @@
-// store/slices/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthCredentials, AuthState, AuthUser } from '../api/types';
+import { storeToken } from '@/lib/tokenStore';
 
 const initialState: AuthState = {
   user: null,
@@ -16,11 +16,11 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      
-      // Store token securely
+       
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', action.payload.token);
         localStorage.setItem('authUser', JSON.stringify(action.payload.user));
+        storeToken(action.payload.token);
       }
     },
     logout: (state) => {

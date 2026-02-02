@@ -3,8 +3,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import DynamicContent from "./Title";
-import ButtonCom from "./Button";
-import { ChefHat, TrendingUp, Users, Zap, BarChart3, Clock } from "lucide-react";
+import { ChefHat, TrendingUp, Users, Zap, BarChart3, Clock, ArrowRight } from "lucide-react";
+import { ButtonWithIcon } from "./Button";
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
@@ -282,15 +282,11 @@ const Capabilities = () => {
             whileTap={{ scale: 0.95 }}
             className={classes.ctaButtonWrapper}
           >
-            <ButtonCom
+            <ButtonWithIcon
               text="Get Started Today!"
-              type="default"
-              color=""
-              gradient={true}
-              className={classes.ctaButton}
-              onClick={() => {
-                console.log('Get started clicked');
-              }}
+              size="default"
+              variant="default"
+              icon={<ArrowRight size={16} />}
             />
           </motion.div>
         </motion.div>

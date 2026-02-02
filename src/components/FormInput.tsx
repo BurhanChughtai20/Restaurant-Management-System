@@ -1,46 +1,93 @@
-"use client";
+import { DynamicCardFormProps } from "@/app/store/api";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
-import React from "react";
-import { Label } from "./ui/label"; // Check your import path (usually ui/label)
-import { Input } from "./ui/input";
-import { cn } from "@/lib/utils";
-
-const classes = {
-  container: "flex flex-col space-y-2 w-full group/input",
-  label: "text-sm font-medium text-black dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-  input: "h-10 w-full px-3 py-2 text-sm md:text-base", // Simplified as ui/input handles styling
-};
-
-// Update interface to include halfWidth
-interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  id: string;
-  containerClassName?: string;
-  halfWidth?: boolean; // Add this line
-}
-
-const FormInput: React.FC<FormInputProps> = ({
-  label,
-  id,
-  containerClassName,
-  placeholder,
-  type = "text",
-  halfWidth, // Destructure this here to "catch" it
-  ...props   // Now props ONLY contains valid input attributes
+export const DynamicCardForm: React.FC<DynamicCardFormProps> = ({
+  title,
+  description,
+  actionButton,
+  fields,
+  footerButtons,
+  extraHeaderAction,
 }) => {
   return (
-    <div className={cn(classes.container, containerClassName)}>
-      <Label htmlFor={id} className={classes.label}>
-        {label}
-      </Label>
-      <Input
-        id={id}
-        type={type}
-        placeholder={placeholder}
-        {...props} // halfWidth is no longer in here!
-      />
+    <div className="flex items-center justify-center min-h-screen my-4">
+    <Card className="w-full max-w-sm mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle>{title}</CardTitle>
+        {description && <CardDescription className="mt-1">{description}</CardDescription>}
+      </CardHeader>
+
+      <CardContent>
+        <form className="flex flex-col gap-4">
+          {fields.map((field) => (
+            <div key={field.id} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor={field.id}>{field.label}</Label>
+                {field.actionLink && (
+                  <Link
+                    href={field.actionLink.href}
+                    className="text-sm underline-offset-4 hover:underline"
+                  >
+                    {field.actionLink.text}
+                  </Link>
+                )}
+              </div>
+              <Input
+                id={field.id}
+                type={field.type || "text"}
+                placeholder={field.placeholder}
+                required={field.required}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            </div>
+          ))}
+        </form>
+
+        {actionButton && (
+          <div className="mt-6">
+            <Button
+              variant={actionButton.variant || "default"}
+              size={actionButton.size || "default"}
+              onClick={actionButton.onClick}
+              className={`w-full ${actionButton.className ?? ""}`}
+            >
+              {actionButton.text}
+            </Button>
+          </div>
+        )}
+
+        {extraHeaderAction && <div className="mt-4">{extraHeaderAction}</div>}
+      </CardContent>
+
+      {footerButtons && (
+        <CardFooter className="flex flex-col gap-2 mt-4">
+          {footerButtons.map((btn, index) => (
+            <Button
+              key={index}
+              variant={btn.variant || "default"}
+              size={btn.size || "default"}
+              type={btn.type || "button"}
+              onClick={btn.onClick}
+              className="w-full"
+            >
+              {btn.text}
+            </Button>
+          ))}
+        </CardFooter>
+      )}
+    </Card>
     </div>
   );
 };
-
-export default FormInput;

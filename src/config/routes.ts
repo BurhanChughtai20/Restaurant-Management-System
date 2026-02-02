@@ -6,6 +6,7 @@ export const AUTH_ROUTES = {
   resetPassword: "/reset-password",
   verifyEmail: "/verify-email",
 } as const;
+ 
 
 export const DASHBOARD_ROUTES = {
   dashboard: "/dashboard",
@@ -24,5 +25,5 @@ export type DashboardRouteKey = keyof typeof DASHBOARD_ROUTES;
 export const APP_ROUTES = {
   home: "/",
   pricing: "/pricing",
-  blog: "/blog",
 } as const;
+
