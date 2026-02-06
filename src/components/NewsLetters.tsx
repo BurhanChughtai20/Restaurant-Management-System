@@ -1,6 +1,6 @@
 import Link from "next/link";
-import ButtonCom from "./Button";
 import { ArrowRight, FacebookIcon, InstagramIcon, TwitterIcon } from "lucide-react";
+import { ButtonWithIcon } from "./Button";
 
 const classes = {
   newsletterContainer: "mt-4 flex flex-col space-y-2",
@@ -28,11 +28,9 @@ export const NewsletterInput = () => (
   /> 
   
   <div className={classes.buttonWrapper}>
-    <ButtonCom
+    <ButtonWithIcon
       icon={<ArrowRight size={16} />}
-      iconPosition="right"
       text="Get Started"
-      type="default"
       className="my-primary-btn w-full md:w-max"
       onClick={() => alert("Started")}
     />

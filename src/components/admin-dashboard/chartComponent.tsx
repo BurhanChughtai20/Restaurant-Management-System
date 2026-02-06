@@ -13,96 +13,116 @@ import {
 } from "@/components/ui/card"
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
 
-// Temporary dummy data (can later replace with RTK Query data)
-const dummyChartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
-
-// ChartConfig defines mapping of data keys to label/icon/color
-const chartConfig = {
-  desktop: { label: "Desktop", color: "var(--chart-1)", icon: TrendingDown },
-  mobile: { label: "Mobile", color: "var(--chart-2)", icon: TrendingUp },
-} satisfies ChartConfig
-
-interface ChartAreaIconsProps {
-  data?: typeof dummyChartData // allow passing dynamic data
+// Interface for individual chart data
+export interface DashboardChartItem {
+  month: string
+  [key: string]: string | number
 }
 
-export function ChartAreaIcons({ data = dummyChartData }: ChartAreaIconsProps) {
+// Interface for individual card configuration
+export interface DashboardCard {
+  id: string
+  title: string
+  description: string
+  data: DashboardChartItem[]
+  chartConfig: ChartConfig
+  trendPercentage: number
+  trendDirection: "up" | "down"
+  dateRange: string
+  dataKey1: string
+  dataKey2: string
+}
+
+interface DynamicDashboardCardsProps {
+  cards: DashboardCard[]
+  maxCards?: number
+}
+
+export function DynamicDashboardCards({ 
+  cards, 
+  maxCards = 4 
+}: DynamicDashboardCardsProps) {
+  const displayCards = cards.slice(0, maxCards)
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Area Chart - Icons</CardTitle>
-        <CardDescription>
-          Showing total visitors for the last 6 months
-        </CardDescription>
-      </CardHeader>
+    <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+      {displayCards.map((card) => (
+        <Card key={card.id} className="flex flex-col">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg">{card.title}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              {card.description}
+            </CardDescription>
+          </CardHeader>
 
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <AreaChart
-            data={data}
-            margin={{ left: 12, right: 12 }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            {/* Desktop area */}
-            <Area
-              dataKey="desktop"
-              type="natural"
-              fill="var(--color-desktop)"
-              fillOpacity={0.4}
-              stroke="var(--color-desktop)"
-              stackId="a"
-            />
-            {/* Mobile area */}
-            <Area
-              dataKey="mobile"
-              type="natural"
-              fill="var(--color-mobile)"
-              fillOpacity={0.4}
-              stroke="var(--color-mobile)"
-              stackId="a"
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-          </AreaChart>
-        </ChartContainer>
-      </CardContent>
+          <CardContent className="flex-1 pb-2">
+            {/* Pass the stable card.id to ChartContainer */}
+            <ChartContainer 
+              id={card.id} 
+              config={card.chartConfig} 
+              className="h-30 sm:h-35 w-full"
+            >
+              <AreaChart
+                data={card.data}
+                margin={{ left: 0, right: 0, top: 5, bottom: 0 }}
+              >
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <Area
+                  dataKey={card.dataKey1}
+                  type="natural"
+                  fill={`var(--color-${card.dataKey1})`}
+                  fillOpacity={0.4}
+                  stroke={`var(--color-${card.dataKey1})`}
+                  stackId="a"
+                />
+                <Area
+                  dataKey={card.dataKey2}
+                  type="natural"
+                  fill={`var(--color-${card.dataKey2})`}
+                  fillOpacity={0.4}
+                  stroke={`var(--color-${card.dataKey2})`}
+                  stackId="a"
+                />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
 
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+          <CardFooter className="pt-0">
+            <div className="flex w-full items-start gap-2 text-xs sm:text-sm">
+              <div className="grid gap-1">
+                <div className="flex items-center gap-2 font-medium leading-none">
+                  Trending {card.trendDirection} by {Math.abs(card.trendPercentage)}%
+                  {card.trendDirection === "up" ? (
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                  )}
+                </div>
+                <div className="text-muted-foreground flex items-center gap-2 leading-none text-xs">
+                  {card.dateRange}
+                </div>
+              </div>
             </div>
-            <div className="text-muted-foreground flex items-center gap-2 leading-none">
-              January - June 2024
-            </div>
-          </div>
-        </div>
-      </CardFooter>
-    </Card>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
   )
 }

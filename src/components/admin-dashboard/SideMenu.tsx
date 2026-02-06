@@ -1,60 +1,97 @@
 "use client";
 
-import React from "react";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
- 
+
 import { LogOut } from "lucide-react";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS } from "@/config/menuConfig";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function SideMenu() {
+  const pathname = usePathname();
+
   return (
     <Sidebar collapsible="icon" variant="sidebar">
+      {/* Header */}
+      <SidebarHeader className="h-14 border-b">
+        <div className="flex items-center px-2 font-semibold">
+          <span className="truncate">My App</span>
+        </div>
+      </SidebarHeader>
+
       {/* Main Menu */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {MAIN_MENU_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.route}
+                    tooltip={item.label}
+                  >
+                    <Link href={item.route}>
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-          <SidebarMenu>
-            {MAIN_MENU_ITEMS.map((item) => (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton asChild>
-                  <a href={item.route}>
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+        <SidebarSeparator />
+
+        {/* Secondary Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {SECONDARY_MENU_ITEMS.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.route}
+                    tooltip={item.label}
+                  >
+                    <Link href={item.route}>
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Secondary Menu / Footer */}
-      <SidebarFooter>
+      {/* Footer with Logout */}
+      <SidebarFooter className="border-t">
         <SidebarMenu>
-          {SECONDARY_MENU_ITEMS.map((item) => (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton asChild>
-                <a href={item.route}>
-                  {item.icon}
-                  <span>{item.label}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-
-          {/* Optional Logout */}
           <SidebarMenuItem>
-            <SidebarMenuButton>
+            <SidebarMenuButton 
+              onClick={() => {
+                console.log("Logging out...");
+                // Add your logout logic
+              }}
+              tooltip="Logout"
+            >
               <LogOut />
               <span>Logout</span>
             </SidebarMenuButton>

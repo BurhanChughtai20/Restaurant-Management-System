@@ -8,7 +8,7 @@ import { useAuthNavigation } from "@/auth";
 import { useLoginMutation } from "@/app/store/api/authApi";
 import { useAlert } from "./DynamicAlert";
 import { ButtonWithIcon } from "./Button";
-import { FormField, LoginRequest } from "@/app/store/api/types";
+import { FormField, LoginRequest, Role } from "@/app/store/api/types";
 import { DynamicCardForm } from "./FormInput";
 import DynamicContent from "./Title";
 
@@ -36,8 +36,8 @@ export function LoginForm() {
       showAlert("Valid email is required", "error");
       return false;
     }
-    if (password.length < 6) {
-      showAlert("Password must be at least 6 characters", "error");
+    if (password.length < 3) {
+      showAlert("Password must be at least 3 characters", "error");
       return false;
     }
     return true;
@@ -50,8 +50,8 @@ export function LoginForm() {
       const response = await login({
         email: formData.email.trim(),
         password: formData.password,
+        role: Role.Admin,
       }).unwrap();
-
       dispatch(setCredentials({ user: response.user, token: response.token }));
       showAlert("Login successful!", "success");
       goToDashboard();

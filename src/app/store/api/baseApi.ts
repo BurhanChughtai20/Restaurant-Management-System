@@ -14,26 +14,22 @@ const API_BASE_URL =
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState, endpoint }) => {
-    // Skip token for login
-    if (endpoint === "login") return headers;
-
-    let token: string | null = null;
-
-    if (typeof window !== "undefined") {
-      token = getToken();
-    }
-
-    if (!token) {
-      const reduxToken = (getState() as RootState).auth.token;
-      if (reduxToken) token = reduxToken;
-    }
-
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-
+  if (endpoint === 'login' || endpoint === 'useLoginMutation') {
     return headers;
-  },
+  }
+
+  let token = (getState() as RootState).auth.token;
+
+  if (!token && typeof window !== "undefined") {
+    token = getToken();
+  }
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  
+  return headers;
+},
   credentials: "include",
 });
 

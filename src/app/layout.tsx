@@ -7,7 +7,6 @@ import { Navbar } from "@/components/navbar-menu"
 import ReduxProvider from "./providers/ReduxProvider"
 import { AlertProvider } from "@/components/DynamicAlert"
 import { baseMetadata } from "@/lib/metadata"
-import { SidebarProvider } from "@/components/ui/sidebar"
 
 const rubik = Rubik({
   subsets: ["latin"],
