@@ -27,9 +27,11 @@ export async function buildApp() {
   origin: [
     "http://localhost:3000",
     "https://restaurant-management-syste-git-9f0028-chughtaiburhans-projects.vercel.app",
+    
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], 
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 });
 
 
