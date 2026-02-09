@@ -16,7 +16,7 @@ export async function CreateMenuItem({
 
   const newMenuItem = await prisma.menuItem.create({
     data: {
-      name,
+      name: name.trim(),
       price,
       description: description ?? null,
       sku,

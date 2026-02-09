@@ -20,37 +20,45 @@ export async function buildApp() {
     privacy: fastifyCaching.privacy.PRIVATE,
     expiresIn: 60 * 1000,
   });
+
   await fastify.register(fastifyCookie);
   await fastify.register(fastifyJwt, { secret: jwtSecret });
   await fastify.register(registerAuthenticate);
+
   await fastify.register(fastifyCors, {
-  origin: [
-    "http://localhost:3000",
-    "https://restaurant-management-syste-git-9f0028-chughtaiburhans-projects.vercel.app",
-    
-  ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], 
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); 
+
+    const allowed = [
+      "http://127.0.0.1:3001",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://restaurant-management-syste-git-9f0028-chughtaiburhans-projects.vercel.app",
+    ];
+
+    const ngrokRegex = /^https:\/\/.*\.ngrok-free\.(app|dev)$/;
+
+    if (allowed.includes(origin) || ngrokRegex.test(origin)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Not allowed by CORS"), false);
+    }
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true, // for cookies/JWT
+  allowedHeaders: ["Content-Type", "Authorization"],
 });
 
 
   await fastify.register(fastifyResponseValidation);
+
   fastify.setErrorHandler((error, req, reply) => {
     req.log.error(error);
 
-    const statusCode =
-      (error as FastifyError).statusCode ?? 500;
+    const statusCode = (error as FastifyError).statusCode ?? 500;
+    const message = error instanceof Error ? error.message : "Internal Server Error";
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Internal Server Error";
-
-    reply.status(statusCode).send({
-      statusCode,
-      message,
-    });
+    reply.status(statusCode).send({ statusCode, message });
   });
 
   fastify.get("/", async () => ({ status: "OK" }));

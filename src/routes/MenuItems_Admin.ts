@@ -28,16 +28,21 @@ async function MenuItemsRoutes(fastify: FastifyInstance) {
       },
     );
   }
-  function registerGet(
-    path: string,
-    handler: (restaurantId: number, query?: any) => Promise<any>,
-  ) {
-    fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
-      const restaurantId = (req as any).restaurantId;
-      const result = await handler(restaurantId, req.query);
-      return reply.send(result);
-    });
-  }
+function registerGet(
+  path: string,
+  handler: (restaurantId: number, query?: any) => Promise<any>,
+) {
+  fastify.get(path, { preHandler: [restaurantAuth] }, async (req, reply) => {
+    reply.header("Cache-Control", "no-store");
+    reply.header("Pragma", "no-cache");
+    reply.header("Expires", "0");
+
+    const restaurantId = (req as any).restaurantId;
+    const result = await handler(restaurantId, req.query);
+    return reply.send(result);
+  });
+}
+
   function registerPatch<T>(
     path: string,
     handler: (body: T, restaurantId: number, params: any) => Promise<any>,
@@ -46,6 +51,11 @@ async function MenuItemsRoutes(fastify: FastifyInstance) {
       path,
       { preHandler: [restaurantAuth] },
       async (req, reply) => {
+         console.log('PATCH Request received:');
+      console.log('- Path:', req.url);
+      console.log('- Params:', req.params);
+      console.log('- Body:', req.body);
+      console.log('- RestaurantId:', (req as any).restaurantId);
         const restaurantId = (req as any).restaurantId;
         const result = await handler(req.body as T, restaurantId, req.params);
         return reply.send(result);

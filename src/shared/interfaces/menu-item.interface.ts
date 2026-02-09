@@ -69,7 +69,6 @@ export interface GetAllMenuItemsParams {
   cursorId?: number;
 }
 
-// Paginated response
 export interface PaginatedMenuItems {
   data: MenuItem[];
   nextCursor: number | null;
