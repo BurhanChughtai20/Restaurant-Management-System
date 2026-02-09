@@ -1,142 +1,296 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import DynamicContent from "../Title";
-import { DataTable } from "./table/data-table"; 
-import type { Orders } from "./types";
-import { ordersColumns } from "./tables/orders-columns.ts";
-import { Button } from "@/components/ui/button"; 
-import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
-import { DynamicCardForm } from "../FormInput";
+import { useCallback, useMemo, useState } from "react";
+import { DataTable } from "./table/data-table";
+import { createMenuItemColumns } from "./tables/menu-items-columns";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  useGetAdminMenuItemsQuery,
+  useCreateMenuItemMutation,
+  useUpdateMenuItemMutation,
+  useDeleteMenuItemMutation,
+} from "@/app/store/api";
+import type { MenuItem } from "@/app/store/api/types";
+import { useAlert } from "../DynamicAlert";
+import { useAppSelector } from "@/app/store/hooks";
+import { selectUser } from "@/app/store/slices/authSlice";
 
-// Static table data
-const STATIC_TABLE_DATA: Orders[] = [
-  { id: "728ed52f", amount: 100, status: "pending", email: "m@example.com" },
-];
-
-// Dashboard header content
-const DASHBOARD_HEADER_CONTENT = [
-  { as: "h2" as const, className: "text-2xl sm:text-3xl font-bold", content: "Dashboard Overview" },
-  { as: "p" as const, className: "text-muted-foreground", content: "Real-time performance metrics across all channels." },
-];
-
-const FORM_TITLE = [
-  { as: "h2" as const, className: "text-2xl sm:text-3xl font-bold", content: "Add New Item" },
-  { as: "p" as const, className: "text-muted-foreground", content: "Add a new item to the menu." },
-]
-// ✅ Dynamic form fields defined once
-const FORM_FIELDS = [
-  { id: "name", label: "Item Name", placeholder: "Enter item name", type: "text", required: true },
-  { id: "price", label: "Price", placeholder: "Enter price", type: "number", required: true },
-  { id: "email", label: "Customer Email", placeholder: "Enter email", type: "email", required: false },
-];
-
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 const MenuItemsPage = () => {
-  const [tableData, setTableData] = useState<Orders[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isError, setIsError] = useState<boolean>(false);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const authUser = useAppSelector(selectUser);
+  const restaurantId = authUser?.restaurantId;
 
-  // Dynamic form state based on FORM_FIELDS
-  const initialFormState = FORM_FIELDS.reduce((acc, field) => {
-    acc[field.id] = "";
-    return acc;
-  }, {} as Record<string, string>);
+  const { showAlert } = useAlert();
 
-  const [formValues, setFormValues] = useState<Record<string, string>>(initialFormState);
+  // ---- API hooks ----
+  const {
+    data: menuData,
+    isLoading,
+    isError,
+    isFetching,
+  } = useGetAdminMenuItemsQuery();
 
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setIsError(false);
-      await new Promise((res) => setTimeout(res, 300));
-      setTableData(STATIC_TABLE_DATA);
-    } catch (error) {
-      console.error(error);
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const [createMenuItem, { isLoading: isCreating }] = useCreateMenuItemMutation();
+  const [updateMenuItem, { isLoading: isUpdating }] = useUpdateMenuItemMutation();
+  const [deleteMenuItem, { isLoading: isDeleting }] = useDeleteMenuItemMutation();
+
+  // ---- Modal state ----
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
+
+  // ---- Form state (shared for add / edit) ----
+  const [formName, setFormName] = useState("");
+  const [formPrice, setFormPrice] = useState("");
+
+  // ---- Handlers ----
+  const openAddDialog = () => {
+    setFormName("");
+    setFormPrice("");
+    setEditingItem(null);
+    setIsAddOpen(true);
+  };
+
+  const openEditDialog = useCallback((item: MenuItem) => {
+    setFormName(item.name);
+    setFormPrice(String(item.price));
+    setEditingItem(item);
+    setIsAddOpen(true);
   }, []);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  const memoizedTableData = useMemo(() => tableData, [tableData]);
-
-  const handleFormChange = (field: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }));
+  const closeDialog = () => {
+    setIsAddOpen(false);
+    setEditingItem(null);
   };
 
-  const handleFormSubmit = () => {
-    console.log("Form submitted:", formValues);
-    setIsModalOpen(false);
-    setFormValues(initialFormState); // reset form after submit
+  const handleCreate = async () => {
+    if (!restaurantId) return;
+    try {
+      await createMenuItem({
+        name: formName.trim(),
+        price: parseFloat(formPrice),
+        restaurantId,
+      }).unwrap();
+      showAlert("Menu item created successfully!", "success");
+      closeDialog();
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      showAlert(error?.data?.message ?? "Failed to create menu item", "error");
+    }
   };
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Loading Analytics...</div>;
-  if (isError) return <div className="p-6 text-destructive">Failed to load data.</div>;
+  const handleUpdate = async () => {
+    if (!editingItem || !restaurantId) return;
+    try {
+      await updateMenuItem({
+        id: editingItem.id,
+        restaurantId,
+        name: formName.trim(),
+        price: parseFloat(formPrice),
+      }).unwrap();
+      showAlert("Menu item updated successfully!", "success");
+      closeDialog();
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      showAlert(error?.data?.message ?? "Failed to update menu item", "error");
+    }
+  };
+
+  const handleSubmit = () => {
+    if (editingItem) {
+      handleUpdate();
+    } else {
+      handleCreate();
+    }
+  };
+
+  // ---- Delete ----
+  const openDeleteDialog = useCallback((item: MenuItem) => {
+    setDeletingItem(item);
+  }, []);
+
+  const closeDeleteDialog = () => {
+    setDeletingItem(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingItem) return;
+    try {
+      await deleteMenuItem({ id: deletingItem.id }).unwrap();
+      showAlert("Menu item deleted successfully!", "success");
+      closeDeleteDialog();
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      showAlert(error?.data?.message ?? "Failed to delete menu item", "error");
+    }
+  };
+
+  // ---- Table columns (memoised, depends on edit/delete handlers) ----
+  const columns = useMemo(
+    () => createMenuItemColumns(openEditDialog, openDeleteDialog),
+    [openEditDialog, openDeleteDialog]
+  );
+
+  const tableData = useMemo(() => menuData?.data ?? [], [menuData]);
+
+  // ---- Render ----
+  if (isLoading) {
+    return <div className="p-6 text-muted-foreground">Loading menu items...</div>;
+  }
+
+  if (isError) {
+    return <div className="p-6 text-destructive">Failed to load menu items.</div>;
+  }
 
   return (
     <div className="flex flex-col h-full md:p-3 w-full">
       <div className="flex-1 space-y-4 p-4 md:p-3 pt-6">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+          <ol className="flex items-center gap-1.5">
+            <li>
+              <span className="hover:text-foreground transition-colors">Dashboard</span>
+            </li>
+            <li aria-hidden="true" className="text-muted-foreground/50">/</li>
+            <li>
+              <span className="text-foreground font-medium">Menu Items</span>
+            </li>
+          </ol>
+        </nav>
+
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            {DASHBOARD_HEADER_CONTENT.map(({ as, className, content }) => (
-              <DynamicContent key={content} as={as} className={className}>
-                {content}
-              </DynamicContent>
-            ))}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Menu Items</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Manage your restaurant menu items.
+            </p>
           </div>
 
-          <Button variant="default" size="sm" onClick={() => setIsModalOpen(true)}>
-            Add New Item
+          <Button variant="default" size="sm" onClick={openAddDialog}>
+            + Add New Item
           </Button>
         </div>
 
         {/* Table */}
-        <div className="container mx-auto p-3">
-          <DataTable columns={ordersColumns} data={memoizedTableData} />
+        <div className="relative">
+          {isFetching && !isLoading && (
+            <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-md">
+              <span className="text-sm text-muted-foreground">Refreshing...</span>
+            </div>
+          )}
+          <DataTable columns={columns} data={tableData} />
         </div>
       </div>
 
-      {/* Modal with Dynamic Form */}
-      {isModalOpen && (
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-md w-full">
-              <DialogTitle>
-                {FORM_TITLE.map(({ as, className, content }) => (
-                  <DynamicContent key={content} as={as} className={className}>
-                    {content}
-                  </DynamicContent>
-                ))}
-              </DialogTitle>
+      {/* Add / Edit Dialog */}
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingItem ? "Edit Menu Item" : "Add New Item"}</DialogTitle>
+            <DialogDescription>
+              {editingItem
+                ? "Update the details of this menu item."
+                : "Add a new item to the menu."}
+            </DialogDescription>
+          </DialogHeader>
 
-            <DynamicCardForm
-              title="New Order"
-              description="Fill in the order details below"
-              fields={FORM_FIELDS.map((field) => ({
-                ...field,
-                value: formValues[field.id],
-                onChange: (e: React.ChangeEvent<HTMLInputElement>) => handleFormChange(field.id, e.target.value),
-              }))}
-              actionButton={{
-                text: "Save",
-                onClick: handleFormSubmit,
-              }}
-              footerButtons={[
-                {
-                  text: "Cancel",
-                  onClick: () => setIsModalOpen(false),
-                  variant: "outline",
-                },
-              ]}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+          <form
+            className="flex flex-col gap-4 py-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="item-name">Item Name</Label>
+              <Input
+                id="item-name"
+                type="text"
+                placeholder="e.g. French Fries"
+                required
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="item-price">Price</Label>
+              <Input
+                id="item-price"
+                type="number"
+                placeholder="e.g. 3.50"
+                required
+                min="0"
+                step="0.01"
+                value={formPrice}
+                onChange={(e) => setFormPrice(e.target.value)}
+              />
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={closeDialog}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isCreating || isUpdating}>
+                {isCreating || isUpdating
+                  ? "Saving..."
+                  : editingItem
+                    ? "Update"
+                    : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deletingItem} onOpenChange={(open) => { if (!open) closeDeleteDialog(); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Menu Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {deletingItem?.name}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={closeDeleteDialog}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

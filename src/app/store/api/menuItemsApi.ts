@@ -29,18 +29,11 @@ const generateMenuItemTags = (
 
 export const menuApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAdminMenuItems: builder.query<PaginatedMenuItems, Partial<GetAllMenuItemsParams>>({
-      query: ({ restaurantId, cursorId, limit = 10 }) => ({
+    getAdminMenuItems: builder.query<PaginatedMenuItems, void>({
+      query: () => ({
         url: "/menu-items/admin/menu-items",
-        params: { restaurantId, cursorId, limit },
       }),
-      providesTags: (result, _error, arg) => generateMenuItemTags(result, arg.restaurantId),
-      // Consistent serialization is key for the selector to find the data
-      serializeQueryArgs: ({ endpointName, queryArgs }) =>
-        `${endpointName}-${queryArgs.restaurantId ?? "unknown"}`,
-      // Merge results if you want infinite scroll, otherwise remove merge
-      forceRefetch: ({ currentArg, previousArg }) => currentArg !== previousArg,
-      keepUnusedDataFor: 60,
+      providesTags: (result) => generateMenuItemTags(result),
     }),
 
     createMenuItem: builder.mutation<MenuItem, MenuItemBody>({
@@ -57,14 +50,26 @@ export const menuApi = api.injectEndpoints({
     }),
 
     updateMenuItem: builder.mutation<MenuItem, UpdateMenuItemBody & { id: number; restaurantId: number }>({
-      query: ({ id, ...body }) => ({
+      query: ({ id, restaurantId, ...body }) => ({
         url: `/menu-items/admin/update-menu-item/${id}`,
-        method: "PUT",
+        method: "PATCH",
         body,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: "MenuItem", id: arg.id },
+        { type: "MenuItem", id: "LIST" },
         { type: "MenuItem", id: `LIST-${arg.restaurantId}` },
+      ],
+    }),
+
+    deleteMenuItem: builder.mutation<{ message: string }, { id: number }>({
+      query: ({ id }) => ({
+        url: `/menu-items/admin/delete-menu-item/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: "MenuItem", id: arg.id },
+        { type: "MenuItem", id: "LIST" },
       ],
     }),
   }),
@@ -74,4 +79,5 @@ export const {
   useGetAdminMenuItemsQuery,
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
+  useDeleteMenuItemMutation,
 } = menuApi;

@@ -171,6 +171,8 @@ export interface UpdateMenuItemBody {
   name?: string;
   price?: number;
   description?: string;
+  category?: string;
+  availability?: boolean;
   sku?: string;
   isActive?: boolean;
 }

@@ -8,8 +8,7 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../store";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001/v1";
+const API_BASE_URL = "https://exposable-subdistichously-eloise.ngrok-free.dev/v1";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
