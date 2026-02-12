@@ -18,6 +18,7 @@ import { LogOut } from "lucide-react";
 import { MAIN_MENU_ITEMS, SECONDARY_MENU_ITEMS } from "@/config/menuConfig";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/store/slices/authSlice";
 
 export function SideMenu() {
   const pathname = usePathname();
@@ -89,6 +90,8 @@ export function SideMenu() {
               onClick={() => {
                 console.log("Logging out...");
                 // Add your logout logic
+                localStorage.clear();
+                window.location.href = '/login';
               }}
               tooltip="Logout"
             >
