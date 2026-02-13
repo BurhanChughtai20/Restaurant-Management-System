@@ -8,10 +8,20 @@ export interface OrderItem {
   id: number;
   name: string;
   description?: string | null;
-  quantity: number;
+  quantity: number;   // <-- can be undefined in some Prisma typings
   price: number;
-  total?: number; 
+  total: number;      // <-- can be undefined in some Prisma typings
 }
+
+
+export interface MenuItemForMobile {
+  id: number;
+  name: string;
+  description?: string | null;
+  price: number;
+  sku: string;
+}
+
 
 export interface AdminOrderItem {
   id: number;

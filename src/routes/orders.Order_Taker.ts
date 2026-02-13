@@ -9,46 +9,52 @@ import {
   getAllOrdersByOrderTaker,
   getOrderTakerReport,
 } from "../controller/index.ts";
-import type { AuthenticatedUserExtended, CreateOrderRequestBody } from "../shared/index.ts";
+import type { AuthenticatedUser, CreateOrderRequestBody } from "../shared/index.ts";
 import { ApiError } from "../utils/ApiError.ts";
 
 type RouteHandler<TResult> = (
   restaurantId: number,
-  user: AuthenticatedUserExtended,
+  user: AuthenticatedUser,
   query?: any
 ) => Promise<TResult>;
 
 type PostHandler<TBody, TResult> = (
   restaurantId: number,
-  user: AuthenticatedUserExtended,
+  user: AuthenticatedUser,
   body: TBody
 ) => Promise<TResult>;
 
 type PatchHandler<TBody, TResult> = (
   restaurantId: number,
-  user: AuthenticatedUserExtended,
+  user: AuthenticatedUser,
   params: any,
   body: TBody
 ) => Promise<TResult>;
 
 function getRestaurantId(req: FastifyRequest): number {
   const restaurantId = (req as any).restaurantId;
-  if (!restaurantId || typeof restaurantId !== 'number') {
+
+  if (typeof restaurantId !== "number" || restaurantId <= 0) {
     throw new ApiError(400, "Invalid restaurant context");
   }
+
   return restaurantId;
 }
 
-function getAuthenticatedUser(req: FastifyRequest): AuthenticatedUserExtended {
-  const user = req.user as AuthenticatedUserExtended;
-  if (!user?.id) {
-    throw new ApiError(401, "Unauthorized: User authentication required");
+function getAuthenticatedUser(req: FastifyRequest): AuthenticatedUser {
+  const user = req.user as AuthenticatedUser | undefined;
+
+  if (!user?.id || !user.role) {
+    throw new ApiError(401, "Unauthorized");
   }
+
   return user;
 }
 
-function validateRequestBody<TBody>(body: unknown): asserts body is TBody {
-  if (!body || typeof body !== 'object') {
+function validateRequestBody<TBody extends object>(
+  body: unknown
+): asserts body is TBody {
+  if (!body || typeof body !== "object") {
     throw new ApiError(400, "Request body is required");
   }
 }

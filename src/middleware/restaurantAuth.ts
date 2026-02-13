@@ -8,8 +8,10 @@ export async function restaurantAuth(
 ): Promise<void> {
   try {
     const header = request.headers.authorization;
-    if (!header) return reply.status(401).send({ error: "Unauthorized: Missing Authorization header" });
-    if (!header.startsWith("Bearer ")) return reply.status(401).send({ error: "Unauthorized: Must start with 'Bearer '" });
+    if (!header)
+      return reply.status(401).send({ error: "Unauthorized: Missing Authorization header" });
+    if (!header.startsWith("Bearer "))
+      return reply.status(401).send({ error: "Unauthorized: Must start with 'Bearer '" });
 
     const token = header.slice(7);
 
@@ -22,6 +24,7 @@ export async function restaurantAuth(
 
     const { userId, role } = decoded;
 
+    // Fetch the active role from DB
     const userRole = await prisma.userRole.findFirst({
       where: { userId, role, isActive: true },
       include: {
@@ -38,9 +41,17 @@ export async function restaurantAuth(
     });
 
     if (!userRole) return reply.status(403).send({ error: "Forbidden: No active role" });
-    if (!userRole.user?.restaurantId) return reply.status(403).send({ error: "Forbidden: No restaurant access" });
+    if (!userRole.user?.restaurantId)
+      return reply.status(403).send({ error: "Forbidden: No restaurant access" });
 
-    (request as any).user = userRole.user;
+    (request as any).user = {
+      id: userRole.user.id,
+      name: userRole.user.name,
+      email: userRole.user.email,
+      restaurantId: userRole.user.restaurantId,
+      role: userRole.role,
+    };
+
     (request as any).restaurantId = userRole.user.restaurantId;
 
   } catch (error: any) {

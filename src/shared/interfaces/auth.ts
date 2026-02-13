@@ -62,12 +62,11 @@ export interface OtpData {
 
 export interface AuthenticatedUser {
   id: number;
+  role: Role;
+  name?: string;
+  restaurantId?: number;
 }
-export interface AuthenticatedUserExtended {
-  id: number;
-  role?: Role; // optional if you ever want to check role
-  name?: string; // optional extra info
-}
+
 
 
 export interface VerifyEmailOtpParams {
