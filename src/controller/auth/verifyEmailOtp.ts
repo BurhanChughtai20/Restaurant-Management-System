@@ -1,36 +1,52 @@
-import { Role } from "@prisma/client";
+import { prisma } from "../../libs/prisma.ts";
 import { redisClient } from "../../libs/redis.ts";
-import prisma from "../../libs/prisma.ts";
+import { getRestaurantIdForRole } from "../../libs/getRestaurantIdForRole.ts";
 import { generateToken } from "../../utils/jwtToken.ts";
-export async function verifyEmailOtp({ email, otp, role }: { email: string; otp: string; role: Role }) {
-  const redisKey = `signup:${email}:${role.toString()}`;
-  const userData = await redisClient.hGetAll(redisKey);
+import type { UserData, VerifyEmailOtpParams, VerifyEmailOtpResponse } from "../../shared/index.ts";
 
-  if (!userData || Object.keys(userData).length === 0) throw new Error("OTP expired or user not found");
+export async function verifyEmailOtp({
+  email,
+  otp,
+  role,
+}: VerifyEmailOtpParams): Promise<VerifyEmailOtpResponse> {
+  const redisKey = `signup:${email}:${role}`;
+  const userDataRaw = await redisClient.hGetAll(redisKey);
+  if (!userDataRaw || Object.keys(userDataRaw).length === 0) throw new Error("OTP expired or user not found");
 
-  const { name, password, otp: storedOtp, otpExpiresAt, desiredRestaurantName } = userData;
+  const userData: UserData = {
+    name: userDataRaw.name ?? "",
+    email: userDataRaw.email ?? "",
+    password: userDataRaw.password ?? "",
+    role,
+    otp: userDataRaw.otp ?? "",
+    otpExpiresAt: userDataRaw.otpExpiresAt ?? "",
+    ...(userDataRaw.desiredRestaurantName ? { desiredRestaurantName: userDataRaw.desiredRestaurantName } : {}),
+  };
 
-  if (!name || !email || !password || !storedOtp || !otpExpiresAt) throw new Error("Signup data incomplete");
-  if (storedOtp !== otp) throw new Error("Invalid OTP");
-  if (parseInt(otpExpiresAt, 10) < Date.now()) throw new Error("OTP expired");
-
-  const restaurantId = await (async (): Promise<number> => {
-    if (role === "Admin") {
-      const restaurant = await prisma.restaurant.create({ data: { name: `${name}'s Restaurant`, slug: `${email.split("@")[0]}-${Date.now()}` } });
-      return restaurant.id;
-    } else {
-      if (!desiredRestaurantName) throw new Error(`Restaurant name required for ${role}`);
-      const restaurant = await prisma.restaurant.findFirst({ where: { name: desiredRestaurantName } });
-      if (!restaurant) throw new Error("Restaurant not found");
-      return restaurant.id;
-    }
-  })();
+  if (userData.otp !== otp) throw new Error("Invalid OTP");
+  if (parseInt(userData.otpExpiresAt, 10) < Date.now()) throw new Error("OTP expired");
 
   let user = await prisma.users.findUnique({ where: { email } });
+
   if (!user) {
-    user = await prisma.users.create({ data: { name, email, password, isEmailVerified: true, restaurantId } });
+    // Assign restaurant ID
+    const restaurantId = await getRestaurantIdForRole(role, userData.name, email, userData.desiredRestaurantName);
+
+    user = await prisma.users.create({
+      data: {
+        name: userData.name,
+        email,
+        password: userData.password,
+        restaurantId,
+        isEmailVerified: true,
+        isActive: true,
+      },
+    });
   } else {
-    user = await prisma.users.update({ where: { email }, data: { isEmailVerified: true, restaurantId } });
+    user = await prisma.users.update({
+      where: { email },
+      data: { isEmailVerified: true },
+    });
   }
 
   const token = generateToken(user.id, role, "12h");
@@ -52,7 +68,10 @@ export async function verifyEmailOtp({ email, otp, role }: { email: string; otp:
       email: user.email,
       role: userRole.role,
       restaurantId: user.restaurantId,
+      restaurantName: (await prisma.restaurant.findUnique({ where: { id: user.restaurantId } }))?.name as string | null,
+      isActive: userRole.isActive,
       isEmailVerified: user.isEmailVerified,
+       createdAt: user.createdAt.toISOString(),
     },
   };
 }

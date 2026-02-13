@@ -1,5 +1,5 @@
 import { prisma } from "../../libs/prisma.ts";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { generateToken } from "../../utils/jwtToken.ts";
 import { ApiError } from "../../utils/ApiError.ts";
 import { Role } from "@prisma/client";
@@ -13,7 +13,6 @@ export async function login({
   password: string;
   role: Role;
 }) {
-  // Fetch user with all roles and restaurant
   const user = await prisma.users.findUnique({
     where: { email },
     include: { userRoles: true, restaurant: true },
@@ -27,15 +26,10 @@ export async function login({
   if (!user.isEmailVerified)
     throw new ApiError(403, "Email not verified. Please verify your email first.");
 
-  // ✅ Check if user has the requested role
-  const userRole = user.userRoles.find(
-    (r) => r.role === role && r.isActive
-  );
-
+  const userRole = user.userRoles.find((r) => r.role === role && r.isActive);
   if (!userRole)
     throw new ApiError(403, `User does not have ${role} role`);
 
-  // Generate token
   const token = generateToken(user.id, role, "12h");
 
   // Update token in DB
@@ -54,6 +48,7 @@ export async function login({
       role: userRole.role,
       restaurantId: user.restaurantId,
       restaurantName: user.restaurant?.name,
+      isActive: userRole.isActive,
       isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt,
     },

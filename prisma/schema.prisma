@@ -6,6 +6,239 @@ datasource db {
   provider = "postgresql"
 }
 
+model Restaurant {
+  id                Int                @id @default(autoincrement())
+  name              String
+  slug              String             @unique
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  articles          Article[]
+  menuItems         MenuItem[]
+  orders            Order[]
+  users             Users[]
+  waiterConnections WaiterConnection[]
+  whatsappNumbers   WhatsAppNumber[]
+  whatsappOrders    WhatsAppOrder[]
+
+  @@map("restaurant")
+}
+
+model Users {
+  id               Int                @id @default(autoincrement())
+  restaurantId     Int
+  name             String             @db.Char(100)
+  email            String             @unique
+  password         String
+  isEmailVerified  Boolean            @default(false)
+  isActive         Boolean            @default(true) // <-- added
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  articles         Article[]
+  chefConnection   ChefConnection[]   @relation("ChefConnectionUser")
+  ordersPicked     Order[]            @relation("OrdersPicked")
+  ordersTaken      Order[]            @relation("OrdersTaken")
+  otps             Otp[]
+  passwordResets   PasswordReset[]
+  userRoles        UserRole[]
+  restaurant       Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  waiterConnection WaiterConnection[] @relation("WaiterConnectionUser")
+
+  @@map("users")
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      Role
+  token     String?  @unique
+  isActive  Boolean  @default(true)  // <-- keep this
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_role")
+}
+
+
+model Otp {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  code      String
+  type      OtpType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset")
+}
+
+model WaiterConnection {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  orderTakerId Int?
+  socketId     String?    @unique
+  sessionToken String     @unique
+  isActive     Boolean    @default(false)
+  expiresAt    DateTime
+  fromTime     String?
+  toTime       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  waiter       Users?     @relation("WaiterConnectionUser", fields: [orderTakerId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@map("waiter_connection")
+}
+
+model ChefConnection {
+  id           Int      @id @default(autoincrement())
+  chefId       Int
+  socketId     String?  @unique
+  sessionToken String   @unique
+  isActive     Boolean  @default(true)
+  fromTime     String?
+  toTime       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chef         Users    @relation("ChefConnectionUser", fields: [chefId], references: [id], onDelete: Cascade)
+
+  @@map("chef_connection")
+}
+
+model MenuItem {
+  id                 Int                 @id @default(autoincrement())
+  restaurantId       Int
+  name               String              @db.Char(100)
+  sku                String              @unique
+  price              Float
+  description        String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  restaurant         Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems         OrderItem[]
+  whatsappOrderItems WhatsAppOrderItem[]
+
+  @@index([restaurantId])
+  @@map("menu_item")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  menuItemId  Int
+  name        String
+  description String?
+  quantity    Int      @default(1)
+  price       Float
+  total       Float
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_item")
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  restaurantId Int
+  orderTakerId Int?
+  chefId       Int?
+  status       OrderStatus @default(PENDING)
+  totalAmount  Float       @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  chef         Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
+  orderTaker   Users?      @relation("OrdersTaken", fields: [orderTakerId], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+
+  @@map("order")
+}
+
+model Article {
+  id              Int        @id @default(autoincrement())
+  restaurantId    Int
+  title           String     @db.VarChar(200)
+  description     String
+  metaTitle       String?
+  metaDescription String?
+  openingHours    String?
+  socialLinks     String?
+  image           String?
+  isPublished     Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  publisherId     Int
+  publisher       Users      @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([publisherId])
+  @@index([restaurantId])
+  @@index([title])
+  @@map("article")
+}
+
+model WhatsAppNumber {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  phoneNumber  String     @db.VarChar(20)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, phoneNumber])
+  @@index([restaurantId])
+  @@map("whatsapp_number")
+}
+
+model WhatsAppOrder {
+  id           Int                 @id @default(autoincrement())
+  restaurantId Int
+  phoneNumber  String              @db.VarChar(20)
+  clientName   String?             @db.VarChar(100)
+  address      String
+  status       String              @default("PENDING")
+  totalAmount  Float               @default(0)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items        WhatsAppOrderItem[]
+
+  @@index([restaurantId])
+  @@index([phoneNumber])
+  @@map("whatsapp_order")
+}
+
+model WhatsAppOrderItem {
+  id              Int           @id @default(autoincrement())
+  whatsappOrderId Int
+  menuItemId      Int
+  name            String
+  description     String?
+  quantity        Int           @default(1)
+  price           Float
+  total           Float
+  menuItem        MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  whatsappOrder   WhatsAppOrder @relation(fields: [whatsappOrderId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_order_item")
+}
+
 enum OtpType {
   EMAIL_VERIFY
   PASSWORD_RESET
@@ -23,223 +256,4 @@ enum OrderStatus {
   PICKED
   READY
   COMPLETED
-}
-
-model Restaurant {
-  id        Int      @id @default(autoincrement())
-  name      String
-  slug      String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  users              Users[]
-  menuItems          MenuItem[]
-  orders             Order[]
-  articles           Article[]
-  whatsappNumbers    WhatsAppNumber[]
-  whatsappOrders     WhatsAppOrder[]
-}
-
-model Users {
-  id           Int      @id @default(autoincrement())
-  restaurantId Int
-  name         String   @db.Char(100)
-  email        String   @unique
-  password     String
-  isEmailVerified Boolean @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  userRoles      UserRole[]
-  otps           Otp[]
-  passwordResets PasswordReset[]
-
-  waiterConnection WaiterConnection?
-  chefConnection   ChefConnection?
-
-  ordersTaken  Order[] @relation("OrdersTaken")
-  ordersPicked Order[] @relation("OrdersPicked")
-
-  articles Article[]
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-}
-
-model UserRole {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  role      Role
-  token     String?  @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, role])
-}
-
-model Otp {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  code      String
-  type      OtpType
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model PasswordReset {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  token     String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model WaiterConnection {
-  id           Int      @id @default(autoincrement())
-  orderTakerId Int      @unique
-  socketId     String?  @unique
-  sessionToken String   @unique
-  isActive     Boolean  @default(true)
-  fromTime     String?
-  toTime       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  waiter Users @relation(fields: [orderTakerId], references: [id], onDelete: Cascade)
-}
-
-model ChefConnection {
-  id           Int      @id @default(autoincrement())
-  chefId       Int      @unique
-  socketId     String?  @unique
-  sessionToken String   @unique
-  isActive     Boolean  @default(true)
-  fromTime     String?
-  toTime       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  chef Users @relation(fields: [chefId], references: [id], onDelete: Cascade)
-}
-
-model MenuItem {
-  id           Int      @id @default(autoincrement())
-  restaurantId Int
-  name         String   @db.Char(100)
-  sku          String   @unique
-  price        Float
-  description  String?  @db.Text
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  orderItems          OrderItem[]
-  whatsappOrderItems  WhatsAppOrderItem[]
-  restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-}
-
-model OrderItem {
-  id          Int     @id @default(autoincrement())
-  orderId     Int
-  menuItemId  Int
-  name        String
-  description String?
-  quantity    Int     @default(1)
-  price       Float
-  total       Float
-
-  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
-}
-
-model Order {
-  id           Int         @id @default(autoincrement())
-  restaurantId Int
-  orderTakerId Int?
-  chefId       Int?
-  status       OrderStatus @default(PENDING)
-  totalAmount  Float       @default(0)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  orderTaker Users?      @relation("OrdersTaken", fields: [orderTakerId], references: [id])
-  chef       Users?      @relation("OrdersPicked", fields: [chefId], references: [id])
-  items      OrderItem[]
-  restaurant Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-}
-
-model Article {
-  id              Int      @id @default(autoincrement())
-  restaurantId    Int
-  title           String   @db.VarChar(200)
-  description     String   @db.Text
-  metaTitle       String?
-  metaDescription String?
-  openingHours    String?  // ✅ add this line
-  socialLinks     String?  // ✅ add this line if needed
-  image           String?
-  isPublished     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  publisherId     Int
-
-  publisher   Users      @relation(fields: [publisherId], references: [id], onDelete: Cascade)
-  restaurant  Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@index([publisherId])
-  @@index([restaurantId])
-  @@index([title])
-}
-
-
-model WhatsAppNumber {
-  id           Int      @id @default(autoincrement())
-  restaurantId Int
-  phoneNumber  String   @db.VarChar(20)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@unique([restaurantId, phoneNumber])
-  @@index([restaurantId])
-}
-
-model WhatsAppOrder {
-  id           Int      @id @default(autoincrement())
-  restaurantId Int
-  phoneNumber  String   @db.VarChar(20)
-  clientName   String?  @db.VarChar(100)
-  address      String   @db.Text
-  status       String   @default("PENDING")
-  totalAmount  Float    @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  restaurant Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  items      WhatsAppOrderItem[]
-
-  @@index([restaurantId])
-  @@index([phoneNumber])
-}
-
-model WhatsAppOrderItem {
-  id              Int     @id @default(autoincrement())
-  whatsappOrderId Int
-  menuItemId      Int
-  name            String
-  description     String?
-  quantity        Int     @default(1)
-  price           Float
-  total           Float
-
-  whatsappOrder WhatsAppOrder @relation(fields: [whatsappOrderId], references: [id], onDelete: Cascade)
-  menuItem      MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }

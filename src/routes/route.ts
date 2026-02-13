@@ -21,7 +21,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
     { module: chefsManagementRoutes, prefix: `${API_PREFIX}/chef` },
     {
       module: OrderTaker_Mobile_Routes,
-      prefix: `${API_PREFIX}/menu-items/order-taker`,
+      prefix: `${API_PREFIX}/mobile/order-taker`,
     },
     {
       module: MenuItems_Chef_Mobile_Routes,

@@ -28,6 +28,7 @@ export { createOrder } from "./orders/orderTaker/createOrder.ts";
 export { updateOrder } from "./orders/orderTaker/updateOrder.ts";
 export { getOrderTakerReport } from "./orders/orderTaker/orderTakerReport.service.ts";
 export {getAllOrdersByOrderTaker} from "./orders/orderTaker/getAllOrders.OrderTakers.ts";
+export {connectWaiter} from "./staff/order_taker/connectWaiter.ts";
 // export { createArticle } from "./article/createArticle.ts";
 // export { autoCreateArticle } from "./article/autoCreateArticle.ts";
 // export { updateArticle } from "./article/updateArticle.ts";

@@ -14,15 +14,20 @@ export interface SearchOrderTakerParams {
   isActive?: boolean;
 }
 
-
 export interface UpdateOrderTakerBody {
   orderTakerId: number;
-  fromTime: string;
-  toTime: string;
+  fromTime?: string;
+  toTime?: string;
+  isActive?: boolean;
+  name?: string;
+  email?: string;
 }
 
 export interface DeleteOrderTakerBody {
   orderTakerId: number;
+}
+export interface DeleteOrderTakerBody {
+  connectionId: number; 
 }
 
 export interface OrderTaker {
@@ -34,7 +39,7 @@ export interface OrderTaker {
   isEmailVerified: boolean;
   waiterConnection: {
     id: number;
-    orderTakerId: number;
+    orderTakerId: number | null;
     isActive: boolean;
     fromTime: string | null;
     toTime: string | null;
@@ -45,4 +50,11 @@ export interface OrderTaker {
 export interface PaginatedOrderTakers {
   data: OrderTaker[];
   nextCursor: number | null;
+}
+
+export interface UpdateOrderTakerParams {
+  restaurantId: number;
+  orderTakerId: number;
+  fromTime?: string;
+  toTime?: string;
 }

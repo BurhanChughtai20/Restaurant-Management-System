@@ -1,5 +1,5 @@
 import prisma from "../../../libs/prisma.ts";
-import type { GetOrderTakersParams, PaginatedOrderTakers } from "../../../shared/index.ts"; 
+import type { GetOrderTakersParams, OrderTaker, PaginatedOrderTakers } from "../../../shared/index.ts"; 
 
 export async function getOrderTakers({
   restaurantId,
@@ -7,7 +7,7 @@ export async function getOrderTakers({
   cursorId,
 }: GetOrderTakersParams): Promise<PaginatedOrderTakers> {  
   try {
-    const orderTakers = await prisma.users.findMany({
+    const orderTakersRaw = await prisma.users.findMany({
       where: {
         restaurantId,
         userRoles: { some: { role: "Order_Taker", isActive: true } },
@@ -36,6 +36,11 @@ export async function getOrderTakers({
         },
       },
     });
+
+    const orderTakers: OrderTaker[] = orderTakersRaw.map((ot) => ({
+      ...ot,
+      waiterConnection: ot.waiterConnection[0] ?? null,
+    }));
 
     const nextCursor = orderTakers[orderTakers.length - 1]?.id ?? null;
 

@@ -1,4 +1,3 @@
-// src/types/auth.ts
 import type { Role } from "@prisma/client";
 
 export interface SignupBody {
@@ -50,7 +49,9 @@ export interface UserData {
   role: string;
   otp: string;
   otpExpiresAt: string;
+  desiredRestaurantName?: string;
 }
+
 
 export interface OtpData {
   otp: string;
@@ -68,3 +69,26 @@ export interface AuthenticatedUserExtended {
   name?: string; // optional extra info
 }
 
+
+export interface VerifyEmailOtpParams {
+  email: string;
+  otp: string;
+  role: Role;
+}
+
+type isActive= true | false;
+export interface VerifyEmailOtpResponse {
+  message: string;
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: Role;
+    restaurantId: number;
+    restaurantName?: string | null;
+    isActive: isActive;
+    isEmailVerified: boolean;
+    createdAt?: string | null;
+  };
+}

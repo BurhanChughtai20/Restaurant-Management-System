@@ -8,9 +8,10 @@ import {
   getOrderTakerStats,
   searchWaiters,
   getOrderTakers,
+  connectWaiter,
 } from "../controller/index.ts";
-import type { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
 
+import type { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
 
 async function orderTakerManagementRoutes(fastify: FastifyInstance) {
 
@@ -60,12 +61,35 @@ async function orderTakerManagementRoutes(fastify: FastifyInstance) {
     );
   }
 
+ function registerPost<T>(
+  path: string,
+  handler: (body: T, restaurantId: number) => Promise<any>,
+  rolesRequired: boolean = true,
+) {
+  fastify.post<{ Body: T }>(
+    path,
+    rolesRequired ? { preHandler: [restaurantAuth] } : {},
+    async (req, reply) => {
+      const restaurantId = (req as any).restaurantId;
+      const result = await handler(req.body as T, restaurantId);
+      return reply.send(result);
+    },
+  );
+}
+
+registerPost<{ sessionToken: string; orderTakerId: number }>(
+  "/connect-waiter",
+  async (body) => connectWaiter(body),
+  false
+);
+
+
   registerGet("/order-takers", (restaurantId, query) =>
     getOrderTakers({
       restaurantId,
       limit: Number(query?.limit) || 10,
       ...(query?.cursorId && { cursorId: Number(query.cursorId) }),
-    }),
+    }), 
   );
 
   registerGet("/token-order-taker", async (_restaurantId, _query, req, reply) =>
@@ -79,15 +103,19 @@ async function orderTakerManagementRoutes(fastify: FastifyInstance) {
   );
 
   registerPatch<UpdateOrderTakerBody>(
-    "/token-order-taker",
-    (body, restaurantId) =>
-      updateOrderTakerConnection({
-        restaurantId,
-        orderTakerId: body.orderTakerId,
-        ...(body.fromTime !== undefined && { fromTime: body.fromTime }),
-        ...(body.toTime !== undefined && { toTime: body.toTime }),
-      }),
-  );
+  "/token-order-taker",
+  (body, restaurantId) =>
+    updateOrderTakerConnection({
+      restaurantId,
+      orderTakerId: body.orderTakerId,
+      ...(body.fromTime !== undefined && { fromTime: body.fromTime }),
+      ...(body.toTime !== undefined && { toTime: body.toTime }),
+      ...(body.isActive !== undefined && { isActive: body.isActive }),
+      ...(body.name !== undefined && { name: body.name }),
+      ...(body.email !== undefined && { email: body.email }),
+    }),
+);
+
 
   registerGet("/order-taker/stats", (_restaurantId, _query, req, reply) =>
     getOrderTakerStats(req, reply),
