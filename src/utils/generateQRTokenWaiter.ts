@@ -1,10 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { randomUUID } from "crypto";
 import prisma from "../libs/prisma.ts";
-
-export const generateQRToken = async (
+export const generateQRTokenWaiter = async (
   req: FastifyRequest,
-  reply: FastifyReply
+  reply: FastifyReply,
 ) => {
   const restaurantId = (req as any).restaurantId;
   const sessionToken = randomUUID();

@@ -18,7 +18,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
     { module: MenuItemsAdminRoutes, prefix: `${API_PREFIX}/menu-items/admin` },
     { module: Orders_Admin_Routes, prefix: `${API_PREFIX}/orders/admin` },
     { module: orderTakerManagementRoutes, prefix: `${API_PREFIX}/waiter` },
-    { module: chefsManagementRoutes, prefix: `${API_PREFIX}/chef` },
+    { module: chefsManagementRoutes, prefix: `${API_PREFIX}/chefs` },
     {
       module: OrderTaker_Mobile_Routes,
       prefix: `${API_PREFIX}/mobile/order-taker`,
@@ -26,7 +26,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
     {
       module: MenuItems_Chef_Mobile_Routes,
       prefix: `${API_PREFIX}/menu-items/chef`,
-    }, 
+    },
     { module: whatsapp_bot_order_routes, prefix: `${API_PREFIX}/whatsapp_bot` },
     { module: whatsappBotRoutes, prefix: `${API_PREFIX}` },
   ];

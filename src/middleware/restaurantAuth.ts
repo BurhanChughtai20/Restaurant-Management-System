@@ -24,7 +24,6 @@ export async function restaurantAuth(
 
     const { userId, role } = decoded;
 
-    // Fetch the active role from DB
     const userRole = await prisma.userRole.findFirst({
       where: { userId, role, isActive: true },
       include: {

@@ -25,9 +25,8 @@ export interface UpdateOrderTakerBody {
 
 export interface DeleteOrderTakerBody {
   orderTakerId: number;
-}
-export interface DeleteOrderTakerBody {
   connectionId: number; 
+
 }
 
 export interface OrderTaker {

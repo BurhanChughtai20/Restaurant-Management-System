@@ -2,10 +2,14 @@ export interface UpdateChefBody {
   chefId: number;
   fromTime?: string;
   toTime?: string;
+  isActive?: boolean;
+  name?: string;
+  email?: string;
 }
 
 export interface DeleteChefBody {
   chefId: number;
+  connectionId: number; 
 }
 export interface GetAllChefsInput {
   restaurantId: number;
@@ -13,23 +17,31 @@ export interface GetAllChefsInput {
   cursorId?: number;
 }
 
-export interface PaginatedChefs {
-  data: {
+export interface UpdateChefConnectionParams {
+  restaurantId: number;
+  chefId: number;
+  fromTime?: string;
+  toTime?: string;
+}
+export interface Chef {
+  id: number;
+  name: string;
+  email: string;
+  restaurantId: number;
+  isEmailVerified: boolean;
+  createdAt: Date;
+  chefConnection: {
     id: number;
-    name: string;
-    email: string;
-    restaurantId: number;
-    isEmailVerified: boolean;
+    chefId: number;
+    isActive: boolean;
+    fromTime: string | null;
+    toTime: string | null;
     createdAt: Date;
-    waiterConnection: {
-      id: number;
-      orderTakerId: number;
-      isActive: boolean;
-      fromTime: string | null;
-      toTime: string | null;
-      createdAt: Date;
-    } | null;
-  }[];
+  } | null;
+}
+
+export interface PaginatedChefs {
+  data: Chef[];
   nextCursor: number | null;
 }
 

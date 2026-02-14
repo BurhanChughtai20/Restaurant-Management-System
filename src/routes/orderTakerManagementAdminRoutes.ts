@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { restaurantAuth } from "../middleware/restaurantAuth.ts";
-import { generateQRToken } from "../utils/generateQRToken.ts";
 
 import {
   deleteOrderTakerConnection,
@@ -11,10 +10,13 @@ import {
   connectWaiter,
 } from "../controller/index.ts";
 
-import type { DeleteOrderTakerBody, UpdateOrderTakerBody } from "../shared/index.ts";
+import type {
+  DeleteOrderTakerBody,
+  UpdateOrderTakerBody,
+} from "../shared/index.ts";
+import { generateQRTokenWaiter } from "../utils/generateQRTokenWaiter.ts";
 
 async function orderTakerManagementRoutes(fastify: FastifyInstance) {
-
   function registerGet(
     path: string,
     handler: (
@@ -61,50 +63,45 @@ async function orderTakerManagementRoutes(fastify: FastifyInstance) {
     );
   }
 
- function registerPost<T>(
-  path: string,
-  handler: (body: T, restaurantId: number) => Promise<any>,
-  rolesRequired: boolean = true,
-) {
-  fastify.post<{ Body: T }>(
-    path,
-    rolesRequired ? { preHandler: [restaurantAuth] } : {},
-    async (req, reply) => {
-      const restaurantId = (req as any).restaurantId;
-      const result = await handler(req.body as T, restaurantId);
-      return reply.send(result);
-    },
+  function registerPost<T>(
+    path: string,
+    handler: (body: T, restaurantId: number) => Promise<any>,
+    rolesRequired: boolean = true,
+  ) {
+    fastify.post<{ Body: T }>(
+      path,
+      rolesRequired ? { preHandler: [restaurantAuth] } : {},
+      async (req, reply) => {
+        const restaurantId = (req as any).restaurantId;
+        const result = await handler(req.body as T, restaurantId);
+        return reply.send(result);
+      },
+    );
+  }
+
+  registerPost<{ sessionToken: string; orderTakerId: number }>(
+    "/connect-waiter",
+    async (body) => connectWaiter(body),
+    false,
   );
-}
 
-registerPost<{ sessionToken: string; orderTakerId: number }>(
-  "/connect-waiter",
-  async (body) => connectWaiter(body),
-  false
-);
-
-
-  registerGet("/order-takers", (restaurantId, query) =>
+  registerGet("/", (restaurantId, query) =>
     getOrderTakers({
       restaurantId,
       limit: Number(query?.limit) || 10,
       ...(query?.cursorId && { cursorId: Number(query.cursorId) }),
-    }), 
+    }),
   );
 
-  registerGet("/token-order-taker", async (_restaurantId, _query, req, reply) =>
-    generateQRToken(req, reply),
+  registerGet("/token", async (_restaurantId, _query, req, reply) =>
+    generateQRTokenWaiter(req, reply),
   );
 
-  registerDelete<DeleteOrderTakerBody>(
-    "/token-order-taker",
-    (body, restaurantId) =>
-      deleteOrderTakerConnection({ ...body, restaurantId }),
+  registerDelete<DeleteOrderTakerBody>("/token", (body, restaurantId) =>
+    deleteOrderTakerConnection({ ...body, restaurantId }),
   );
 
-  registerPatch<UpdateOrderTakerBody>(
-  "/token-order-taker",
-  (body, restaurantId) =>
+  registerPatch<UpdateOrderTakerBody>("/token", (body, restaurantId) =>
     updateOrderTakerConnection({
       restaurantId,
       orderTakerId: body.orderTakerId,
@@ -114,8 +111,7 @@ registerPost<{ sessionToken: string; orderTakerId: number }>(
       ...(body.name !== undefined && { name: body.name }),
       ...(body.email !== undefined && { email: body.email }),
     }),
-);
-
+  );
 
   registerGet("/order-taker/stats", (_restaurantId, _query, req, reply) =>
     getOrderTakerStats(req, reply),

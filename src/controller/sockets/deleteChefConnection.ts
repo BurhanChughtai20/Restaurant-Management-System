@@ -2,24 +2,40 @@ import prisma from "../../libs/prisma.ts";
 
 export const deleteChefConnection = async ({
   restaurantId,
-  chefId,
-}: { restaurantId: number; chefId: number }) => {
-  const chef = await prisma.users.findFirst({
+  connectionId,
+}: { restaurantId: number; connectionId: number }) => {
+  const connection = await prisma.chefConnection.findFirst({
     where: {
-      id: chefId,
-      restaurantId,
-      userRoles: { some: { role: "Chef" } },
+      id: connectionId,
+      chef: { restaurantId },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      chefId: true,
+    },
   });
 
-  if (!chef) throw new Error("Unauthorized - Chef not in your restaurant");
+  if (!connection) throw new Error("Connection not found or unauthorized");
 
-  try {
-    await prisma.chefConnection.delete({ where: { chefId } });
-  } catch {
-    throw new Error("Chef connection not found");
+  const { chefId } = connection;
+
+  await prisma.chefConnection.delete({
+    where: { id: connectionId },
+  });
+
+  const remainingConnections = await prisma.chefConnection.count({
+    where: { chefId },
+  });
+
+  if (remainingConnections === 0 && chefId !== null) {
+    await prisma.users.update({
+      where: { id: chefId },
+      data: { isActive: false },
+    });
   }
 
-  return { message: "Chef connection deleted successfully" };
+  return {
+    message: "Chef connection deleted successfully",
+    userDeactivated: remainingConnections === 0,
+  };
 };

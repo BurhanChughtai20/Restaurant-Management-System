@@ -8,13 +8,13 @@ import {
   getChefReport,
   getWeeklyTopChefs,
 } from "../controller/index.ts";
-import type { AuthenticatedUserExtended } from "../shared/index.ts";
 import { ApiError } from "../utils/ApiError.ts";
 import type { MenuItemForChef } from "../shared/interfaces/chef.interface.ts";
+import type { AuthenticatedUser } from "../shared/index.ts";
 
 type RouteHandler<TResult> = (
   restaurantId: number,
-  user: AuthenticatedUserExtended,
+  user: AuthenticatedUser,
   query?: any
 ) => Promise<TResult>;
 
@@ -26,8 +26,8 @@ function getRestaurantId(req: FastifyRequest): number {
   return restaurantId;
 }
 
-function getAuthenticatedUser(req: FastifyRequest): AuthenticatedUserExtended {
-  const user = req.user as AuthenticatedUserExtended;
+function getAuthenticatedUser(req: FastifyRequest): AuthenticatedUser {
+  const user = req.user as AuthenticatedUser;
   if (!user?.id) {
     throw new ApiError(401, "Unauthorized: User authentication required");
   }

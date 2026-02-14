@@ -19,6 +19,7 @@ model Restaurant {
   waiterConnections WaiterConnection[]
   whatsappNumbers   WhatsAppNumber[]
   whatsappOrders    WhatsAppOrder[]
+  chefConnections   ChefConnection[]
 
   @@map("restaurant")
 }
@@ -30,7 +31,7 @@ model Users {
   email            String             @unique
   password         String
   isEmailVerified  Boolean            @default(false)
-  isActive         Boolean            @default(true) // <-- added
+  isActive         Boolean            @default(true)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   articles         Article[]
@@ -51,7 +52,7 @@ model UserRole {
   userId    Int
   role      Role
   token     String?  @unique
-  isActive  Boolean  @default(true)  // <-- keep this
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -59,7 +60,6 @@ model UserRole {
   @@unique([userId, role])
   @@map("user_role")
 }
-
 
 model Otp {
   id        Int      @id @default(autoincrement())
@@ -105,19 +105,24 @@ model WaiterConnection {
 }
 
 model ChefConnection {
-  id           Int      @id @default(autoincrement())
-  chefId       Int
-  socketId     String?  @unique
-  sessionToken String   @unique
-  isActive     Boolean  @default(true)
+  id           Int        @id @default(autoincrement())
+  restaurantId Int
+  chefId       Int?   
+  socketId     String?    @unique
+  sessionToken String     @unique
+  isActive     Boolean    @default(false)
+  expiresAt    DateTime
   fromTime     String?
   toTime       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  chef         Users    @relation("ChefConnectionUser", fields: [chefId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  chef       Users?      @relation("ChefConnectionUser", fields: [chefId], references: [id], onDelete: Cascade)
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
+  @@index([restaurantId])
   @@map("chef_connection")
 }
+
 
 model MenuItem {
   id                 Int                 @id @default(autoincrement())
