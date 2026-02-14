@@ -58,7 +58,7 @@ export const connectChef = async ({
   return {
     success: true,
     message: "Chef connected successfully",
-    waiter: {
+    chef: {
       id: user.id,
       name: user.name.trim(),
       email: user.email.trim(),

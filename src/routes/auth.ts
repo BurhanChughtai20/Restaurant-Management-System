@@ -9,7 +9,7 @@ import {
   deleteAccount,
 } from "../shared/index.ts";
 
-import type { Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import type {
   SignupBody,
   LoginBody,
@@ -21,6 +21,7 @@ import type {
 
 import { extractAuthPayload } from "../utils/auth.util.ts";
 import { prisma } from "../libs/prisma.ts";
+import { getDashboardOverview } from "../controller/auth/getDashboardOverview.ts";
 
 async function authRoutes(fastify: FastifyInstance) {
   function registerPost<T extends object>(
@@ -82,6 +83,26 @@ async function authRoutes(fastify: FastifyInstance) {
       }
     },
   );
+
+
+    fastify.get("/dashboard-overview", async (req, reply) => {
+    try {
+      const payload = extractAuthPayload(req, fastify);
+
+      if (!payload || payload.role !== Role.Admin) {
+        return reply.status(403).send({
+          error: "Access denied. Admin only.",
+        });
+      }
+
+      const result = await getDashboardOverview();
+      return reply.send(result);
+    } catch (error: any) {
+      return reply.status(error.statusCode || 500).send({
+        error: error.message || "Internal Server Error",
+      });
+    }
+  });
 }
 
 export default authRoutes;

@@ -80,7 +80,7 @@ async function Chef_Orders_Mobile_Routes(fastify: FastifyInstance) {
 );
 
   registerGet(
-    "/completed-orders",
+    "/",
     [Role.Chef],
     (restaurantId, user) => getAllCompletedOrdersForChef({restaurantId, chefId: user.id})
   );

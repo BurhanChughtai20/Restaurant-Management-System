@@ -22,23 +22,29 @@ export async function getAllCompletedOrdersForChef(
   }
 
   const orders = await prisma.order.findMany({
-    where: {
-      restaurantId,
-      chefId,
-      status: "COMPLETED",
-      users: { some: { id: chefId, userRoles: { some: { role: "Chef" } } } },
-    },
-    include: {
-      items: {
-        select: {
-          id: true,
-          quantity: true,
-          menuItem: { select: { id: true, name: true, description: true } },
+  where: {
+    restaurantId,
+    chefId,
+    status: "COMPLETED",
+  },
+  include: {
+    items: {
+      select: {
+        id: true,
+        quantity: true,
+        menuItem: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
         },
       },
     },
-    orderBy: { createdAt: "desc" },
-  });
+  },
+  orderBy: { createdAt: "desc" },
+});
+
 
   return orders as CompletedOrder[];
 }

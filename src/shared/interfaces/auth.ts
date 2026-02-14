@@ -91,3 +91,16 @@ export interface VerifyEmailOtpResponse {
     createdAt?: string | null;
   };
 }
+
+export interface UserRoleCounts {
+  admins: number;
+  chefs: number;
+  orderTakers: number;
+  shopOwners: number;
+}
+
+export interface DashboardOverviewResponse {
+  users: UserRoleCounts;
+  totalRestaurants: number;
+  totalUsers: number;
+}

@@ -9,7 +9,6 @@ import MenuItems_Chef_Mobile_Routes from "./orders.Chef.ts";
 import Orders_Admin_Routes from "./admin.orders.ts";
 import whatsapp_bot_order_routes from "./whatsapp.bot.order.ts";
 import { whatsappBotRoutes } from "./whatsapp.bot.ts";
-import AdminOrdersRoutes from "./admin.orders.ts";
 export async function registerRoutes(fastify: FastifyInstance) {
   const API_PREFIX = process.env.API_PREFIX || "/v1";
 
@@ -25,7 +24,7 @@ export async function registerRoutes(fastify: FastifyInstance) {
     },
     {
       module: MenuItems_Chef_Mobile_Routes,
-      prefix: `${API_PREFIX}/menu-items/chef`,
+      prefix: `${API_PREFIX}/mobile/chefs`,
     },
     { module: whatsapp_bot_order_routes, prefix: `${API_PREFIX}/whatsapp_bot` },
     { module: whatsappBotRoutes, prefix: `${API_PREFIX}` },
