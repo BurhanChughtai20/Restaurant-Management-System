@@ -1,6 +1,7 @@
 import api from "./baseApi";
 import {
   OrderTaker,
+  GetWaitersResponse,
   PaginatedResponse,
   SearchParams,
   Stats,
@@ -13,8 +14,8 @@ import {
  */
 export const orderTakersApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all order takers
-    getAllOrderTakers: builder.query<OrderTaker[], void>({
+    // Get all order takers (GET /waiter, Bearer auth)
+    getAllOrderTakers: builder.query<GetWaitersResponse, void>({
       query: () => "/waiter",
       providesTags: ["OrderTakers"],
     }),
@@ -51,6 +52,38 @@ export const orderTakersApi = api.injectEndpoints({
       providesTags: ["Stats"],
     }),
 
+    // Get waiter session token for QR (GET /waiter/token, Bearer auth)
+    getWaiterToken: builder.query<{ sessionToken: string }, void>({
+      query: () => "/waiter/token",
+      providesTags: ["OrderTakers"],
+    }),
+
+    // Update waiter (PATCH /waiter/token) – body: { orderTakerId, name }
+    updateWaiter: builder.mutation<
+      OrderTaker,
+      { orderTakerId: number; name: string }
+    >({
+      query: (body) => ({
+        url: "/waiter/token",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["OrderTakers"],
+    }),
+
+    // Delete waiter connection (DELETE /waiter/token) – body: { connectionId: waiterConnection.id }
+    deleteOrderTakerConnection: builder.mutation<
+      { message: string },
+      { connectionId: number }
+    >({
+      query: (body) => ({
+        url: "/waiter/token",
+        method: "DELETE",
+        body,
+      }),
+      invalidatesTags: ["OrderTakers"],
+    }),
+
     // Generate QR token for order taker
     generateOrderTakerToken: builder.mutation<
       { token: string; qrCode: string },
@@ -62,7 +95,7 @@ export const orderTakersApi = api.injectEndpoints({
       }),
     }),
 
-    // Update order taker connection
+    // Update order taker connection (legacy /waiter/token-order-taker)
     updateOrderTakerConnection: builder.mutation<
       WaiterConnection,
       { orderTakerId: number; fromTime?: string; toTime?: string }
@@ -70,19 +103,6 @@ export const orderTakersApi = api.injectEndpoints({
       query: (body) => ({
         url: "/waiter/token-order-taker",
         method: "PATCH",
-        body,
-      }),
-      invalidatesTags: ["OrderTakers"],
-    }),
-
-    // Delete order taker connection
-    deleteOrderTakerConnection: builder.mutation<
-      { message: string },
-      { orderTakerId: number }
-    >({
-      query: (body) => ({
-        url: "/waiter/token-order-taker",
-        method: "DELETE",
         body,
       }),
       invalidatesTags: ["OrderTakers"],
@@ -95,6 +115,8 @@ export const {
   useGetPaginatedWaitersQuery,
   useSearchWaitersQuery,
   useGetOrderTakerStatsQuery,
+  useLazyGetWaiterTokenQuery,
+  useUpdateWaiterMutation,
   useGenerateOrderTakerTokenMutation,
   useUpdateOrderTakerConnectionMutation,
   useDeleteOrderTakerConnectionMutation,

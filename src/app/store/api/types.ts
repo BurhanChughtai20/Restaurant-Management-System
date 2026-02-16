@@ -286,12 +286,12 @@ export interface WaiterConnection {
   id: number;
   orderTakerId: number;
   socketId?: string;
-  sessionToken: string;
+  sessionToken?: string;
   isActive: boolean;
   fromTime?: string;
   toTime?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface OrderTaker {
@@ -301,8 +301,13 @@ export interface OrderTaker {
   email: string;
   isEmailVerified: boolean;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   waiterConnection?: WaiterConnection;
+}
+
+export interface GetWaitersResponse {
+  data: OrderTaker[];
+  nextCursor: number;
 }
 
 export interface ChefConnection {
@@ -324,8 +329,13 @@ export interface Chef {
   email: string;
   isEmailVerified: boolean;
   createdAt: string;
-  updatedAt: string;
-  chefConnection?: ChefConnection;
+  updatedAt?: string;
+  chefConnection?: ChefConnection | null;
+}
+
+export interface GetChefsResponse {
+  data: Chef[];
+  nextCursor: number | null;
 }
 
 // ----------------- Orders -----------------

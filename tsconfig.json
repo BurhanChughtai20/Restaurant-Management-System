@@ -14,7 +14,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "incremental": true,
-    "types": ["next/types", "node", "@mui/material", "jest", "@testing-library/jest-dom"],
+    "types": ["next/types", "node",  "jest", "@testing-library/jest-dom"],
     "plugins": [
       {
         "name": "next"

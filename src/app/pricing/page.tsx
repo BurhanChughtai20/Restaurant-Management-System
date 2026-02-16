@@ -15,7 +15,7 @@ const TrustedBy = dynamic(() => import('@/components/TrustedBy'), {
 
 // --- Dynamic Tailwind Classes ---
 const classes = {
-  container: "",
+  container: "pt-20 md:pt-24",
 };
 
 export const metadata: Metadata = generatePageMetadata({

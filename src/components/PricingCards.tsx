@@ -3,7 +3,7 @@
 import React from "react";
 import { Check, ArrowRight } from "lucide-react";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
-import ButtonCom from "./Button";
+import { ButtonWithIcon } from "./Button";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -116,11 +116,11 @@ const PricingCards = () => {
               </div>
 
               <CardItem translateZ="80" className={classes.buttonWrapper}>
-                <ButtonCom
+                <ButtonWithIcon
                   icon={<ArrowRight size={18} />}
                   iconPosition="right"
                   text={plan.buttonText}
-                  type={plan.isPopular ? "primary" : "default"} 
+                  appearance={plan.isPopular ? "primary" : "default"}
                   className={cn(
                     classes.buttonBase,
                     plan.isPopular ? classes.buttonPopular : classes.buttonNormal

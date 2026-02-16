@@ -3,9 +3,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 import type { OrderTaker } from "@/app/store/api/types";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 export const createOrderTakerColumns = (
+  onEdit: (item: OrderTaker) => void,
   onDelete: (item: OrderTaker) => void
 ): ColumnDef<OrderTaker>[] => [
   {
@@ -74,18 +75,31 @@ export const createOrderTakerColumns = (
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      const hasConnection = !!row.original.waiterConnection;
-      if (!hasConnection) return null;
+      const item = row.original;
+      const hasConnection = !!item.waiterConnection;
       return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(row.original)}
-          title="Remove connection"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(item)}
+            title="Edit"
+            className="h-8 w-8"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          {hasConnection && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(item)}
+              title="Remove connection"
+              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       );
     },
   },

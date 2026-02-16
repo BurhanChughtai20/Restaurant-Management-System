@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { DataTable } from "./table/data-table";
 import { createChefColumns } from "./tables/chefs-columns";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -13,72 +15,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import type { Chef } from "@/app/store/api/types";
-
-// ---------------------------------------------------------------------------
-// Hardcoded data
-// ---------------------------------------------------------------------------
-const STATIC_CHEFS: Chef[] = [
-  {
-    id: 1,
-    restaurantId: 14,
-    name: "Hassan Ali",
-    email: "hassan.ali@example.com",
-    isEmailVerified: true,
-    createdAt: "2026-01-10T08:00:00Z",
-    updatedAt: "2026-02-01T10:00:00Z",
-    chefConnection: {
-      id: 1,
-      chefId: 1,
-      sessionToken: "chef_tok_abc123",
-      isActive: true,
-      createdAt: "2026-02-01T10:00:00Z",
-      updatedAt: "2026-02-09T12:00:00Z",
-    },
-  },
-  {
-    id: 2,
-    restaurantId: 14,
-    name: "Ayesha Siddiqui",
-    email: "ayesha.siddiqui@example.com",
-    isEmailVerified: true,
-    createdAt: "2026-01-18T11:00:00Z",
-    updatedAt: "2026-02-03T14:00:00Z",
-    chefConnection: {
-      id: 2,
-      chefId: 2,
-      sessionToken: "chef_tok_def456",
-      isActive: false,
-      createdAt: "2026-02-03T14:00:00Z",
-      updatedAt: "2026-02-08T20:00:00Z",
-    },
-  },
-  {
-    id: 3,
-    restaurantId: 14,
-    name: "Bilal Tariq",
-    email: "bilal.tariq@example.com",
-    isEmailVerified: false,
-    createdAt: "2026-02-05T09:30:00Z",
-    updatedAt: "2026-02-09T07:00:00Z",
-  },
-  {
-    id: 4,
-    restaurantId: 14,
-    name: "Zainab Malik",
-    email: "zainab.malik@example.com",
-    isEmailVerified: true,
-    createdAt: "2026-01-05T06:00:00Z",
-    updatedAt: "2026-02-06T15:00:00Z",
-    chefConnection: {
-      id: 3,
-      chefId: 4,
-      sessionToken: "chef_tok_ghi789",
-      isActive: true,
-      createdAt: "2026-02-06T15:00:00Z",
-      updatedAt: "2026-02-09T11:00:00Z",
-    },
-  },
-];
+import {
+  useGetChefsQuery,
+  useLazyGetChefTokenQuery,
+  useUpdateChefMutation,
+  useDeleteChefConnectionTokenMutation,
+} from "@/app/store/api/chefsApi";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -86,7 +28,55 @@ const STATIC_CHEFS: Chef[] = [
 const ChefsPage = () => {
   // ---- Modal state ----
   const [deletingItem, setDeletingItem] = useState<Chef | null>(null);
+  const [editingItem, setEditingItem] = useState<Chef | null>(null);
+  const [editName, setEditName] = useState("");
   const [isTokenOpen, setIsTokenOpen] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+
+  const { data: chefsResponse, isLoading: isChefsLoading, isError: isChefsError } = useGetChefsQuery();
+  const [getChefToken, { isLoading: isTokenLoading }] = useLazyGetChefTokenQuery();
+  const [updateChef] = useUpdateChefMutation();
+  const [deleteConnection] = useDeleteChefConnectionTokenMutation();
+
+  const tableData = chefsResponse?.data ?? [];
+
+  const handleGenerateQR = useCallback(async () => {
+    try {
+      const result = await getChefToken().unwrap();
+      if (result?.sessionToken) setSessionToken(result.sessionToken);
+    } catch (e) {
+      console.error("Failed to get chef token", e);
+    }
+  }, [getChefToken]);
+
+  const handleTokenModalClose = useCallback((open: boolean) => {
+    if (!open) setSessionToken(null);
+    setIsTokenOpen(open);
+  }, []);
+
+  // ---- Edit ----
+  const openEditDialog = useCallback((item: Chef) => {
+    setEditingItem(item);
+    setEditName(item.name.trim());
+  }, []);
+
+  const closeEditDialog = useCallback(() => {
+    setEditingItem(null);
+    setEditName("");
+  }, []);
+
+  const handleEditSave = useCallback(async () => {
+    if (!editingItem) return;
+    try {
+      await updateChef({
+        chefId: editingItem.id,
+        name: editName,
+      }).unwrap();
+      closeEditDialog();
+    } catch (e) {
+      console.error("Failed to update chef", e);
+    }
+  }, [editingItem, editName, updateChef, closeEditDialog]);
 
   // ---- Delete ----
   const openDeleteDialog = useCallback((item: Chef) => {
@@ -97,19 +87,22 @@ const ChefsPage = () => {
     setDeletingItem(null);
   };
 
-  const handleDelete = () => {
-    // TODO: integrate API later
-    console.log("Delete connection for:", deletingItem?.name);
-    closeDeleteDialog();
-  };
+  const handleDelete = useCallback(async () => {
+    const connectionId = deletingItem?.chefConnection?.id;
+    if (connectionId == null) return;
+    try {
+      await deleteConnection({ connectionId }).unwrap();
+      closeDeleteDialog();
+    } catch (e) {
+      console.error("Failed to delete connection", e);
+    }
+  }, [deletingItem, deleteConnection]);
 
   // ---- Table columns ----
   const columns = useMemo(
-    () => createChefColumns(openDeleteDialog),
-    [openDeleteDialog]
+    () => createChefColumns(openEditDialog, openDeleteDialog),
+    [openEditDialog, openDeleteDialog]
   );
-
-  const tableData = STATIC_CHEFS;
 
   // ---- Render ----
   return (
@@ -143,36 +136,92 @@ const ChefsPage = () => {
         </div>
 
         {/* Table */}
-        <DataTable columns={columns} data={tableData} />
+        {isChefsLoading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            Loading chefs…
+          </div>
+        ) : isChefsError ? (
+          <div className="flex items-center justify-center py-12 text-destructive">
+            Failed to load chefs.
+          </div>
+        ) : (
+          <DataTable columns={columns} data={tableData} />
+        )}
       </div>
 
       {/* Token / QR Code Dialog */}
-      <Dialog open={isTokenOpen} onOpenChange={setIsTokenOpen}>
+      <Dialog open={isTokenOpen} onOpenChange={handleTokenModalClose}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Chef Token</DialogTitle>
             <DialogDescription>
-              Share this QR code with the chef to connect.
+              Generate a QR code and share it with the chef to connect.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col items-center gap-4 py-4">
-            <img
-              src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=chef-token-sample"
-              alt="QR Code"
-              className="w-48 h-48 rounded-md border"
-            />
-            <div className="w-full">
-              <p className="text-xs text-muted-foreground mb-1">Token</p>
-              <code className="block w-full rounded-md bg-muted p-3 text-sm break-all select-all">
-                chef_tok_sample_abc123xyz789
-              </code>
-            </div>
+            {sessionToken ? (
+              <>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(sessionToken)}`}
+                  alt="QR Code"
+                  className="w-48 h-48 rounded-md border"
+                />
+                <div className="w-full">
+                  <p className="text-xs text-muted-foreground mb-1">Token</p>
+                  <code className="block w-full rounded-md bg-muted p-3 text-sm break-all select-all">
+                    {sessionToken}
+                  </code>
+                </div>
+              </>
+            ) : (
+              <div className="w-48 h-48 rounded-md border bg-muted flex items-center justify-center text-muted-foreground text-sm">
+                QR will appear here
+              </div>
+            )}
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsTokenOpen(false)}>
+            <Button
+              variant="default"
+              onClick={handleGenerateQR}
+              disabled={isTokenLoading}
+            >
+              {isTokenLoading ? "Generating…" : "Generate QR"}
+            </Button>
+            <Button variant="outline" onClick={() => handleTokenModalClose(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={(open) => { if (!open) closeEditDialog(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Chef</DialogTitle>
+            <DialogDescription>
+              Update the chef name.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-chef-name">Name</Label>
+              <Input
+                id="edit-chef-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeEditDialog}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleEditSave}>
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

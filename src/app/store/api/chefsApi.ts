@@ -2,6 +2,7 @@
 import api from "./baseApi";
 import {
   Chef,
+  GetChefsResponse,
   PaginatedResponse,
   SearchParams,
   Stats,
@@ -14,7 +15,13 @@ import {
  */
 export const chefsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    // Get all chefs
+    // Get all chefs (GET /chefs – main list for Chef page)
+    getChefs: builder.query<GetChefsResponse, void>({
+      query: () => "/chefs",
+      providesTags: ["Chefs"],
+    }),
+
+    // Legacy: get all chefs from /chef
     getAllChefs: builder.query<Chef[], void>({
       query: () => "/chef",
       providesTags: ["Chefs"],
@@ -52,7 +59,39 @@ export const chefsApi = api.injectEndpoints({
       providesTags: ["Stats"],
     }),
 
-    // Generate QR token for chef
+    // Get chef session token for QR (GET /chefs/token, Bearer auth)
+    getChefToken: builder.query<{ sessionToken: string }, void>({
+      query: () => "/chefs/token",
+      providesTags: ["Chefs"],
+    }),
+
+    // Update chef (PATCH /chefs/token) – body: { chefId, name }
+    updateChef: builder.mutation<
+      Chef,
+      { chefId: number; name: string }
+    >({
+      query: (body) => ({
+        url: "/chefs/token",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Chefs"],
+    }),
+
+    // Delete chef connection (DELETE /chefs/token) – body: { connectionId }
+    deleteChefConnectionToken: builder.mutation<
+      { message: string },
+      { connectionId: number }
+    >({
+      query: (body) => ({
+        url: "/chefs/token",
+        method: "DELETE",
+        body,
+      }),
+      invalidatesTags: ["Chefs"],
+    }),
+
+    // Generate QR token for chef (legacy)
     generateChefToken: builder.mutation<
       { token: string; qrCode: string },
       void
@@ -92,10 +131,14 @@ export const chefsApi = api.injectEndpoints({
 });
 
 export const {
+  useGetChefsQuery,
   useGetAllChefsQuery,
   useGetPaginatedChefsQuery,
   useSearchChefsQuery,
   useGetChefStatsQuery,
+  useLazyGetChefTokenQuery,
+  useUpdateChefMutation,
+  useDeleteChefConnectionTokenMutation,
   useGenerateChefTokenMutation,
   useUpdateChefConnectionMutation,
   useDeleteChefConnectionMutation,
